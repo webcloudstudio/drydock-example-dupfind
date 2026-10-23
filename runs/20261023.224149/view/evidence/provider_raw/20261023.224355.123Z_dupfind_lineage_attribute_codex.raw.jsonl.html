@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>evidence/provider_raw/20261023.224355.123Z_dupfind_lineage_attribute_codex.raw.jsonl</title>
+<link rel="stylesheet" href="../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>evidence/provider_raw/20261023.224355.123Z_dupfind_lineage_attribute_codex.raw.jsonl</h1><div class="filenav"><a href="../../../index.html">&larr; Report</a><a href="../../../evidence/provider_raw/20261023.224355.123Z_dupfind_lineage_attribute_codex.raw.jsonl">Raw file</a></div></header>
+<article class="doc"><pre>{&quot;type&quot;:&quot;thread.started&quot;,&quot;thread_id&quot;:&quot;01a16aef-61d6-7991-ab34-6d46a63df828&quot;}
+{&quot;type&quot;:&quot;turn.started&quot;}
+{&quot;type&quot;:&quot;item.completed&quot;,&quot;item&quot;:{&quot;id&quot;:&quot;item_0&quot;,&quot;type&quot;:&quot;agent_message&quot;,&quot;text&quot;:&quot;&lt;requirement name=\&quot;go-application-structure\&quot; stories=\&quot;architecture\&quot;&gt;\nImplement in Go 1.22 or newer using only the standard library. The application root is a Go module, and its executable is the main package at `./cmd/dupfind`. Tests run under `go test`.\n&lt;/requirement&gt;\n&lt;requirement name=\&quot;parse-command-options\&quot; stories=\&quot;cli-options\&quot;&gt;\ndupfind [--summary] [--min-size &amp;lt;bytes&amp;gt;] &amp;lt;directory&amp;gt;\n&lt;/requirement&gt;\n&lt;requirement name=\&quot;validate-scan-directory\&quot; stories=\&quot;directory-validation\&quot;&gt;\nThe tool walks &amp;lt;directory&amp;gt; recursively, including hidden files and directories\n(names beginning `.`).\n&lt;/requirement&gt;\n&lt;requirement name=\&quot;discover-eligible-files\&quot; stories=\&quot;file-discovery\&quot;&gt;\nIt considers regular files only. It neither follows nor reports symbolic links.\n&lt;/requirement&gt;\n&lt;requirement name=\&quot;group-duplicate-files\&quot; stories=\&quot;file-hashing\&quot;&gt;\nFiles are grouped by size first. Only files that share a size are read.\nWithin a size, files are grouped by the SHA-256 digest of their contents. A group of two or\nmore files with the same size and digest is a duplicate group.\n&lt;/requirement&gt;\n&lt;requirement name=\&quot;emit-listing-report\&quot; stories=\&quot;listing-report\&quot;&gt;\nListing (default): header `group,size,sha256,path`, then one row per file in every duplicate\ngroup.\n&lt;/requirement&gt;\n&lt;requirement name=\&quot;emit-summary-report\&quot; stories=\&quot;summary-report\&quot;&gt;\nSummary (`--summary`): header `groups,duplicate_files,reclaimable_bytes`, then one row.\n&lt;/requirement&gt;\n&lt;requirement name=\&quot;run-test-and-vet-gate\&quot; stories=\&quot;test-gate\&quot;&gt;\nThe completed application provides a POSIX-compatible `bin/test.sh` that runs\n`go vet ./...` and `go test ./...` from the application root and exits zero only when both pass.\n&lt;/requirement&gt;\n&lt;requirement name=\&quot;pass-conformance-suite\&quot; stories=\&quot;conformance\&quot;&gt;\nThe harness runs `go build -o &amp;lt;temporary path&amp;gt; ./cmd/dupfind`, creates a fixed directory tree in a\ntemporary directory, and then runs 15 checks.\n&lt;/requirement&gt;&quot;}}
+{&quot;type&quot;:&quot;turn.completed&quot;,&quot;usage&quot;:{&quot;input_tokens&quot;:13709,&quot;cached_input_tokens&quot;:10240,&quot;cache_write_input_tokens&quot;:0,&quot;output_tokens&quot;:978,&quot;reasoning_output_tokens&quot;:516}}
+</pre></article>
+</main>
+</body>
+</html>

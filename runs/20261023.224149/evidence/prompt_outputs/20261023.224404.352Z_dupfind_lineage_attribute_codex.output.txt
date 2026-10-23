@@ -1,0 +1,21 @@
+<requirement name="full-listing" stories="file-discovery,file-hashing,listing-report">
+# ── A. Full listing ──────────────────────────────────────────────────────────────────────
+</requirement>
+<requirement name="summary-report" stories="summary-report,file-discovery,file-hashing">
+# ── B. Summary ───────────────────────────────────────────────────────────────────────────
+</requirement>
+<requirement name="minimum-size-filter" stories="cli-options,file-discovery,file-hashing,listing-report,summary-report">
+# ── C. Minimum size ──────────────────────────────────────────────────────────────────────
+</requirement>
+<requirement name="no-duplicates" stories="file-discovery,file-hashing,listing-report,summary-report">
+# ── D. No duplicates ─────────────────────────────────────────────────────────────────────
+</requirement>
+<requirement name="operational-failures" stories="directory-validation">
+# ── E. Operational failures ──────────────────────────────────────────────────────────────
+</requirement>
+<requirement name="usage-errors" stories="cli-options">
+# ── U. Usage errors ──────────────────────────────────────────────────────────────────────
+</requirement>
+<unattached story="architecture"/>
+<unattached story="test-gate"/>
+<unattached story="conformance"/>

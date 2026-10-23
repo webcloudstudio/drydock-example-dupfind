@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>workspace/targets/DupFind/blueprint/FEATURE-LISTING-REPORT.md</title>
+<link rel="stylesheet" href="../../../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>workspace/targets/DupFind/blueprint/FEATURE-LISTING-REPORT.md</h1><div class="filenav"><a href="../../../../../index.html">&larr; Report</a><a href="../../../../../workspace/targets/DupFind/blueprint/FEATURE-LISTING-REPORT.md">Raw file</a></div></header>
+<article class="doc"><h1>FEATURE: Listing Report</h1>
+<div class="scroll"><table><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Version</td><td>20261023 V1</td></tr><tr><td>Description</td><td>Emit deterministic CSV rows for duplicate file groups.</td></tr><tr><td>Depends On</td><td>FEATURE-FILE-HASHING.md</td></tr><tr><td>Provides</td><td>duplicate listing CSV</td></tr><tr><td>Consumes</td><td>duplicate candidate grouping</td></tr></tbody></table></div>
+<h2>Purpose</h2>
+<p>The listing mode writes duplicate groups as CSV on standard output. It emits no data rows when no duplicate groups exist.</p>
+<h2>Behavior</h2>
+<ul><li>Use <code>encoding/csv</code> with LF line endings.</li><li>Emit <code>group,size,sha256,path</code> followed by one row per duplicate file.</li><li>Order groups by reclaimable bytes descending, then SHA-256 digest ascending.</li><li>Number groups from 1.</li><li>Write relative paths with <code>/</code> separators and sort them by byte value.</li><li>Preserve RFC 4180 escaping for commas, quotes, and newlines.</li><li>Never write beneath the scanned directory.</li></ul>
+<h2>Programmatic Acceptance</h2>
+<p>=== AC listing-duplicate-rows ===<br>Intent: Duplicate files are emitted as parsed CSV rows with derived size and digest values.</p>
+<p>import csv import hashlib import os import tempfile from drydock_go import cli_runner</p>
+<p>with tempfile.TemporaryDirectory() as root: payload = b&quot;same listing payload\n&quot; paths = [ os.path.join(root, &quot;b&quot;, &quot;copy.txt&quot;), os.path.join(root, &quot;a&quot;, &quot;original.txt&quot;), ] for path in paths: os.makedirs(os.path.dirname(path), exist_ok=True) with open(path, &quot;wb&quot;) as handle: handle.write(payload)</p>
+<p>code, output, error = cli_runner(root) print(output) print(error) assert code == 0 rows = list(csv.reader(output.splitlines())) header = [&quot;group&quot;, &quot;size&quot;, &quot;sha256&quot;, &quot;path&quot;] assert rows[0] == header data = rows[1:] expected_size = len(payload) expected_digest = hashlib.sha256(payload).hexdigest() expected_paths = sorted([&quot;a/original.txt&quot;, &quot;b/copy.txt&quot;]) assert len(data) == len(expected_paths) assert [row[3] for row in data] == expected_paths assert all(row[0] == &quot;1&quot; for row in data) assert all(int(row[1]) == expected_size for row in data) assert all(row[2] == expected_digest for row in data) === END AC listing-duplicate-rows ===</p>
+<p>=== AC listing-csv-escaping ===<br>Intent: Paths containing commas remain one correctly parsed CSV field.</p>
+<p>import csv import os import tempfile from drydock_go import cli_runner</p>
+<p>with tempfile.TemporaryDirectory() as root: payload = b&quot;comma path payload&quot; names = [&quot;one,copy.txt&quot;, &quot;two.txt&quot;] for name in names: path = os.path.join(root, name) with open(path, &quot;wb&quot;) as handle: handle.write(payload)</p>
+<p>code, output, error = cli_runner(root) print(output) print(error) assert code == 0 rows = list(csv.reader(output.splitlines())) assert len(rows) == 1 + len(names) paths = [row[3] for row in rows[1:]] assert paths == sorted(names) assert &quot;one,copy.txt&quot; in paths === END AC listing-csv-escaping ===</p>
+<p>=== AC listing-no-duplicates ===<br>Intent: A directory without duplicate groups produces only the listing header.</p>
+<p>import csv import os import tempfile from drydock_go import cli_runner</p>
+<p>with tempfile.TemporaryDirectory() as root: values = [b&quot;first&quot;, b&quot;second&quot;] for index, value in enumerate(values): with open(os.path.join(root, f&quot;unique-{index}.txt&quot;), &quot;wb&quot;) as handle: handle.write(value)</p>
+<p>code, output, error = cli_runner(root) print(output) print(error) assert code == 0 rows = list(csv.reader(output.splitlines())) assert rows == [[&quot;group&quot;, &quot;size&quot;, &quot;sha256&quot;, &quot;path&quot;]] === END AC listing-no-duplicates ===</p>
+<h2>User Acceptance</h2>
+<ul><li>None.</li></ul>
+<h2>Guardrails</h2>
+<ul><li>The implementation must not delete, move, or modify examined files.</li><li>The supplied conformance harness remains authoritative and is not copied into application code.</li></ul></article>
+</main>
+</body>
+</html>

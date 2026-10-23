@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>evidence/prompts/20261023.224355.123Z_dupfind_lineage_attribute_codex.prompt.md</title>
+<link rel="stylesheet" href="../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>evidence/prompts/20261023.224355.123Z_dupfind_lineage_attribute_codex.prompt.md</h1><div class="filenav"><a href="../../../index.html">&larr; Report</a><a href="../../../evidence/prompts/20261023.224355.123Z_dupfind_lineage_attribute_codex.prompt.md">Raw file</a></div></header>
+<article class="doc"><h1>Attribute Stories to Source Requirements</h1>
+<p>You are the lineage attribution agent. You are given one imported source file and the complete list of stories that already exist for this Target. Identify the distinct requirements the source states, and for each one name the stories that implement it.</p>
+<p>This is a matching task against a closed set. Every story you may name is listed in <code>&lt;stories&gt;</code>. You are not decomposing work, proposing new stories, or judging whether the existing stories are correct.</p>
+<h2>Method</h2>
+<ol><li>Read the source and identify each distinct requirement it states. A requirement is a thing the</li></ol>
+<p>system must do, at whatever granularity the author wrote it. One sentence may state one requirement that several stories implement — for example &quot;add a table and show it on screen&quot; is one requirement implemented by a schema story, a route story, and a view story. Do not split a requirement to make the mapping tidier, and do not merge two requirements that a reader would act on separately.</p>
+<ol><li>Give each requirement a short kebab-case name that describes it. The name is an identifier, not</li></ol>
+<p>a summary: <code>mark-book-read</code>, not <code>the-reader-can-mark-a-book-as-read</code>.</p>
+<ol><li>For each requirement, list every story that implements any part of it. A story may implement</li></ol>
+<p>more than one requirement; a requirement may need more than one story.</p>
+<ol><li>List any story that implements no requirement in the source as <code>&lt;unattached&gt;</code>. This is expected</li></ol>
+<p>and correct for foundational work — application scaffolding, configuration, shared UI framing, test harnesses — that the author never asked for by name. Do not force such a story onto an unrelated requirement.</p>
+<h2>Rules</h2>
+<ul><li>Use only story ids that appear in <code>&lt;stories&gt;</code>. Never invent one.</li><li>Every story must appear exactly once, either inside a <code>stories</code> attribute or as <code>&lt;unattached&gt;</code>.</li><li>Quote the requirement text verbatim from the source in the tag body. Do not paraphrase it.</li><li>Emit nothing but the tags below. No preamble, no commentary, no explanation.</li></ul>
+<h2>Output</h2>
+<pre><code>&lt;requirement name=&quot;add-remove-books&quot; stories=&quot;add-book,remove-book,database&quot;&gt;
+The reader can add a book with a title and author, view the books in the order added, and remove a book.
+&lt;/requirement&gt;
+&lt;requirement name=&quot;reject-empty-fields&quot; stories=&quot;validate-book&quot;&gt;
+An empty title or author is rejected with a clear error message.
+&lt;/requirement&gt;
+&lt;unattached story=&quot;architecture&quot;/&gt;
+&lt;unattached story=&quot;ui-general&quot;/&gt;</code></pre>
+<h1>Attribution job</h1>
+<p>&lt;source name=&quot;INSTRUCTIONS.md&quot;&gt;</p>
+<h1>Build Instructions: A Duplicate File Finder</h1>
+<h2>Objective</h2>
+<p>Build a command-line tool that finds duplicate files under a directory. Two files are duplicates when their contents are byte-for-byte identical. The tool reports each group of duplicates and the disk space that deleting all but one copy of each would recover. It never deletes, moves, or modifies a file.</p>
+<h2>Stack</h2>
+<p>Implement in Go 1.22 or newer using only the standard library. The application root is a Go module, and its executable is the main package at <code>./cmd/dupfind</code>. Tests run under <code>go test</code>.</p>
+<h2>Run Harness</h2>
+<p><code>sources/run.sh</code> is the scoring entry point. It is supplied, not authored, and is staged verbatim into the application root. <code>drydock uat</code> runs <code>sh sources/run.sh</code> from the completed application root and takes its exit code and output as the score.</p>
+<p>The harness runs <code>go build -o &lt;temporary path&gt; ./cmd/dupfind</code>, creates a fixed directory tree in a temporary directory, and then runs 15 checks. Each check compares one command&#x27;s exit code and standard output with a known answer. Standard error is never compared. The harness prints <code>PASS</code> or <code>FAIL</code> per check and ends with:</p>
+<pre><code>DupFind: NN passed, NN failed (of 15)</code></pre>
+<p><code>sources/run.sh</code> is the exam. Do not modify, rewrite, regenerate, or substitute it. Application code never reads it and never embeds an answer from it.</p>
+<h2>Command</h2>
+<pre><code>dupfind [--summary] [--min-size &lt;bytes&gt;] &lt;directory&gt;</code></pre>
+<p>Options precede the directory. Exactly one directory is required.</p>
+<div class="scroll"><table><thead><tr><th>Option</th><th>Meaning</th></tr></thead><tbody><tr><td><code>--summary</code></td><td>Write the summary instead of the listing.</td></tr><tr><td><code>--min-size &lt;bytes&gt;</code></td><td>Ignore files smaller than <code>&lt;bytes&gt;</code>. A positive integer; default <code>1</code>.</td></tr></tbody></table></div>
+<h2>Rules</h2>
+<ol><li><strong>Scope.</strong> The tool walks <code>&lt;directory&gt;</code> recursively, including hidden files and directories</li></ol>
+<p>(names beginning <code>.</code>). It considers regular files only. It neither follows nor reports symbolic links.</p>
+<ol><li><strong>Empty files are never duplicates.</strong> A file of zero bytes is always ignored, which the</li></ol>
+<p>default <code>--min-size 1</code> guarantees.</p>
+<ol><li><strong>Duplicate test.</strong> Files are grouped by size first. Only files that share a size are read.</li></ol>
+<p>Within a size, files are grouped by the SHA-256 digest of their contents. A group of two or more files with the same size and digest is a duplicate group.</p>
+<ol><li><strong>Paths</strong> are written relative to <code>&lt;directory&gt;</code>, with <code>/</code> as the separator and no leading</li></ol>
+<p><code>./</code>.</p>
+<ol><li><strong>Order.</strong> Groups are ordered by reclaimable bytes descending, then by digest ascending.</li></ol>
+<p>A group&#x27;s reclaimable bytes are <code>size × (files − 1)</code>. Groups are numbered from 1 in that order. Within a group, paths are ordered by byte value ascending.</p>
+<ol><li><strong>Unreadable files.</strong> A file that cannot be read is skipped with one warning line on standard</li></ol>
+<p>error. It does not change the exit code.</p>
+<h2>Output</h2>
+<p>Output is CSV on standard output: a header row, then data rows, with <code>\n</code> line endings. A field that contains a comma, a double quote, or a newline is quoted as RFC 4180 specifies. Go&#x27;s <code>encoding/csv</code> writer produces this format.</p>
+<p><strong>Listing</strong> (default): header <code>group,size,sha256,path</code>, then one row per file in every duplicate group. <code>sha256</code> is the lowercase hexadecimal digest. With no duplicates, only the header is written.</p>
+<pre><code>group,size,sha256,path
+1,17,8a3c67892f82af22b58377b8e85bb41899053788d3aa3b81d2e6b4580e917c29,a/report.txt
+1,17,8a3c67892f82af22b58377b8e85bb41899053788d3aa3b81d2e6b4580e917c29,b/report-copy.txt</code></pre>
+<p><strong>Summary</strong> (<code>--summary</code>): header <code>groups,duplicate_files,reclaimable_bytes</code>, then one row. <code>duplicate_files</code> is the sum of <code>files − 1</code> over all groups. <code>reclaimable_bytes</code> is the sum of every group&#x27;s reclaimable bytes. With no duplicates the row is <code>0,0,0</code>.</p>
+<p>A failing command writes nothing to standard output and one diagnostic line to standard error.</p>
+<h2>Exit codes</h2>
+<div class="scroll"><table><thead><tr><th>Code</th><th>Meaning</th></tr></thead><tbody><tr><td><code>0</code></td><td>Success, whether or not duplicates were found.</td></tr><tr><td><code>1</code></td><td>Operational failure: <code>&lt;directory&gt;</code> does not exist or is not a directory.</td></tr><tr><td><code>2</code></td><td>Usage error: missing or extra arguments, unknown option, <code>--min-size</code> not a positive integer.</td></tr></tbody></table></div>
+<h2>Tests</h2>
+<p>The completed application provides a POSIX-compatible <code>bin/test.sh</code> that runs <code>go vet ./...</code> and <code>go test ./...</code> from the application root and exits zero only when both pass. The suite covers each rule, each output form, and each exit code against real temporary directories. &lt;/source&gt;</p>
+<p>&lt;stories&gt; &lt;story id=&quot;architecture&quot; implements=&quot;ARCHITECTURE.md&quot;&gt;Establish the Go module structure and application boundaries for DupFind.&lt;/story&gt; &lt;story id=&quot;cli-options&quot; implements=&quot;FEATURE-CLI-OPTIONS.md&quot;&gt;Parse DupFind options and enforce the command argument contract.&lt;/story&gt; &lt;story id=&quot;directory-validation&quot; implements=&quot;FEATURE-DIRECTORY-VALIDATION.md&quot;&gt;Validate that the requested scan path exists and is a directory.&lt;/story&gt; &lt;story id=&quot;file-discovery&quot; implements=&quot;FEATURE-FILE-DISCOVERY.md&quot;&gt;Walk the scan tree and select eligible regular files.&lt;/story&gt; &lt;story id=&quot;file-hashing&quot; implements=&quot;FEATURE-FILE-HASHING.md&quot;&gt;Filter candidates and group files by size and SHA-256 digest.&lt;/story&gt; &lt;story id=&quot;summary-report&quot; implements=&quot;FEATURE-SUMMARY-REPORT.md&quot;&gt;Emit the duplicate-group summary and reclaimable-space totals.&lt;/story&gt; &lt;story id=&quot;listing-report&quot; implements=&quot;FEATURE-LISTING-REPORT.md&quot;&gt;Emit deterministic CSV rows for duplicate groups.&lt;/story&gt; &lt;story id=&quot;test-gate&quot; implements=&quot;FEATURE-TEST-GATE.md&quot;&gt;Provide the local POSIX test and vet gate.&lt;/story&gt; &lt;story id=&quot;conformance&quot; implements=&quot;FEATURE-CONFORMANCE.md&quot;&gt;Run the complete supplied DupFind conformance suite.&lt;/story&gt; &lt;/stories&gt;</p></article>
+</main>
+</body>
+</html>

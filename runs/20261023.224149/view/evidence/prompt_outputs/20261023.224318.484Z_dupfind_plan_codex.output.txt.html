@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>evidence/prompt_outputs/20261023.224318.484Z_dupfind_plan_codex.output.txt</title>
+<link rel="stylesheet" href="../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>evidence/prompt_outputs/20261023.224318.484Z_dupfind_plan_codex.output.txt</h1><div class="filenav"><a href="../../../index.html">&larr; Report</a><a href="../../../evidence/prompt_outputs/20261023.224318.484Z_dupfind_plan_codex.output.txt">Raw file</a></div></header>
+<article class="doc"><pre>=== BEGIN ARTIFACT FEATURE-LISTING-REPORT.md ===
+# FEATURE: Listing Report
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261023 V1 |
+| Description | Emit deterministic CSV rows for duplicate file groups. |
+| Depends On  | FEATURE-FILE-HASHING.md |
+| Provides    | duplicate listing CSV |
+| Consumes    | duplicate candidate grouping |
+
+## Questions
+
+- None.
+
+## Purpose
+
+The listing mode writes duplicate groups as CSV on standard output. It emits no data rows when no duplicate groups exist.
+
+## Behavior
+
+- Use `encoding/csv` with LF line endings.
+- Emit `group,size,sha256,path` followed by one row per duplicate file.
+- Order groups by reclaimable bytes descending, then SHA-256 digest ascending.
+- Number groups from 1.
+- Write relative paths with `/` separators and sort them by byte value.
+- Preserve RFC 4180 escaping for commas, quotes, and newlines.
+- Never write beneath the scanned directory.
+
+## Programmatic Acceptance
+
+=== AC listing-duplicate-rows ===
+Intent: Duplicate files are emitted as parsed CSV rows with derived size and digest values.
+
+import csv
+import hashlib
+import os
+import tempfile
+from drydock_go import cli_runner
+
+with tempfile.TemporaryDirectory() as root:
+    payload = b&quot;same listing payload\n&quot;
+    paths = [
+        os.path.join(root, &quot;b&quot;, &quot;copy.txt&quot;),
+        os.path.join(root, &quot;a&quot;, &quot;original.txt&quot;),
+    ]
+    for path in paths:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, &quot;wb&quot;) as handle:
+            handle.write(payload)
+
+    code, output, error = cli_runner(root)
+    print(output)
+    print(error)
+    assert code == 0
+    rows = list(csv.reader(output.splitlines()))
+    header = [&quot;group&quot;, &quot;size&quot;, &quot;sha256&quot;, &quot;path&quot;]
+    assert rows[0] == header
+    data = rows[1:]
+    expected_size = len(payload)
+    expected_digest = hashlib.sha256(payload).hexdigest()
+    expected_paths = sorted([&quot;a/original.txt&quot;, &quot;b/copy.txt&quot;])
+    assert len(data) == len(expected_paths)
+    assert [row[3] for row in data] == expected_paths
+    assert all(row[0] == &quot;1&quot; for row in data)
+    assert all(int(row[1]) == expected_size for row in data)
+    assert all(row[2] == expected_digest for row in data)
+=== END AC listing-duplicate-rows ===
+
+=== AC listing-csv-escaping ===
+Intent: Paths containing commas remain one correctly parsed CSV field.
+
+import csv
+import os
+import tempfile
+from drydock_go import cli_runner
+
+with tempfile.TemporaryDirectory() as root:
+    payload = b&quot;comma path payload&quot;
+    names = [&quot;one,copy.txt&quot;, &quot;two.txt&quot;]
+    for name in names:
+        path = os.path.join(root, name)
+        with open(path, &quot;wb&quot;) as handle:
+            handle.write(payload)
+
+    code, output, error = cli_runner(root)
+    print(output)
+    print(error)
+    assert code == 0
+    rows = list(csv.reader(output.splitlines()))
+    assert len(rows) == 1 + len(names)
+    paths = [row[3] for row in rows[1:]]
+    assert paths == sorted(names)
+    assert &quot;one,copy.txt&quot; in paths
+=== END AC listing-csv-escaping ===
+
+=== AC listing-no-duplicates ===
+Intent: A directory without duplicate groups produces only the listing header.
+
+import csv
+import os
+import tempfile
+from drydock_go import cli_runner
+
+with tempfile.TemporaryDirectory() as root:
+    values = [b&quot;first&quot;, b&quot;second&quot;]
+    for index, value in enumerate(values):
+        with open(os.path.join(root, f&quot;unique-{index}.txt&quot;), &quot;wb&quot;) as handle:
+            handle.write(value)
+
+    code, output, error = cli_runner(root)
+    print(output)
+    print(error)
+    assert code == 0
+    rows = list(csv.reader(output.splitlines()))
+    assert rows == [[&quot;group&quot;, &quot;size&quot;, &quot;sha256&quot;, &quot;path&quot;]]
+=== END AC listing-no-duplicates ===
+
+## User Acceptance
+
+- None.
+
+## Guardrails
+
+- The implementation must not delete, move, or modify examined files.
+- The supplied conformance harness remains authoritative and is not copied into application code.
+=== END ARTIFACT ===
+=== BEGIN ARTIFACT FEATURE-SUMMARY-REPORT.md ===
+# FEATURE: Summary Report
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261023 V1 |
+| Description | Emit duplicate-group counts and reclaimable-space totals. |
+| Depends On  | FEATURE-FILE-HASHING.md |
+| Provides    | duplicate summary CSV |
+| Consumes    | duplicate candidate grouping |
+
+## Questions
+
+- None.
+
+## Purpose
+
+Summary mode reports the number of duplicate groups, duplicate files beyond one retained copy per group, and reclaimable bytes.
+
+## Behavior
+
+- Emit `groups,duplicate_files,reclaimable_bytes`.
+- Emit exactly one data row, including when no duplicates exist.
+- Compute totals from the same duplicate groups used by listing mode.
+- Apply the positive `--min-size` filter before forming totals.
+- Write CSV with LF line endings.
+
+## Programmatic Acceptance
+
+=== AC summary-derived-totals ===
+Intent: Summary values equal totals derived from duplicate files created by the criterion.
+
+import csv
+import hashlib
+import os
+import tempfile
+from drydock_go import cli_runner
+
+with tempfile.TemporaryDirectory() as root:
+    groups = [
+        (b&quot;alpha&quot;, [&quot;a.txt&quot;, &quot;b.txt&quot;, &quot;c.txt&quot;]),
+        (b&quot;longer payload&quot;, [&quot;d.txt&quot;, &quot;e.txt&quot;]),
+    ]
+    expected_groups = len(groups)
+    expected_duplicate_files = 0
+    expected_reclaimable = 0
+    for payload, names in groups:
+        for name in names:
+            with open(os.path.join(root, name), &quot;wb&quot;) as handle:
+                handle.write(payload)
+        expected_duplicate_files += len(names) - 1
+        expected_reclaimable += len(payload) * (len(names) - 1)
+
+    code, output, error = cli_runner(&quot;--summary&quot;, root)
+    print(output)
+    print(error)
+    assert code == 0
+    rows = list(csv.reader(output.splitlines()))
+    assert rows[0] == [&quot;groups&quot;, &quot;duplicate_files&quot;, &quot;reclaimable_bytes&quot;]
+    assert len(rows) == 2
+    actual = [int(value) for value in rows[1]]
+    expected = [expected_groups, expected_duplicate_files, expected_reclaimable]
+    assert actual == expected
+=== END AC summary-derived-totals ===
+
+=== AC summary-min-size ===
+Intent: The minimum-size option excludes smaller duplicate groups from summary totals.
+
+import csv
+import os
+import tempfile
+from drydock_go import cli_runner
+
+with tempfile.TemporaryDirectory() as root:
+    small = b&quot;tiny&quot;
+    large = b&quot;large duplicate payload&quot;
+    for index in range(2):
+        with open(os.path.join(root, f&quot;small-{index}.txt&quot;), &quot;wb&quot;) as handle:
+            handle.write(small)
+        with open(os.path.join(root, f&quot;large-{index}.txt&quot;), &quot;wb&quot;) as handle:
+            handle.write(large)
+
+    code, output, error = cli_runner(&quot;--summary&quot;, &quot;--min-size&quot;, str(len(large)), root)
+    print(output)
+    print(error)
+    assert code == 0
+    rows = list(csv.reader(output.splitlines()))
+    assert len(rows) == 2
+    actual = [int(value) for value in rows[1]]
+    expected = [1, 1, len(large)]
+    assert actual == expected
+=== END AC summary-min-size ===
+
+=== AC summary-zero-totals ===
+Intent: An empty or duplicate-free directory reports zero summary totals.
+
+import csv
+import os
+import tempfile
+from drydock_go import cli_runner
+
+with tempfile.TemporaryDirectory() as root:
+    with open(os.path.join(root, &quot;empty&quot;), &quot;wb&quot;) as handle:
+        handle.write(b&quot;&quot;)
+
+    code, output, error = cli_runner(&quot;--summary&quot;, root)
+    print(output)
+    print(error)
+    assert code == 0
+    rows = list(csv.reader(output.splitlines()))
+    assert rows == [
+        [&quot;groups&quot;, &quot;duplicate_files&quot;, &quot;reclaimable_bytes&quot;],
+        [&quot;0&quot;, &quot;0&quot;, &quot;0&quot;],
+    ]
+=== END AC summary-zero-totals ===
+
+## User Acceptance
+
+- None.
+
+## Guardrails
+
+- Summary mode must not mutate the scanned directory.
+- Summary totals must be derived from discovered duplicate groups, never hardcoded.
+=== END ARTIFACT ===
+=== BEGIN ARTIFACT FEATURE-TEST-GATE.md ===
+# FEATURE: Test Gate
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261023 V1 |
+| Description | Provide the local POSIX test and vet gate. |
+| Depends On  | ARCHITECTURE.md |
+| Provides    | bin/test.sh |
+| Consumes    | Go module and application test suite |
+
+## Questions
+
+- None.
+
+## Purpose
+
+The project test gate provides one root-relative POSIX shell command that verifies static analysis and the complete Go test suite.
+
+## Behavior
+
+- `bin/test.sh` executes from the application root.
+- It runs `go vet ./...` and `go test ./...`.
+- It exits zero only when both commands succeed.
+- It propagates failure rather than masking a failed command.
+- Focused Go tests cover CLI behavior, discovery, grouping, ordering, and serialization.
+
+## Programmatic Acceptance
+
+=== AC test-gate-present-and-passing ===
+Intent: The project test gate exists and completes successfully from the application root.
+
+import os
+import subprocess
+from pathlib import Path
+
+gate = Path(&quot;bin/test.sh&quot;)
+assert gate.is_file()
+result = subprocess.run(
+    [&quot;sh&quot;, str(gate)],
+    capture_output=True,
+    text=True,
+    cwd=os.getcwd(),
+)
+print(result.stdout)
+print(result.stderr)
+assert result.returncode == 0
+=== END AC test-gate-present-and-passing ===
+
+=== AC test-gate-is-posix-shell ===
+Intent: The test gate can be executed by a POSIX shell without requiring a different shell.
+
+import os
+import subprocess
+from pathlib import Path
+
+gate = Path(&quot;bin/test.sh&quot;)
+assert gate.is_file()
+result = subprocess.run(
+    [&quot;sh&quot;, str(gate)],
+    capture_output=True,
+    text=True,
+    cwd=os.getcwd(),
+)
+print(result.stdout)
+print(result.stderr)
+assert result.returncode == 0
+=== END AC test-gate-is-posix-shell ===
+
+## User Acceptance
+
+- None.
+
+## Guardrails
+
+- The test gate must not modify supplied conformance assets.
+- The test gate must run from the application root and use the module&#x27;s Go toolchain.
+=== END ARTIFACT ===
+=== BEGIN ARTIFACT FEATURE-CONFORMANCE.md ===
+# FEATURE: Complete Conformance
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261023 V1 |
+| Description | Verify the completed DupFind implementation against the supplied conformance suite. |
+| Depends On  | FEATURE-CLI-OPTIONS.md, FEATURE-DIRECTORY-VALIDATION.md, FEATURE-FILE-DISCOVERY.md, FEATURE-FILE-HASHING.md, FEATURE-LISTING-REPORT.md, FEATURE-SUMMARY-REPORT.md, FEATURE-TEST-GATE.md |
+| Provides    | complete supplied conformance verification |
+| Consumes    | bin/test.sh, dupfind executable |
+
+## Questions
+
+- None.
+
+## Purpose
+
+The supplied `sources/run.sh` is the terminal acceptance authority for the completed command-line application.
+
+## Verification
+
+- Run the staged harness unfiltered from the application root.
+- Preserve `sources/run.sh` byte-for-byte.
+- Require the harness process to exit zero.
+- Do not interpret or replace individual harness checks.
+
+## Programmatic Acceptance
+
+=== AC complete-conformance ===
+Intent: The supplied terminal harness passes for the completed DupFind application.
+Suite: full
+
+import subprocess
+
+result = subprocess.run(
+    [&quot;sh&quot;, &quot;sources/run.sh&quot;],
+    capture_output=True,
+    text=True,
+)
+print(result.stdout)
+print(result.stderr)
+assert result.returncode == 0
+=== END AC complete-conformance ===
+
+## User Acceptance
+
+- None.
+
+## Guardrails
+
+- Do not modify, rewrite, regenerate, filter, or substitute `sources/run.sh`.
+- Do not execute the full conformance suite before this terminal story.
+=== END ARTIFACT ===</pre></article>
+</main>
+</body>
+</html>

@@ -1,0 +1,25 @@
+[
+  {
+    "id": "D-001",
+    "type": "choice",
+    "severity": "low",
+    "origin": "plan",
+    "blueprint": "ARCHITECTURE.md",
+    "story": "architecture",
+    "status": "recommended",
+    "archived": false,
+    "title": "Diagnostic wording",
+    "description": "The source specifies stderr diagnostics and exit statuses but does not prescribe diagnostic text. The implementation will use concise conventional stderr lines while keeping stdout empty on failures.",
+    "options": [
+      {
+        "value": "concise-stderr",
+        "label": "Concise stderr diagnostics"
+      },
+      {
+        "value": "fixed-diagnostic-catalog",
+        "label": "Fixed diagnostic catalog"
+      }
+    ],
+    "system_choice": "concise-stderr"
+  }
+]

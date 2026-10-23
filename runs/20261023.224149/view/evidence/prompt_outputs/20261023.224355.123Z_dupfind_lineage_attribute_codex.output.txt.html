@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>evidence/prompt_outputs/20261023.224355.123Z_dupfind_lineage_attribute_codex.output.txt</title>
+<link rel="stylesheet" href="../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>evidence/prompt_outputs/20261023.224355.123Z_dupfind_lineage_attribute_codex.output.txt</h1><div class="filenav"><a href="../../../index.html">&larr; Report</a><a href="../../../evidence/prompt_outputs/20261023.224355.123Z_dupfind_lineage_attribute_codex.output.txt">Raw file</a></div></header>
+<article class="doc"><pre>&lt;requirement name=&quot;go-application-structure&quot; stories=&quot;architecture&quot;&gt;
+Implement in Go 1.22 or newer using only the standard library. The application root is a Go module, and its executable is the main package at `./cmd/dupfind`. Tests run under `go test`.
+&lt;/requirement&gt;
+&lt;requirement name=&quot;parse-command-options&quot; stories=&quot;cli-options&quot;&gt;
+dupfind [--summary] [--min-size &amp;lt;bytes&amp;gt;] &amp;lt;directory&amp;gt;
+&lt;/requirement&gt;
+&lt;requirement name=&quot;validate-scan-directory&quot; stories=&quot;directory-validation&quot;&gt;
+The tool walks &amp;lt;directory&amp;gt; recursively, including hidden files and directories
+(names beginning `.`).
+&lt;/requirement&gt;
+&lt;requirement name=&quot;discover-eligible-files&quot; stories=&quot;file-discovery&quot;&gt;
+It considers regular files only. It neither follows nor reports symbolic links.
+&lt;/requirement&gt;
+&lt;requirement name=&quot;group-duplicate-files&quot; stories=&quot;file-hashing&quot;&gt;
+Files are grouped by size first. Only files that share a size are read.
+Within a size, files are grouped by the SHA-256 digest of their contents. A group of two or
+more files with the same size and digest is a duplicate group.
+&lt;/requirement&gt;
+&lt;requirement name=&quot;emit-listing-report&quot; stories=&quot;listing-report&quot;&gt;
+Listing (default): header `group,size,sha256,path`, then one row per file in every duplicate
+group.
+&lt;/requirement&gt;
+&lt;requirement name=&quot;emit-summary-report&quot; stories=&quot;summary-report&quot;&gt;
+Summary (`--summary`): header `groups,duplicate_files,reclaimable_bytes`, then one row.
+&lt;/requirement&gt;
+&lt;requirement name=&quot;run-test-and-vet-gate&quot; stories=&quot;test-gate&quot;&gt;
+The completed application provides a POSIX-compatible `bin/test.sh` that runs
+`go vet ./...` and `go test ./...` from the application root and exits zero only when both pass.
+&lt;/requirement&gt;
+&lt;requirement name=&quot;pass-conformance-suite&quot; stories=&quot;conformance&quot;&gt;
+The harness runs `go build -o &amp;lt;temporary path&amp;gt; ./cmd/dupfind`, creates a fixed directory tree in a
+temporary directory, and then runs 15 checks.
+&lt;/requirement&gt;</pre></article>
+</main>
+</body>
+</html>

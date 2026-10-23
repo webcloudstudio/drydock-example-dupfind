@@ -1,0 +1,551 @@
+=== BEGIN ARTIFACT ARCHITECTURE.md ===
+# ARCHITECTURE: DupFind
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261023 V1 |
+| Description | Defines the Go module structure and boundaries for the DupFind command-line application. |
+| Provides    | Go module, cmd/dupfind entry point |
+| Consumes    | — |
+
+## Questions
+
+- None.
+
+## Purpose
+
+DupFind is a standard-library Go command-line application that recursively scans a user-supplied directory and reports duplicate regular files.
+
+## Module Structure
+
+- `cmd/dupfind`: process entry point; parses process arguments, invokes application behavior, and calls `os.Exit`.
+- `internal/cli`: command-line parsing, validation, and orchestration.
+- `internal/discovery`: recursive traversal and eligible-file selection.
+- `internal/grouping`: size filtering, SHA-256 hashing, and duplicate grouping.
+- `internal/reporting`: deterministic CSV listing and summary output.
+- `bin/test.sh`: POSIX local verification launcher.
+
+## Boundaries
+
+The application reads filesystem metadata and file contents only beneath the requested scan directory. It never writes, deletes, or moves files beneath that directory. Reporting writes only to standard output, while diagnostics are written to standard error.
+
+The process entry point owns process exit status. Application behavior is exposed through testable functions that accept arguments and I/O streams.
+
+## Technology Stack
+
+- Go 1.22 or newer.
+- Go standard library only.
+- POSIX `sh` for the local test gate.
+
+## Technical Decisions
+
+- Files are grouped by size before contents are read.
+- Candidate contents are hashed with SHA-256.
+- CSV output uses `encoding/csv`.
+- Diagnostics use concise conventional stderr lines; diagnostic wording is not part of the output contract.
+
+## Programmatic Acceptance
+
+=== AC architecture-module ===
+Intent: The application is a Go module with the required executable package.
+import subprocess
+
+module_check = subprocess.run(
+    ["go", "list", "-m"],
+    capture_output=True,
+    text=True,
+)
+assert module_check.returncode == 0
+
+build_check = subprocess.run(
+    ["go", "build", "./cmd/dupfind"],
+    capture_output=True,
+    text=True,
+)
+assert build_check.returncode == 0
+=== END AC architecture-module ===
+
+=== AC architecture-standard-library ===
+Intent: The executable package builds successfully with the module's declared dependencies.
+import subprocess
+
+check = subprocess.run(
+    ["go", "build", "-trimpath", "./cmd/dupfind"],
+    capture_output=True,
+    text=True,
+)
+assert check.returncode == 0
+=== END AC architecture-standard-library ===
+
+## User Acceptance
+
+- None.
+
+## Guardrails
+
+- The implementation must use only the Go standard library.
+- The application must never modify files beneath the examined directory.
+- `sources/run.sh` remains supplied and unmodified.
+=== END ARTIFACT ===
+=== BEGIN ARTIFACT FEATURE-CLI-OPTIONS.md ===
+# FEATURE: CLI Options
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261023 V1 |
+| Description | Defines DupFind option parsing and command argument validation. |
+| Depends On  | ARCHITECTURE.md |
+| Provides    | dupfind option parsing |
+| Consumes    | Go module and cmd/dupfind entry point |
+
+## Questions
+
+- None.
+
+## Purpose
+
+The command accepts `--summary`, `--min-size <bytes>`, and exactly one directory argument. The default minimum size is one byte.
+
+## Command Contract
+
+Valid forms are:
+
+```text
+dupfind [--summary] [--min-size <bytes>] <directory>
+```
+
+Options precede the directory. `--min-size` must be a positive integer. Unknown options, missing arguments, extra arguments, and invalid minimum sizes are usage errors with exit status 2, no standard output, and a diagnostic on standard error. The conventional Go help path is supported.
+
+## Programmatic Acceptance
+
+=== AC cli-valid-options ===
+Intent: Valid option combinations are accepted and produce successful command exits.
+import csv
+import os
+import subprocess
+import tempfile
+from pathlib import Path
+
+with tempfile.TemporaryDirectory() as temp:
+    root = Path(temp)
+    first = root / "first.txt"
+    second = root / "second.txt"
+    first.write_bytes(b"same")
+    second.write_bytes(b"same")
+
+    result = subprocess.run(
+        ["go", "run", "./cmd/dupfind", "--min-size", "1", str(root)],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0
+    rows = list(csv.reader(result.stdout.splitlines()))
+    assert rows
+    assert rows[0][0] == "group"
+
+=== AC cli-summary-option ===
+Intent: The summary option is accepted and selects summary output.
+import csv
+import subprocess
+import tempfile
+from pathlib import Path
+
+with tempfile.TemporaryDirectory() as temp:
+    root = Path(temp)
+    (root / "one").write_bytes(b"same")
+    (root / "two").write_bytes(b"same")
+
+    result = subprocess.run(
+        ["go", "run", "./cmd/dupfind", "--summary", str(root)],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0
+    rows = list(csv.reader(result.stdout.splitlines()))
+    assert rows[0][0] == "groups"
+
+=== AC cli-usage-errors ===
+Intent: Malformed arguments return usage status 2 without standard output.
+import subprocess
+import tempfile
+from pathlib import Path
+
+with tempfile.TemporaryDirectory() as temp:
+    root = Path(temp)
+
+    cases = [
+        ["go", "run", "./cmd/dupfind"],
+        ["go", "run", "./cmd/dupfind", str(root), str(root)],
+        ["go", "run", "./cmd/dupfind", "--min-size", "abc", str(root)],
+        ["go", "run", "./cmd/dupfind", "--min-size", "0", str(root)],
+        ["go", "run", "./cmd/dupfind", "--frobnicate", str(root)],
+    ]
+
+    for command in cases:
+        result = subprocess.run(command, capture_output=True, text=True)
+        assert result.returncode == 2
+        assert result.stdout == ""
+=== END AC cli-usage-errors ===
+
+## User Acceptance
+
+- None.
+
+## Guardrails
+
+- Usage errors must not write CSV to standard output.
+- Only positive integer minimum sizes are accepted.
+- The implementation must not read or depend on `sources/run.sh`.
+=== END ARTIFACT ===
+=== BEGIN ARTIFACT FEATURE-DIRECTORY-VALIDATION.md ===
+# FEATURE: Directory Validation
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261023 V1 |
+| Description | Defines validation of the requested scan path before filesystem traversal. |
+| Depends On  | FEATURE-CLI-OPTIONS.md |
+| Provides    | scan-directory validation |
+| Consumes    | dupfind option parsing |
+
+## Questions
+
+- None.
+
+## Purpose
+
+After successful option parsing, DupFind validates that the supplied path exists and is a directory.
+
+## Behavior
+
+A missing path or a path naming a regular file is an operational failure. The command returns exit status 1, writes no standard output, and emits a diagnostic on standard error. A valid directory proceeds to discovery.
+
+## Programmatic Acceptance
+
+=== AC directory-missing ===
+Intent: A missing scan path returns operational failure without CSV output.
+import subprocess
+import tempfile
+from pathlib import Path
+
+with tempfile.TemporaryDirectory() as temp:
+    missing = Path(temp) / "missing"
+    result = subprocess.run(
+        ["go", "run", "./cmd/dupfind", str(missing)],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 1
+    assert result.stdout == ""
+    assert result.stderr != ""
+
+=== AC directory-file ===
+Intent: A regular file supplied as the scan path returns operational failure without CSV output.
+import subprocess
+import tempfile
+from pathlib import Path
+
+with tempfile.TemporaryDirectory() as temp:
+    path = Path(temp) / "input"
+    path.write_bytes(b"content")
+    result = subprocess.run(
+        ["go", "run", "./cmd/dupfind", str(path)],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 1
+    assert result.stdout == ""
+    assert result.stderr != ""
+
+=== AC directory-success ===
+Intent: An existing directory is accepted and produces a successful result.
+import csv
+import subprocess
+import tempfile
+from pathlib import Path
+
+with tempfile.TemporaryDirectory() as temp:
+    root = Path(temp)
+    result = subprocess.run(
+        ["go", "run", "./cmd/dupfind", str(root)],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0
+    rows = list(csv.reader(result.stdout.splitlines()))
+    assert rows[0][0] == "group"
+=== END AC directory-success ===
+
+## User Acceptance
+
+- None.
+
+## Guardrails
+
+- Directory validation occurs before traversal.
+- Operational failures write no standard output.
+- Validation must not modify the supplied path.
+=== END ARTIFACT ===
+=== BEGIN ARTIFACT FEATURE-FILE-DISCOVERY.md ===
+# FEATURE: File Discovery
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261023 V1 |
+| Description | Defines recursive selection of eligible regular files beneath the scan directory. |
+| Depends On  | FEATURE-DIRECTORY-VALIDATION.md |
+| Provides    | recursive eligible-file discovery |
+| Consumes    | scan-directory validation |
+
+## Questions
+
+- None.
+
+## Purpose
+
+DupFind recursively walks the validated directory, including hidden entries and directories. It considers regular files only and ignores symbolic links and zero-byte files.
+
+## Discovery Rules
+
+- Hidden files and directories are included.
+- Regular files are eligible.
+- Symbolic links are neither followed nor reported.
+- Empty files are ignored.
+- The examined tree is read-only from DupFind's perspective.
+
+## Programmatic Acceptance
+
+=== AC discovery-hidden-and-recursive ===
+Intent: Recursive discovery includes hidden files and nested regular files.
+import csv
+import subprocess
+import tempfile
+from pathlib import Path
+
+with tempfile.TemporaryDirectory() as temp:
+    root = Path(temp)
+    hidden = root / ".hidden"
+    nested = root / "nested" / "deep"
+    hidden.mkdir()
+    nested.mkdir(parents=True)
+    (hidden / "secret").write_bytes(b"duplicate")
+    (nested / "copy").write_bytes(b"duplicate")
+
+    result = subprocess.run(
+        ["go", "run", "./cmd/dupfind", str(root)],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0
+    rows = list(csv.DictReader(result.stdout.splitlines()))
+    paths = {row["path"] for row in rows}
+    assert ".hidden/secret" in paths
+    assert "nested/deep/copy" in paths
+
+=== AC discovery-symbolic-link-and-empty ===
+Intent: Symbolic links and empty files are excluded from duplicate listings.
+import csv
+import os
+import subprocess
+import tempfile
+from pathlib import Path
+
+with tempfile.TemporaryDirectory() as temp:
+    root = Path(temp)
+    source = root / "source"
+    source.write_bytes(b"duplicate")
+    os.symlink("source", root / "link")
+    (root / "empty-a").write_bytes(b"")
+    (root / "empty-b").write_bytes(b"")
+
+    result = subprocess.run(
+        ["go", "run", "./cmd/dupfind", str(root)],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0
+    rows = list(csv.DictReader(result.stdout.splitlines()))
+    paths = {row["path"] for row in rows}
+    assert "link" not in paths
+    assert "empty-a" not in paths
+    assert "empty-b" not in paths
+
+=== AC discovery-read-only ===
+Intent: Scanning does not modify files in the examined directory.
+import hashlib
+import subprocess
+import tempfile
+from pathlib import Path
+
+with tempfile.TemporaryDirectory() as temp:
+    root = Path(temp)
+    first = root / "first"
+    second = root / "second"
+    first.write_bytes(b"same")
+    second.write_bytes(b"same")
+    before = {
+        path.relative_to(root): hashlib.sha256(path.read_bytes()).digest()
+        for path in root.rglob("*")
+        if path.is_file() and not path.is_symlink()
+    }
+
+    result = subprocess.run(
+        ["go", "run", "./cmd/dupfind", str(root)],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0
+    after = {
+        path.relative_to(root): hashlib.sha256(path.read_bytes()).digest()
+        for path in root.rglob("*")
+        if path.is_file() and not path.is_symlink()
+    }
+    assert result.returncode == 0
+    assert after == before
+=== END AC discovery-read-only ===
+
+## User Acceptance
+
+- None.
+
+## Guardrails
+
+- Never follow or report symbolic links.
+- Never report empty files.
+- Never write, delete, move, or modify anything beneath the scan directory.
+=== END ARTIFACT ===
+=== BEGIN ARTIFACT FEATURE-FILE-HASHING.md ===
+# FEATURE: File Hashing
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261023 V1 |
+| Description | Defines candidate filtering and exact duplicate grouping by size and SHA-256 digest. |
+| Depends On  | FEATURE-FILE-DISCOVERY.md |
+| Provides    | duplicate candidate grouping |
+| Consumes    | recursive eligible-file discovery |
+
+## Questions
+
+- None.
+
+## Purpose
+
+DupFind applies the positive minimum-size filter, groups candidates by file size before reading contents, and hashes only files sharing a size. Files with equal size but different contents remain separate. Unreadable files are skipped with one warning and do not change the successful exit status.
+
+## Grouping Rules
+
+For each eligible file at or above the minimum size, files are grouped by size. Contents are read only within a size group containing multiple candidates. SHA-256 digests then identify exact duplicate groups. A group is reportable only when it contains at least two files.
+
+## Programmatic Acceptance
+
+=== AC hashing-min-size ===
+Intent: The minimum-size option excludes smaller files while retaining qualifying duplicates.
+import csv
+import subprocess
+import tempfile
+from pathlib import Path
+
+with tempfile.TemporaryDirectory() as temp:
+    root = Path(temp)
+    (root / "small-a").write_bytes(b"x")
+    (root / "small-b").write_bytes(b"x")
+    (root / "large-a").write_bytes(b"large")
+    (root / "large-b").write_bytes(b"large")
+
+    result = subprocess.run(
+        ["go", "run", "./cmd/dupfind", "--min-size", "5", str(root)],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0
+    rows = list(csv.DictReader(result.stdout.splitlines()))
+    paths = {row["path"] for row in rows}
+    assert paths == {"large-a", "large-b"}
+
+=== AC hashing-content-identity ===
+Intent: Equal-sized files with different contents are not grouped as duplicates.
+import csv
+import subprocess
+import tempfile
+from pathlib import Path
+
+with tempfile.TemporaryDirectory() as temp:
+    root = Path(temp)
+    (root / "first").write_bytes(b"abcd")
+    (root / "second").write_bytes(b"abce")
+
+    result = subprocess.run(
+        ["go", "run", "./cmd/dupfind", str(root)],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0
+    rows = list(csv.DictReader(result.stdout.splitlines()))
+    assert rows == []
+
+=== AC hashing-digest ===
+Intent: Exact duplicate groups report the lowercase SHA-256 digest computed from file contents.
+import csv
+import hashlib
+import subprocess
+import tempfile
+from pathlib import Path
+
+with tempfile.TemporaryDirectory() as temp:
+    root = Path(temp)
+    content = b"same bytes"
+    (root / "first").write_bytes(content)
+    (root / "second").write_bytes(content)
+    expected_digest = hashlib.sha256(content).hexdigest()
+
+    result = subprocess.run(
+        ["go", "run", "./cmd/dupfind", str(root)],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0
+    rows = list(csv.DictReader(result.stdout.splitlines()))
+    assert len(rows) == 2
+    assert {row["sha256"] for row in rows} == {expected_digest}
+=== END AC hashing-digest ===
+
+=== AC hashing-unreadable ===
+Intent: An unreadable candidate is skipped without turning a scan into an operational failure.
+import os
+import subprocess
+import tempfile
+from pathlib import Path
+
+with tempfile.TemporaryDirectory() as temp:
+    root = Path(temp)
+    readable_a = root / "readable-a"
+    readable_b = root / "readable-b"
+    unreadable = root / "unreadable"
+    readable_a.write_bytes(b"same")
+    readable_b.write_bytes(b"same")
+    unreadable.write_bytes(b"same")
+    unreadable.chmod(0)
+
+    try:
+        result = subprocess.run(
+            ["go", "run", "./cmd/dupfind", str(root)],
+            capture_output=True,
+            text=True,
+        )
+        assert result.returncode == 0
+    finally:
+        unreadable.chmod(0o600)
+=== END AC hashing-unreadable ===
+
+## User Acceptance
+
+- None.
+
+## Guardrails
+
+- Apply the positive minimum-size filter before hashing.
+- Read contents only for files sharing a size.
+- Use SHA-256 and lowercase hexadecimal output.
+- Skip unreadable files with one stderr warning and preserve successful exit status.
+=== END ARTIFACT ===

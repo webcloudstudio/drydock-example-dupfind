@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>workspace/targets/DupFind/blueprint/FEATURE-DIRECTORY-VALIDATION.md</title>
+<link rel="stylesheet" href="../../../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>workspace/targets/DupFind/blueprint/FEATURE-DIRECTORY-VALIDATION.md</h1><div class="filenav"><a href="../../../../../index.html">&larr; Report</a><a href="../../../../../workspace/targets/DupFind/blueprint/FEATURE-DIRECTORY-VALIDATION.md">Raw file</a></div></header>
+<article class="doc"><h1>FEATURE: Directory Validation</h1>
+<div class="scroll"><table><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Version</td><td>20261023 V1</td></tr><tr><td>Description</td><td>Defines validation of the requested scan path before filesystem traversal.</td></tr><tr><td>Depends On</td><td>FEATURE-CLI-OPTIONS.md</td></tr><tr><td>Provides</td><td>scan-directory validation</td></tr><tr><td>Consumes</td><td>dupfind option parsing</td></tr></tbody></table></div>
+<h2>Purpose</h2>
+<p>After successful option parsing, DupFind validates that the supplied path exists and is a directory.</p>
+<h2>Behavior</h2>
+<p>A missing path or a path naming a regular file is an operational failure. The command returns exit status 1, writes no standard output, and emits a diagnostic on standard error. A valid directory proceeds to discovery.</p>
+<h2>Programmatic Acceptance</h2>
+<p>=== AC directory-missing ===<br>Intent: A missing scan path returns operational failure without CSV output. import subprocess import tempfile from pathlib import Path</p>
+<p>with tempfile.TemporaryDirectory() as temp: missing = Path(temp) / &quot;missing&quot; result = subprocess.run( [&quot;go&quot;, &quot;run&quot;, &quot;./cmd/dupfind&quot;, str(missing)], capture_output=True, text=True, ) assert result.returncode == 1 assert result.stdout == &quot;&quot; assert result.stderr != &quot;&quot;</p>
+<p>=== END AC directory-missing === === AC directory-file ===<br>Intent: A regular file supplied as the scan path returns operational failure without CSV output. import subprocess import tempfile from pathlib import Path</p>
+<p>with tempfile.TemporaryDirectory() as temp: path = Path(temp) / &quot;input&quot; path.write_bytes(b&quot;content&quot;) result = subprocess.run( [&quot;go&quot;, &quot;run&quot;, &quot;./cmd/dupfind&quot;, str(path)], capture_output=True, text=True, ) assert result.returncode == 1 assert result.stdout == &quot;&quot; assert result.stderr != &quot;&quot;</p>
+<p>=== END AC directory-file === === AC directory-success ===<br>Intent: An existing directory is accepted and produces a successful result. import csv import subprocess import tempfile from pathlib import Path</p>
+<p>with tempfile.TemporaryDirectory() as temp: root = Path(temp) result = subprocess.run( [&quot;go&quot;, &quot;run&quot;, &quot;./cmd/dupfind&quot;, str(root)], capture_output=True, text=True, ) assert result.returncode == 0 rows = list(csv.reader(result.stdout.splitlines())) assert rows[0][0] == &quot;group&quot; === END AC directory-success ===</p>
+<h2>User Acceptance</h2>
+<ul><li>None.</li></ul>
+<h2>Guardrails</h2>
+<ul><li>Directory validation occurs before traversal.</li><li>Operational failures write no standard output.</li><li>Validation must not modify the supplied path.</li></ul></article>
+</main>
+</body>
+</html>

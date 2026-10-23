@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>workspace/targets/DupFind/blueprint/FEATURE-TEST-GATE.md</title>
+<link rel="stylesheet" href="../../../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>workspace/targets/DupFind/blueprint/FEATURE-TEST-GATE.md</h1><div class="filenav"><a href="../../../../../index.html">&larr; Report</a><a href="../../../../../workspace/targets/DupFind/blueprint/FEATURE-TEST-GATE.md">Raw file</a></div></header>
+<article class="doc"><h1>FEATURE: Test Gate</h1>
+<div class="scroll"><table><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Version</td><td>20261023 V1</td></tr><tr><td>Description</td><td>Provide the local POSIX test and vet gate.</td></tr><tr><td>Depends On</td><td>ARCHITECTURE.md</td></tr><tr><td>Provides</td><td>bin/test.sh</td></tr><tr><td>Consumes</td><td>Go module and application test suite</td></tr></tbody></table></div>
+<h2>Purpose</h2>
+<p>The project test gate provides one root-relative POSIX shell command that verifies static analysis and the complete Go test suite.</p>
+<h2>Behavior</h2>
+<ul><li><code>bin/test.sh</code> executes from the application root.</li><li>It runs <code>go vet ./...</code> and <code>go test ./...</code>.</li><li>It exits zero only when both commands succeed.</li><li>It propagates failure rather than masking a failed command.</li><li>Focused Go tests cover CLI behavior, discovery, grouping, ordering, and serialization.</li></ul>
+<h2>Programmatic Acceptance</h2>
+<p>=== AC test-gate-present-and-passing ===<br>Intent: The project test gate exists and completes successfully from the application root.</p>
+<p>import os import subprocess from pathlib import Path</p>
+<p>gate = Path(&quot;bin/test.sh&quot;) assert gate.is_file() result = subprocess.run( [&quot;sh&quot;, str(gate)], capture_output=True, text=True, cwd=os.getcwd(), ) print(result.stdout) print(result.stderr) assert result.returncode == 0 === END AC test-gate-present-and-passing ===</p>
+<p>=== AC test-gate-is-posix-shell ===<br>Intent: The test gate can be executed by a POSIX shell without requiring a different shell.</p>
+<p>import os import subprocess from pathlib import Path</p>
+<p>gate = Path(&quot;bin/test.sh&quot;) assert gate.is_file() result = subprocess.run( [&quot;sh&quot;, str(gate)], capture_output=True, text=True, cwd=os.getcwd(), ) print(result.stdout) print(result.stderr) assert result.returncode == 0 === END AC test-gate-is-posix-shell ===</p>
+<h2>User Acceptance</h2>
+<ul><li>None.</li></ul>
+<h2>Guardrails</h2>
+<ul><li>The test gate must not modify supplied conformance assets.</li><li>The test gate must run from the application root and use the module&#x27;s Go toolchain.</li></ul></article>
+</main>
+</body>
+</html>

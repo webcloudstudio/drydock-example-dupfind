@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>workspace/targets/DupFind/blueprint/FEATURE-FILE-DISCOVERY.md</title>
+<link rel="stylesheet" href="../../../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>workspace/targets/DupFind/blueprint/FEATURE-FILE-DISCOVERY.md</h1><div class="filenav"><a href="../../../../../index.html">&larr; Report</a><a href="../../../../../workspace/targets/DupFind/blueprint/FEATURE-FILE-DISCOVERY.md">Raw file</a></div></header>
+<article class="doc"><h1>FEATURE: File Discovery</h1>
+<div class="scroll"><table><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Version</td><td>20261023 V1</td></tr><tr><td>Description</td><td>Defines recursive selection of eligible regular files beneath the scan directory.</td></tr><tr><td>Depends On</td><td>FEATURE-DIRECTORY-VALIDATION.md</td></tr><tr><td>Provides</td><td>recursive eligible-file discovery</td></tr><tr><td>Consumes</td><td>scan-directory validation</td></tr></tbody></table></div>
+<h2>Purpose</h2>
+<p>DupFind recursively walks the validated directory, including hidden entries and directories. It considers regular files only and ignores symbolic links and zero-byte files.</p>
+<h2>Discovery Rules</h2>
+<ul><li>Hidden files and directories are included.</li><li>Regular files are eligible.</li><li>Symbolic links are neither followed nor reported.</li><li>Empty files are ignored.</li><li>The examined tree is read-only from DupFind&#x27;s perspective.</li></ul>
+<h2>Programmatic Acceptance</h2>
+<p>=== AC discovery-hidden-and-recursive ===<br>Intent: Recursive discovery includes hidden files and nested regular files. import csv import subprocess import tempfile from pathlib import Path</p>
+<p>with tempfile.TemporaryDirectory() as temp: root = Path(temp) hidden = root / &quot;.hidden&quot; nested = root / &quot;nested&quot; / &quot;deep&quot; hidden.mkdir() nested.mkdir(parents=True) (hidden / &quot;secret&quot;).write_bytes(b&quot;duplicate&quot;) (nested / &quot;copy&quot;).write_bytes(b&quot;duplicate&quot;)</p>
+<p>result = subprocess.run( [&quot;go&quot;, &quot;run&quot;, &quot;./cmd/dupfind&quot;, str(root)], capture_output=True, text=True, ) assert result.returncode == 0 rows = list(csv.DictReader(result.stdout.splitlines())) paths = {row[&quot;path&quot;] for row in rows} assert &quot;.hidden/secret&quot; in paths assert &quot;nested/deep/copy&quot; in paths</p>
+<p>=== END AC discovery-hidden-and-recursive === === AC discovery-symbolic-link-and-empty ===<br>Intent: Symbolic links and empty files are excluded from duplicate listings. import csv import os import subprocess import tempfile from pathlib import Path</p>
+<p>with tempfile.TemporaryDirectory() as temp: root = Path(temp) source = root / &quot;source&quot; source.write_bytes(b&quot;duplicate&quot;) os.symlink(&quot;source&quot;, root / &quot;link&quot;) (root / &quot;empty-a&quot;).write_bytes(b&quot;&quot;) (root / &quot;empty-b&quot;).write_bytes(b&quot;&quot;)</p>
+<p>result = subprocess.run( [&quot;go&quot;, &quot;run&quot;, &quot;./cmd/dupfind&quot;, str(root)], capture_output=True, text=True, ) assert result.returncode == 0 rows = list(csv.DictReader(result.stdout.splitlines())) paths = {row[&quot;path&quot;] for row in rows} assert &quot;link&quot; not in paths assert &quot;empty-a&quot; not in paths assert &quot;empty-b&quot; not in paths</p>
+<p>=== END AC discovery-symbolic-link-and-empty === === AC discovery-read-only ===<br>Intent: Scanning does not modify files in the examined directory. import hashlib import subprocess import tempfile from pathlib import Path</p>
+<p>with tempfile.TemporaryDirectory() as temp: root = Path(temp) first = root / &quot;first&quot; second = root / &quot;second&quot; first.write_bytes(b&quot;same&quot;) second.write_bytes(b&quot;same&quot;) before = { path.relative_to(root): hashlib.sha256(path.read_bytes()).digest() for path in root.rglob(&quot;*&quot;) if path.is_file() and not path.is_symlink() }</p>
+<p>result = subprocess.run( [&quot;go&quot;, &quot;run&quot;, &quot;./cmd/dupfind&quot;, str(root)], capture_output=True, text=True, ) assert result.returncode == 0 after = { path.relative_to(root): hashlib.sha256(path.read_bytes()).digest() for path in root.rglob(&quot;*&quot;) if path.is_file() and not path.is_symlink() } assert result.returncode == 0 assert after == before === END AC discovery-read-only ===</p>
+<h2>User Acceptance</h2>
+<ul><li>None.</li></ul>
+<h2>Guardrails</h2>
+<ul><li>Never follow or report symbolic links.</li><li>Never report empty files.</li><li>Never write, delete, move, or modify anything beneath the scan directory.</li></ul></article>
+</main>
+</body>
+</html>

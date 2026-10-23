@@ -1,0 +1,157 @@
+{
+  "version": 1,
+  "import": {
+    "root": "/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261023.224149/sources",
+    "format": "markdown"
+  },
+  "sources": {
+    "INSTRUCTIONS.md": {
+      "state": "current",
+      "versions": [
+        {
+          "commit": "9b92345",
+          "date": "2026-10-23",
+          "hash": "189cd54671b6072a66ab49cb47f2b4475c0beb5e75131b43b5d258fb289ec1ed",
+          "release": "",
+          "state": "consumed",
+          "via": "plan",
+          "ticket": null,
+          "requirements": [
+            {
+              "name": "go-application-structure",
+              "text": "Implement in Go 1.22 or newer using only the standard library. The application root is a Go module, and its executable is the main package at `./cmd/dupfind`. Tests run under `go test`.",
+              "stories": [
+                "architecture"
+              ]
+            },
+            {
+              "name": "parse-command-options",
+              "text": "dupfind [--summary] [--min-size &lt;bytes&gt;] &lt;directory&gt;",
+              "stories": [
+                "cli-options"
+              ]
+            },
+            {
+              "name": "validate-scan-directory",
+              "text": "The tool walks &lt;directory&gt; recursively, including hidden files and directories\n(names beginning `.`).",
+              "stories": [
+                "directory-validation"
+              ]
+            },
+            {
+              "name": "discover-eligible-files",
+              "text": "It considers regular files only. It neither follows nor reports symbolic links.",
+              "stories": [
+                "file-discovery"
+              ]
+            },
+            {
+              "name": "group-duplicate-files",
+              "text": "Files are grouped by size first. Only files that share a size are read.\nWithin a size, files are grouped by the SHA-256 digest of their contents. A group of two or\nmore files with the same size and digest is a duplicate group.",
+              "stories": [
+                "file-hashing"
+              ]
+            },
+            {
+              "name": "emit-listing-report",
+              "text": "Listing (default): header `group,size,sha256,path`, then one row per file in every duplicate\ngroup.",
+              "stories": [
+                "listing-report"
+              ]
+            },
+            {
+              "name": "emit-summary-report",
+              "text": "Summary (`--summary`): header `groups,duplicate_files,reclaimable_bytes`, then one row.",
+              "stories": [
+                "summary-report"
+              ]
+            },
+            {
+              "name": "run-test-and-vet-gate",
+              "text": "The completed application provides a POSIX-compatible `bin/test.sh` that runs\n`go vet ./...` and `go test ./...` from the application root and exits zero only when both pass.",
+              "stories": [
+                "test-gate"
+              ]
+            },
+            {
+              "name": "pass-conformance-suite",
+              "text": "The harness runs `go build -o &lt;temporary path&gt; ./cmd/dupfind`, creates a fixed directory tree in a\ntemporary directory, and then runs 15 checks.",
+              "stories": [
+                "conformance"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "run.sh": {
+      "state": "current",
+      "versions": [
+        {
+          "commit": "9b92345",
+          "date": "2026-10-23",
+          "hash": "dc265eae016629662090b0465362c0642ea7deb57afd77c5725652d0969f880d",
+          "release": "",
+          "state": "consumed",
+          "via": "plan",
+          "ticket": null,
+          "requirements": [
+            {
+              "name": "full-listing",
+              "text": "# \u2500\u2500 A. Full listing \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
+              "stories": [
+                "file-discovery",
+                "file-hashing",
+                "listing-report"
+              ]
+            },
+            {
+              "name": "summary-report",
+              "text": "# \u2500\u2500 B. Summary \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
+              "stories": [
+                "summary-report",
+                "file-discovery",
+                "file-hashing"
+              ]
+            },
+            {
+              "name": "minimum-size-filter",
+              "text": "# \u2500\u2500 C. Minimum size \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
+              "stories": [
+                "cli-options",
+                "file-discovery",
+                "file-hashing",
+                "listing-report",
+                "summary-report"
+              ]
+            },
+            {
+              "name": "no-duplicates",
+              "text": "# \u2500\u2500 D. No duplicates \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
+              "stories": [
+                "file-discovery",
+                "file-hashing",
+                "listing-report",
+                "summary-report"
+              ]
+            },
+            {
+              "name": "operational-failures",
+              "text": "# \u2500\u2500 E. Operational failures \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
+              "stories": [
+                "directory-validation"
+              ]
+            },
+            {
+              "name": "usage-errors",
+              "text": "# \u2500\u2500 U. Usage errors \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
+              "stories": [
+                "cli-options"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

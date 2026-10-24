@@ -1,0 +1,73 @@
+Drydock 0.8.0  Copyright (c) 2026 Web Cloud Studio. All rights reserved.
+  ✓ PASS        [1/17]  architecture-cli-contract    architecture        ARCHITECTURE.md
+  ✓ PASS        [2/17]  architecture-package-layout  architecture        ARCHITECTURE.md
+  ✓ PASS        [3/17]  build-command                build-executable    FEATURE-Build.md
+  ✓ PASS        [4/17]  build-test-entry             build-executable    FEATURE-Build.md
+  ✓ PASS        [5/17]  command-help-usage           command-options     FEATURE-Command.md
+  ✓ PASS        [6/17]  command-invalid-option       command-options     FEATURE-Command.md
+  ✓ PASS        [7/17]  command-invalid-size         command-options     FEATURE-Command.md
+  ✓ PASS        [8/17]  scan-groups-exact-files      scan-and-group      FEATURE-Scanning.md
+  ✓ PASS        [9/17]  scan-symlinks-and-empty      scan-and-group      FEATURE-Scanning.md
+  ✓ PASS        [10/17]  scan-read-only               scan-and-group      FEATURE-Scanning.md
+  ✓ PASS        [11/17]  ordering-conformance         order-results       FEATURE-Ordering.md
+  ✓ PASS        [12/17]  listing-output               listing-csv         FEATURE-Listing.md
+  ✓ PASS        [13/17]  listing-empty                listing-csv         FEATURE-Listing.md
+  ✓ PASS        [14/17]  summary-totals               summary-csv         FEATURE-Summary.md
+  ✓ PASS        [15/17]  summary-empty                summary-csv         FEATURE-Summary.md
+  ✓ PASS        [16/17]  test-harness                 test-harness        FEATURE-Tests.md
+  ✓ PASS        [17/17]  full-grader                  conformance-grader  VERIFICATION.md
+
+Acceptance verification: DupFind  (2026-10-24T14:13:38+00:00)
+  PASS 13   FAIL 0   UNVERIFIED 0   PREPASSED 4   (17 AC)
+
+  ✓ PASS        architecture-cli-contract    architecture        ARCHITECTURE.md
+  ✓ PASS        architecture-package-layout  architecture        ARCHITECTURE.md
+  ~ PREPASSED   build-command                build-executable    FEATURE-Build.md
+  ~ PREPASSED   build-test-entry             build-executable    FEATURE-Build.md
+  ~ PREPASSED   command-help-usage           command-options     FEATURE-Command.md
+  ✓ PASS        command-invalid-option       command-options     FEATURE-Command.md
+  ✓ PASS        command-invalid-size         command-options     FEATURE-Command.md
+  ✓ PASS        scan-groups-exact-files      scan-and-group      FEATURE-Scanning.md
+  ✓ PASS        scan-symlinks-and-empty      scan-and-group      FEATURE-Scanning.md
+  ✓ PASS        scan-read-only               scan-and-group      FEATURE-Scanning.md
+  ✓ PASS        ordering-conformance         order-results       FEATURE-Ordering.md
+  ✓ PASS        listing-output               listing-csv         FEATURE-Listing.md
+  ~ PREPASSED   listing-empty                listing-csv         FEATURE-Listing.md
+  ✓ PASS        summary-totals               summary-csv         FEATURE-Summary.md
+  ✓ PASS        summary-empty                summary-csv         FEATURE-Summary.md
+  ✓ PASS        test-harness                 test-harness        FEATURE-Tests.md
+  ✓ PASS        full-grader                  conformance-grader  VERIFICATION.md
+
+  ~ PREPASSED   build-command
+        intent: Building the declared executable package succeeds.
+        green at this block's baseline too, before its code existed — confirm the criterion exercises the story's work
+
+  ~ PREPASSED   build-test-entry
+        intent: The Go test runner recognizes the application packages.
+        green at this block's baseline too, before its code existed — confirm the criterion exercises the story's work
+
+  ~ PREPASSED   command-help-usage
+        intent: Help includes a description of the command and its supported options.
+        green at this block's baseline too, before its code existed — confirm the criterion exercises the story's work
+
+  ~ PREPASSED   listing-empty
+        intent: A directory with no duplicates produces a header-only listing.
+        green at this block's baseline too, before its code existed — confirm the criterion exercises the story's work
+
+  Run `drydock score ac DupFind --full` for untruncated output per failure.
+
+
+  Proof coverage: 13 of 17 criteria are proof — green here, and observed red before the work that turned them green.
+    4 are not. Each names a story whose acceptance did not test it.
+
+    PREPASSED  build-command  build-executable  FEATURE-Build.md
+               green before its block built
+    PREPASSED  build-test-entry  build-executable  FEATURE-Build.md
+               green before its block built
+    PREPASSED  command-help-usage  command-options  FEATURE-Command.md
+               green before its block built
+    PREPASSED  listing-empty  listing-csv  FEATURE-Listing.md
+               green before its block built
+
+Soundings: /mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261024.140514/workspace/targets/DupFind/SOUNDINGS.md
+Target - committed project workspace git store

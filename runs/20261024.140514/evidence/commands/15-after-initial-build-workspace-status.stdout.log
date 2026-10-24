@@ -1,0 +1,16 @@
+Drydock 0.8.0  Copyright (c) 2026 Web Cloud Studio. All rights reserved.
+Drydock status — workspace
+
+Target: DupFind
+   Phase:     Loop
+   State:     9 closed/implemented
+   Detail:    2 imported · 9 authored · metadata built
+   Analysis:  Ready · 8 stories · 0 questions · 0 blockers
+   Plan:      9 closed/implemented
+   Next Step: drydock refit DupFind BOTH <Scope> <Change>
+   10-24:     ✅  drydock build status DupFind
+   10-24:     ✅  drydock build DupFind --override --repair-attempts 6
+   10-24:     ✅  drydock build status DupFind
+   10-24:     ✅  drydock plan verify DupFind
+   10-24:     ✅  drydock plan DupFind --override
+

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>evidence/prompt_outputs/20261024.140741.142Z_dupfind_lineage_attribute_codex.output.txt</title>
+<link rel="stylesheet" href="../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>evidence/prompt_outputs/20261024.140741.142Z_dupfind_lineage_attribute_codex.output.txt</h1><div class="filenav"><a href="../../../index.html">&larr; Report</a><a href="../../../evidence/prompt_outputs/20261024.140741.142Z_dupfind_lineage_attribute_codex.output.txt">Raw file</a></div></header>
+<article class="doc"><pre>&lt;requirement name=&quot;build-dupfind-executable&quot; stories=&quot;build-executable,conformance-grader&quot;&gt;
+Builds ./cmd/dupfind with `go build`
+&lt;/requirement&gt;
+&lt;requirement name=&quot;create-fixed-exam-tree&quot; stories=&quot;conformance-grader&quot;&gt;
+# make_tree &amp;lt;dir&amp;gt; — the exam tree. Every byte is fixed, so every hash is known.
+&lt;/requirement&gt;
+&lt;requirement name=&quot;compare-command-results&quot; stories=&quot;conformance-grader&quot;&gt;
+# check &amp;lt;id&amp;gt; &amp;lt;expected exit&amp;gt; &amp;lt;dupfind args...&amp;gt;  — expected standard output on stdin.
+&lt;/requirement&gt;
+&lt;requirement name=&quot;list-duplicate-files&quot; stories=&quot;scan-and-group,order-results,listing-csv,conformance-grader&quot;&gt;
+# ── A. Full listing ──────────────────────────────────────────────────────────────────────
+&lt;/requirement&gt;
+&lt;requirement name=&quot;summarize-duplicates&quot; stories=&quot;summary-csv,conformance-grader&quot;&gt;
+# ── B. Summary ───────────────────────────────────────────────────────────────────────────
+&lt;/requirement&gt;
+&lt;requirement name=&quot;filter-by-minimum-size&quot; stories=&quot;command-options,scan-and-group,summary-csv,listing-csv,conformance-grader&quot;&gt;
+# ── C. Minimum size ──────────────────────────────────────────────────────────────────────
+&lt;/requirement&gt;
+&lt;requirement name=&quot;handle-empty-duplicate-results&quot; stories=&quot;scan-and-group,listing-csv,summary-csv,conformance-grader&quot;&gt;
+# ── D. No duplicates ─────────────────────────────────────────────────────────────────────
+&lt;/requirement&gt;
+&lt;requirement name=&quot;report-invalid-path-errors&quot; stories=&quot;command-options,conformance-grader&quot;&gt;
+# ── E. Operational failures ─────────────────────────────────────────────────────────────
+&lt;/requirement&gt;
+&lt;requirement name=&quot;reject-invalid-cli-usage&quot; stories=&quot;command-options,conformance-grader&quot;&gt;
+# ── U. Usage errors ──────────────────────────────────────────────────────────────────────
+&lt;/requirement&gt;
+&lt;unattached story=&quot;architecture&quot;/&gt;
+&lt;unattached story=&quot;order-results&quot;/&gt;
+&lt;unattached story=&quot;test-harness&quot;/&gt;</pre></article>
+</main>
+</body>
+</html>

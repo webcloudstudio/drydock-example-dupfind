@@ -1,0 +1,269 @@
+=== BEGIN ARTIFACT FEATURE-Listing.md ===
+# FEATURE: Duplicate Listing
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261024 V1 |
+| Description | Defines the duplicate file CSV listing. |
+| Depends On  | FEATURE-Ordering.md |
+| Provides    | default CSV listing |
+| Consumes    | ordered duplicate groups and relative paths |
+
+## Questions
+
+- None.
+
+## Purpose
+
+The default command output is a CSV listing of every file in every duplicate group. It uses the ordered groups and relative paths provided by `FEATURE-Ordering.md`.
+
+## Output
+
+The CSV header is `group,size,sha256,path`. Each subsequent row contains the group number, file size in bytes, lowercase hexadecimal SHA-256 digest, and relative path. Emit one row per file in every duplicate group. When no duplicates exist, emit the header only.
+
+Use Go's `encoding/csv` writer, with `\n` line endings and RFC 4180 field quoting.
+
+## Programmatic Acceptance
+
+=== AC listing-output ===
+Intent: The command emits the specified CSV header and one row for each duplicate file, with paths parsed as CSV fields.
+
+import csv
+import hashlib
+import io
+import os
+import pathlib
+import subprocess
+
+root = pathlib.Path("listing-fixture")
+(root / "a").mkdir(parents=True, exist_ok=True)
+payload = b"listing input\n"
+(root / "a" / "first.txt").write_bytes(payload)
+(root / "second,copy.txt").write_bytes(payload)
+result = subprocess.run(
+    ["./dupfind", str(root)],
+    capture_output=True,
+    text=True,
+)
+assert result.returncode == 0, (result.stdout, result.stderr)
+rows = list(csv.reader(io.StringIO(result.stdout)))
+digest = hashlib.sha256(payload).hexdigest()
+assert rows[0] == ["group", "size", "sha256", "path"]
+assert rows[1:] == [
+    ["1", str(len(payload)), digest, "a/first.txt"],
+    ["1", str(len(payload)), digest, "second,copy.txt"],
+]
+=== END AC listing-output ===
+
+=== AC listing-empty ===
+Intent: A directory with no duplicates produces a header-only listing.
+import csv
+import io
+import pathlib
+import subprocess
+
+root = pathlib.Path("listing-empty-fixture")
+root.mkdir(parents=True, exist_ok=True)
+(root / "single.txt").write_text("only one\n")
+result = subprocess.run(
+    ["./dupfind", str(root)],
+    capture_output=True,
+    text=True,
+)
+assert result.returncode == 0, (result.stdout, result.stderr)
+rows = list(csv.reader(io.StringIO(result.stdout)))
+assert rows[1:] == []
+=== END AC listing-empty ===
+
+## User Acceptance
+
+- None.
+
+## Guardrails
+
+- Listing never modifies, moves, or deletes examined files.
+=== END ARTIFACT ===
+=== BEGIN ARTIFACT FEATURE-Summary.md ===
+# FEATURE: Duplicate Summary
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261024 V1 |
+| Description | Defines the summary of duplicate groups and reclaimable space. |
+| Depends On  | FEATURE-Ordering.md |
+| Provides    | --summary CSV output |
+| Consumes    | ordered duplicate groups and relative paths |
+
+## Questions
+
+- None.
+
+## Purpose
+
+When `--summary` is supplied, write a single CSV row summarizing the duplicate groups that the listing would produce with the same options.
+
+## Output
+
+The CSV header is `groups,duplicate_files,reclaimable_bytes`, followed by one row containing:
+
+- The number of duplicate groups.
+- The sum of `files − 1` across all groups.
+- The sum of `size × (files − 1)` across all groups.
+
+With no duplicates, emit `0,0,0` as the data row. Use `encoding/csv` and `\n` line endings.
+
+## Programmatic Acceptance
+
+=== AC summary-totals ===
+Intent: The summary reports totals derived from the same duplicate groups as the listing.
+import csv
+import io
+import pathlib
+import subprocess
+
+root = pathlib.Path("summary-fixture")
+root.mkdir(parents=True, exist_ok=True)
+payload_a = b"summary group a\n"
+payload_b = b"summary group b\n"
+(root / "a1").write_bytes(payload_a)
+(root / "a2").write_bytes(payload_a)
+(root / "a3").write_bytes(payload_a)
+(root / "b1").write_bytes(payload_b)
+(root / "b2").write_bytes(payload_b)
+result = subprocess.run(
+    ["./dupfind", "--summary", str(root)],
+    capture_output=True,
+    text=True,
+)
+assert result.returncode == 0, (result.stdout, result.stderr)
+rows = list(csv.reader(io.StringIO(result.stdout)))
+assert rows[0] == ["groups", "duplicate_files", "reclaimable_bytes"]
+assert rows[1:] == [
+    [
+        "2",
+        str((3 - 1) + (2 - 1)),
+        str(len(payload_a) * (3 - 1) + len(payload_b) * (2 - 1)),
+    ]
+]
+=== END AC summary-totals ===
+
+=== AC summary-empty ===
+Intent: A directory with no duplicates reports zero totals.
+import csv
+import io
+import pathlib
+import subprocess
+
+root = pathlib.Path("summary-empty-fixture")
+root.mkdir(parents=True, exist_ok=True)
+(root / "single.txt").write_bytes(b"unique")
+result = subprocess.run(
+    ["./dupfind", "--summary", str(root)],
+    capture_output=True,
+    text=True,
+)
+assert result.returncode == 0, (result.stdout, result.stderr)
+rows = list(csv.reader(io.StringIO(result.stdout)))
+assert rows[1:] == [["0", "0", "0"]]
+=== END AC summary-empty ===
+
+## User Acceptance
+
+- None.
+
+## Guardrails
+
+- Summary totals are computed from the duplicate groups; do not hardcode counts or byte totals.
+=== END ARTIFACT ===
+=== BEGIN ARTIFACT FEATURE-Tests.md ===
+# FEATURE: Go Test Harness
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261024 V1 |
+| Description | Defines the project quality test entry point. |
+| Depends On  | ARCHITECTURE.md, FEATURE-Build.md |
+| Provides    | bin/test.sh |
+| Consumes    | go vet ./..., go test ./... |
+
+## Questions
+
+- None.
+
+## Purpose
+
+Provide a POSIX-compatible `bin/test.sh` at the application root. It runs `go vet ./...` and `go test ./...` from that root and exits zero only when both pass.
+
+## Programmatic Acceptance
+
+=== AC test-harness ===
+Intent: The test entry point runs vet and the Go test suite and succeeds when both succeed.
+import os
+import subprocess
+
+script = "bin/test.sh"
+os.makedirs("bin", exist_ok=True)
+result = subprocess.run(
+    ["sh", script],
+    capture_output=True,
+    text=True,
+)
+assert result.returncode == 0, (result.stdout, result.stderr)
+=== END AC test-harness ===
+
+## User Acceptance
+
+- None.
+
+## Guardrails
+
+- The script must not report success when either `go vet ./...` or `go test ./...` fails.
+=== END ARTIFACT===
+=== BEGIN ARTIFACT VERIFICATION.md===
+# FEATURE: Supplied Grader Verification
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261024 V1 |
+| Description | Defines the terminal verification against the supplied grader. |
+| Depends On  | ARCHITECTURE.md, FEATURE-Build.md, FEATURE-Command.md, FEATURE-Scanning.md, FEATURE-Ordering.md, FEATURE-Listing.md, FEATURE-Summary.md, FEATURE-Tests.md |
+| Provides    | full supplied grader verification |
+| Consumes    | sources/run.sh |
+
+## Questions
+
+- None.
+
+## Purpose
+
+The supplied `sources/run.sh` is the authoritative final conformance grader. Run it from the completed application root; its exit status is the acceptance verdict. The staged grader compares command exit codes and standard output against its fixed directory tree. Standard error is diagnostic only.
+
+Do not modify, rewrite, regenerate, substitute, or read the grader from application code.
+
+## Programmatic Acceptance
+
+=== AC full-grader ===
+Intent: The complete supplied grader passes all 15 checks.
+Suite: full
+
+import subprocess
+
+result = subprocess.run(
+    ["sh", "sources/run.sh"],
+    capture_output=True,
+    text=True,
+)
+print(result.stdout)
+print(result.stderr)
+assert result.returncode == 0
+=== END AC full-grader ===
+
+## User Acceptance
+
+- None.
+
+## Guardrails
+
+- The grader is staged context and must remain verbatim.
+- Verification runs only after all implementation stories are complete.
+=== END ARTIFACT

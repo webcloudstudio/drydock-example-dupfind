@@ -1,0 +1,41 @@
+Drydock 0.8.0  Copyright (c) 2026 Web Cloud Studio. All rights reserved.
+Build: DupFind
+scope: entire project
+frontier: architecture
+git: baseline DupFind 4305408797f8
+git: baseline DupFind f9a6cc9db82b
+
+BLOCK block-1  name="Block 1 · Foundational"  calls_max=7
+  story=architecture  "Establish the Go module and application boundaries."
+
+  [call 1/7]  kind=initial  llm=codex/gpt-6-luna
+    result=ok  rc=0  execution=20261024.140854.923Z-00f76a5e
+    acceptance=2/2
+git: block-1 | go.md, ARCHITECTURE.md | call=1 | app=0b234df8ecbb target=a1a5842cc9d2
+
+  DONE  story=architecture  state=closed/implemented  execution=20261024.140854.923Z-00f76a5e  elapsed=1m44s
+git: block-1 | go.md, ARCHITECTURE.md | step_completed | app=unchanged target=b9c4ed921dda
+
+BLOCK block-2  name="Block 2 · Service"  calls_max=7
+  story=build-executable  "Provide the dupfind executable and build contract."
+  story=command-options  "Parse command options and validate the directory argument."
+  story=scan-and-group  "Find exact duplicate regular files in a directory tree."
+  story=order-results  "Order duplicate groups and paths deterministically."
+  story=listing-csv  "Write the duplicate listing as CSV."
+  story=summary-csv  "Write duplicate group and reclaimable-space totals."
+  story=test-harness  "Provide the project quality test entry point."
+  story=conformance-grader  "Pass the supplied duplicate-finder conformance grader."
+
+  [call 1/7]  kind=initial  llm=codex/gpt-6-luna
+    result=ok  rc=0  execution=20261024.141118.657Z-b16e4dc5
+    acceptance=15/15
+git: block-2 | FEATURE-Build.md, FEATURE-Command.md, FEATURE-Scanning.md, FEATURE-Ordering.md, FEATURE-Listing.md, FEATURE-Summary.md, FEATURE-Tests.md, VERIFICATION.md | call=1 | app=e669dfb13af9 target=19a712b24497
+
+  DONE  story=build-executable  state=closed/implemented  execution=20261024.141118.657Z-b16e4dc5  elapsed=2m39s
+git: block-2 | FEATURE-Build.md, FEATURE-Command.md, FEATURE-Scanning.md, FEATURE-Ordering.md, FEATURE-Listing.md, FEATURE-Summary.md, FEATURE-Tests.md, VERIFICATION.md | step_completed | app=unchanged target=ad5cf79edd27
+git: build complete DupFind 68eaa4f2431d
+git: build complete DupFind 53b2c009146a
+
+result: 9 built, 0 failed, 0 unchanged
+elapsed: 4 minutes 51 seconds
+Target - committed project workspace git store

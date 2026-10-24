@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>evidence/prompts/20261024.141118.657Z_dupfind_build_codex.prompt.md</title>
+<link rel="stylesheet" href="../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>evidence/prompts/20261024.141118.657Z_dupfind_build_codex.prompt.md</h1><div class="filenav"><a href="../../../index.html">&larr; Report</a><a href="../../../evidence/prompts/20261024.141118.657Z_dupfind_build_codex.prompt.md">Raw file</a></div></header>
+<article class="doc"><h1>System Instructions</h1>
+<p>This prompt is divided into three sections:</p>
+<ol><li><strong>System Instructions</strong> (this section) — structural orientation only. Do not treat this</li></ol>
+<p>section as task input.</p>
+<ol><li><strong>Input Context</strong> — begins with the heading <code># Input Context</code>. All blocks are wrapped in</li></ol>
+<p><code>&lt;pblock&gt;</code> tags. Two block types:</p>
+<ul><li>File blocks: <code>&lt;pblock filename=&quot;&lt;name&gt;&quot; role=&quot;&lt;role&gt;&quot; guidance=&quot;...&quot;&gt;</code> — optional</li></ul>
+<p><code>guidance</code> attribute carries context-specific instructions; content is in a fenced block.</p>
+<ul><li>Metadata/section blocks: <code>&lt;pblock label=&quot;&lt;label&gt;&quot; kind=&quot;&lt;kind&gt;&quot;&gt;</code> — job parameters,</li></ul>
+<p>rules, instructions, or group headers.</p>
+<ol><li><strong>Agent Task</strong> — begins with the heading <code># Agent Task</code>. Defines your persona, constraints,</li></ol>
+<p>and required outputs. Read all input context before acting on this section.</p>
+<h1>Input Context</h1>
+<p>&lt;pblock label=&quot;Build block job&quot; kind=&quot;job&quot;&gt;</p>
+<h2>Build block job</h2>
+<ul><li>TARGET: DupFind</li><li>BUILD_DIRECTORY: /mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261024.140514/build/DupFind</li><li>WORKING_DIRECTORY: /mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261024.140514/build/DupFind</li><li>BUILD_BLOCK: Block 2 · Service (block-2)</li><li>STORIES: Provide the dupfind executable and build contract. (build-executable), Parse command options and validate the directory argument. (command-options), Find exact duplicate regular files in a directory tree. (scan-and-group), Order duplicate groups and paths deterministically. (order-results), Write the duplicate listing as CSV. (listing-csv), Write duplicate group and reclaimable-space totals. (summary-csv), Provide the project quality test entry point. (test-harness), Pass the supplied duplicate-finder conformance grader. (conformance-grader)</li><li>DATE: 2026-10-24</li><li>BUILD_SCOPE: exactly one MANIFEST.md build block</li></ul>
+<p>&lt;/pblock&gt;</p>
+<p>&lt;pblock label=&quot;Stories in this block&quot; kind=&quot;section&quot;&gt;</p>
+<h2>Stories in this block</h2>
+<ul><li>Provide the dupfind executable and build contract. (build-executable) [story]</li><li>Parse command options and validate the directory argument. (command-options) [story]</li><li>Find exact duplicate regular files in a directory tree. (scan-and-group) [story]</li><li>Order duplicate groups and paths deterministically. (order-results) [story]</li><li>Write the duplicate listing as CSV. (listing-csv) [story]</li><li>Write duplicate group and reclaimable-space totals. (summary-csv) [story]</li><li>Provide the project quality test entry point. (test-harness) [story]</li><li>Pass the supplied duplicate-finder conformance grader. (conformance-grader) [story]</li></ul>
+<p>&lt;/pblock&gt;</p>
+<p>&lt;pblock label=&quot;Files on disk&quot; kind=&quot;section&quot;&gt;</p>
+<h2>Files on disk in the build directory</h2>
+<ul><li>sources/run.sh</li></ul>
+<p>These are the only imported files present on disk. Every other file named in this prompt is supplied as prompt context and is not on disk; read it here and do not report it as a missing input.</p>
+<p>&lt;/pblock&gt;</p>
+<h2>COMPASS - Target Orientation</h2>
+<p>&lt;pblock filename=&quot;COMPASS.md&quot; role=&quot;compass&quot; path=&quot;/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261024.140514/workspace/targets/DupFind/COMPASS.md&quot; guidance=&quot;Important: This is the core project intent, constraints, and guardrails. It should have presecedence in conflicts.&quot;&gt;</p>
+<pre><code># COMPASS: DupFind
+
+## Compass
+
+Build a command-line duplicate file finder, the Go executable `./cmd/dupfind`, as described in
+`sources/INSTRUCTIONS.md`. It walks a directory, groups regular files by size and then by SHA-256
+digest, and reports each duplicate group or a one-row summary of the space that removing the
+copies would recover.
+
+Correctness is measured by `sources/run.sh`: it builds the executable with `go build` and makes
+15 checks of exit code and standard output against a fixed directory tree. The goal is every check
+passing.
+
+## Constraints
+
+- Implement in Go 1.22 or newer with the standard library only. No third-party modules.
+- The application root is a Go module; the executable&#x27;s main package is `./cmd/dupfind`.
+- Read a file&#x27;s contents only when another file has the same size.
+- Write CSV with `encoding/csv`; diagnostics go to standard error and are never compared.
+
+## Guardrails
+
+- Do not modify, rewrite, regenerate, or substitute `sources/run.sh`.
+- Do not read `sources/run.sh` from application code, and do not hardcode a digest, a path, or a
+  total. Every value is computed from the directory examined.
+- Never delete, move, or write a file under the directory examined.
+
+## Verification Protocol
+
+| Story kind | Command | Asserts |
+|---|---|---|
+| Every behavioral story | `sh bin/test.sh` | exit `0` |
+| Terminal story (once, last) | `sh sources/run.sh` | exit `0` |
+
+&lt;!-- drydock:build-write-guardrail:start --&gt;
+## Build Write Guardrail
+
+- Authorized build directory: `/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261024.140514/build/DupFind`
+- Authorized Target directory: `/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261024.140514/workspace/targets/DupFind`
+- Build agents have permission to create, modify, and remove files required by the active build block inside these authorized directories.
+- No path outside these authorized directories may be modified.
+- Protected Drydock artifacts:
+  - `/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261024.140514/workspace/targets/DupFind/blueprint/`
+  - `/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261024.140514/workspace/targets/DupFind/MANIFEST.md`
+  - `/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261024.140514/workspace/targets/DupFind/COMPASS.md`
+  - `/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261024.140514/workspace/targets/DupFind/QuarterDeck/`
+  - `/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261024.140514/workspace/targets/DupFind/evidence/`
+&lt;!-- drydock:build-write-guardrail:end --&gt;</code></pre>
+<p>&lt;/pblock&gt;</p>
+<h2>STACK - Technology HOW</h2>
+<p>&lt;pblock filename=&quot;go_compact.md&quot; role=&quot;stack&quot; path=&quot;/mnt/c/Users/barlo/projects/drydock/Rigging/languages/go/go_compact.md&quot;&gt;</p>
+<pre><code>&lt;!-- Compacted from Rigging/languages/go/go.md sha256=aa96c7155b26f091e4f2ee9b7a47ff2202fc7c162254f2b8676779198c7147da on 2026-10-18 by Rigging maintenance --&gt;
+
+## Foundation Contract
+
+The published shape of this foundation. It is built before every other foundation: a web server,
+a database, or a CLI is built *into* this tree, this environment, and this test runner. Carried
+verbatim into `go_compact.md`.
+
+- source_root: internal/
+- test_command: go test ./...
+- environment: the module declared in `go.mod`; no vendored toolchain
+- dependencies: `go.mod`
+
+```
+project/
+  go.mod                  # module path; the Go toolchain version
+  cmd/                    # one directory per binary, each package main
+  internal/               # application packages; not importable outside this module
+  bin/                    # launchers; each runs the toolchain, never a vendored copy
+```
+
+Application foundations add packages under `internal/`. The generated persistence library is a
+separate module at `persistence/`, linked by the root `go.mod`.
+
+### Native application layouts and fixtures
+
+Initialize the root `go.mod` in the language foundation before the DATABASE block.
+Use `cmd/app/main.go` for process startup, `internal/cli` for CLI behavior, and
+`internal/appserver` for HTTP behavior. The root application module requires
+`drydock.local/persistence v0.0.0` with `replace drydock.local/persistence =&gt; ./persistence`;
+the generated persistence directory owns its nested module. Run both module test suites.
+
+For a CLI, expose `Run(args []string, stdout, stderr io.Writer) int`, use a local
+`flag.FlagSet` with `flag.ContinueOnError`, and test with `bytes.Buffer`. Only main calls
+`os.Exit`. For HTTP, expose `NewHandler(...) http.Handler` using `net/http.ServeMux`.
+Use `httptest.NewRecorder` and `httptest.NewRequest` for handler tests, or
+`httptest.NewServer` with `t.Cleanup(server.Close)` when testing a real HTTP client.
+Keep business logic in application packages and persistence access in the shipped library.
+
+### How do we execute and measure Acceptance Criteria in this language?
+
+An Acceptance Criterion (AC) is an executable check of Blueprint-required behavior. Native tests
+use `testing` in `*_test.go`; the project gate is `go test ./...`. Within the existing Blueprint
+Python AC container, execute a named test through the shipped helper:
+
+```python
+from drydock_go import run_test
+result = run_test(&quot;./internal/orders&quot;, &quot;TestCreateOrder&quot;)
+assert result.passed, (result.status, result.stdout, result.stderr)
+```
+
+Drydock stages this helper beside the criterion. It runs `go test -json -count=1 -run` with an
+exact test name, retains output and per-test outcomes, and rejects absent/skipped tests as proof.
+The enclosing AC provides identity, timeout, result storage and repair state. Compilation errors
+remain distinct from assertion failures in `result.status`. Coverage and persistence observations
+require explicit instrumentation per criterion; unavailable observations are unknown.
+
+A criterion that exercises the command line runs the built executable through the same helper,
+never `go run`, which reports every non-zero program exit as 1:
+
+```python
+from drydock_go import cli_runner
+code, out, err = cli_runner(&quot;--top&quot;, &quot;0&quot;, &quot;data.csv&quot;)
+assert code == 2, (code, out, err)
+```
+
+`cli_runner` builds the single `./cmd/&lt;name&gt;` main package once with `go build` and returns
+`(exit_code, stdout, stderr)`; pass `package=&quot;./cmd/&lt;name&gt;&quot;` when there are several, and `input=`
+for standard input. A failed build settles the criterion as `execution-error`.
+
+### How does this language provide the shared persistence contract?
+
+Use the shipped module in `Rigging/languages/go/persistence/`. Drydock copies it to the Target&#x27;s
+`persistence/`, generates `schema.go`, `testing.go` and a schema command from `DATABASE.md`, and
+links it into the existing root `go.mod` as `drydock.local/persistence`. Driver versions and sums
+are shipped; SQLite uses `go-sqlite3` (a C compiler and CGO are required), PostgreSQL uses `lib/pq`.
+Run `go mod download` during dependency provisioning; execution requires these modules available.
+
+Call `persistence.OpenDatabase(ctx, dsn)`, then typed methods such as
+`db.Tickets.List(ctx, persistence.TicketsListInput{Status: &quot;open&quot;})`. Methods return a value and
+an error. Optional inputs use pointers; read results are generated structs. Undeclared operations
+and unsupported field types fail explicitly. Use `OpenSession(ctx, dsn)` for native database criteria;
+empty DSN selects the configured, provisioned application store. Defer its cleanup and check the
+returned error: it rolls back on success and failure, never applies schema or deletes the store.
+Pass the same Store to the feature. Other connections and external effects require committed,
+idempotent criteria with owned records and supported cleanup. Both engines retain autocommit
+outside explicit rollback scopes.
+
+The Go library and generator are verified on SQLite and PostgreSQL. Keep application SQL inside
+the library; agents write callers. The language foundation must create `go.mod` before the
+DATABASE step. Python Blueprint AC containers invoke the native Go tests through `run_test`.
+
+---
+
+## Consumer Rules
+
+- Use `gofmt`, explicit errors, small consumer-owned interfaces and owned goroutine lifetimes.
+- Keep business logic in `internal/` and entry points in `cmd/`; commit `go.mod` and `go.sum`.
+- Gate with `go vet ./...`, `go build ./...` and `go test -race ./...`.</code></pre>
+<p>&lt;/pblock&gt;</p>
+<p>&lt;pblock filename=&quot;common.md&quot; role=&quot;stack&quot; path=&quot;/mnt/c/Users/barlo/projects/drydock/Rigging/stack/common.md&quot;&gt;</p>
+<pre><code># Common Best Practices
+
+**Type:** guidance
+**Version:** 20260320 V1  
+**Category:** Technologies
+**Description:** Common development patterns shared across all stack configurations
+
+Always included regardless of technology stack. Covers project structure conventions, shell scripts, metadata files, git hygiene, and development workflow. This file does not change between projects.
+
+---
+
+## 1. Project Directory Layout
+
+**Rule**: Every project follows a predictable directory structure.
+
+```
+project-name/
+├── bin/                # Operation scripts (see Shell Scripts section)
+├── data/               # Runtime data (DB, logs, backups) — gitignored
+│   ├── logs/           # Script and process output logs
+│   └── backups/        # Database and file backups
+├── docs/               # Project documentation
+├── tests/              # Test suite
+├── PROJECT/            # Build specification (optional, for specification-driven projects)
+├── .env                # Environment config — gitignored
+├── .env.example        # Template with placeholder values — committed
+├── .gitignore
+├── CLAUDE.md           # AI agent instructions
+└── Links.md            # External links
+```
+
+Additional directories depend on the stack (e.g., `templates/`, `static/`, `migrations/`).
+
+**Why**: Consistent layout lets any developer or AI agent locate files instantly.
+
+---
+
+## 2. Shell Scripts (bin/ Directory)
+
+**Rule**: All user-facing operations live in `bin/` as bash scripts with standardized headers, logging, and error handling.
+
+### Script Template
+
+```bash
+#!/bin/bash
+# CommandCenter Operation
+# Name: Human Readable Name
+# Type: daemon|batch
+# Port: 8000
+
+# --- Standard Preamble ---
+set -euo pipefail
+SCRIPT_DIR=&quot;$(cd &quot;$(dirname &quot;${BASH_SOURCE[0]}&quot;)&quot; &amp;&amp; pwd)&quot;
+PROJECT_DIR=&quot;$(cd &quot;$SCRIPT_DIR/..&quot; &amp;&amp; pwd)&quot;
+LOG_DIR=&quot;$PROJECT_DIR/data/logs&quot;
+mkdir -p &quot;$LOG_DIR&quot;
+
+TIMESTAMP=$(date &#x27;+%Y-%m-%d_%H%M%S&#x27;)
+SCRIPT_NAME=$(basename &quot;$0&quot; .sh)
+LOG_FILE=&quot;$LOG_DIR/${SCRIPT_NAME}_${TIMESTAMP}.log&quot;
+
+echo &quot;=== $SCRIPT_NAME started at $(date &#x27;+%Y-%m-%d %H:%M:%S&#x27;) ===&quot; | tee &quot;$LOG_FILE&quot;
+echo &quot;Arguments: $*&quot; | tee -a &quot;$LOG_FILE&quot;
+echo &quot;Working dir: $PROJECT_DIR&quot; | tee -a &quot;$LOG_FILE&quot;
+echo &quot;---&quot; | tee -a &quot;$LOG_FILE&quot;
+
+cd &quot;$PROJECT_DIR&quot;
+
+# --- Your Commands Here ---
+# All output goes to both console and log file via tee
+your_command 2&gt;&amp;1 | tee -a &quot;$LOG_FILE&quot;
+
+echo &quot;=== $SCRIPT_NAME finished at $(date &#x27;+%Y-%m-%d %H:%M:%S&#x27;) ===&quot; | tee -a &quot;$LOG_FILE&quot;
+```
+
+### Header Fields
+
+The first comment block is parsed by Command Center&#x27;s scanner for auto-discovery:
+
+| Field | Required | Values | Description |
+|-------|----------|--------|-------------|
+| `# CommandCenter Operation` | Yes | literal | Marks script as discoverable |
+| `# Name:` | Yes | free text | Display name in UI |
+| `# Type:` | No | `daemon` or `batch` | Default: `batch`. Daemons stay running. |
+| `# Port:` | No | integer | Port number for daemon services |
+
+Scripts without the `# CommandCenter Operation` header are still valid scripts but won&#x27;t appear in Command Center&#x27;s UI.
+
+### Standard Scripts
+
+Every project should have these scripts (where applicable):
+
+| Script | Type | Purpose |
+|--------|------|---------|
+| `bin/start.sh` | daemon | Start the dev server |
+| `bin/stop.sh` | batch | Stop the dev server |
+| `bin/test.sh` | batch | Run test suite |
+| `bin/build.sh` | batch | Build/compile the project |
+| `bin/deploy.sh` | batch | Deploy to production |
+| `bin/backup.sh` | batch | Backup data/database |
+
+### Logging Pattern
+
+- All stdout and stderr captured via `tee` to `data/logs/`
+- Log filename includes script name and timestamp: `start_2026-03-07_143022.log`
+- First lines of log always record: timestamp, arguments, working directory
+- These logs are viewable from Command Center&#x27;s Process Monitor
+
+**Why**: Standardized scripts make every project operable the same way. Log capture enables monitoring, alerting, and post-mortem analysis.
+
+---
+
+## 3. External Links (Links.md)
+
+**Rule**: Every project maintains a `Links.md` file at its root with a markdown table of relevant URLs.
+
+```markdown
+| Label | URL |
+|-------|-----|
+| Local Dev | http://localhost:5001 |
+| Production | https://example.com |
+| Docs | https://docs.example.com |
+| GitHub | https://github.com/user/repo |
+```
+
+Rules:
+- One table, two columns: Label and URL
+- Labels are short and descriptive
+- Command Center&#x27;s scanner reads this on startup and stores links in the project&#x27;s `extra` JSON
+- Links appear in the project&#x27;s configuration page
+
+**Why**: Centralizes all project URLs in one discoverable, parseable location. Both AI agents and Command Center consume it.
+
+---
+
+## 4. CLAUDE.md Convention
+
+**Rule**: Every project has a `CLAUDE.md` at its root following this section structure:
+
+1. `## Project Overview` — What the project does, key features
+2. `## Architecture` — Tech stack, key files, patterns
+3. `## Dev Commands` — Bash commands to run the project (in a code block)
+4. `## Service Endpoints` — URLs: `- Label: https://url`
+5. `## Bookmarks` — Grouped links: `### Group` then `- [Title](URL)`
+
+Section rename rules — always use the standard name:
+- `## Commands` / `## Development Commands` / `## Build Commands` → `## Dev Commands`
+- `## Overview` / `## Project Purpose` → `## Project Overview`
+- `## Stack` → `## Architecture`
+
+**Why**: Consistent structure lets AI agents parse project context reliably.
+
+---
+
+## 5. Git Hygiene
+
+**Rule**: Maintain a comprehensive `.gitignore`. Never commit secrets, generated files, or runtime data.
+
+```gitignore
+# Runtime
+data/
+*.db
+*.log
+
+# Environment
+.env
+venv/
+node_modules/
+
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+dist/
+build/
+
+# OS
+.DS_Store
+Thumbs.db
+```
+
+Rules:
+- `data/` — runtime databases, logs, backups, uploads
+- `.env` — secrets and local config
+- Commit `.env.example` with placeholder values
+- Write imperative commit messages: &quot;Add health endpoint&quot; not &quot;Added health endpoint&quot;
+
+**Why**: Clean repos are cloneable and runnable. No secrets in history.
+
+---
+
+## 6. Development Workflow
+
+**Rule**: Follow these rules when working in any git-managed project.
+
+1. **Always commit changes immediately** after completing a task if the task has no errors
+2. **Commit messages** should have descriptive text (no AI/tool mentions)
+3. **DO NOT push** — only commit to local git
+4. **NO co-authored-by lines** in commits
+5. **Always end code change responses with a restart notice** for any project that runs a web server:
+   - If only templates/CSS/static files changed: &quot;No restart needed — browser refresh is enough.&quot;
+   - If any Python/JS server files changed: &quot;Restart required — run the start script or equivalent.&quot;
+
+**Why**: Consistent workflow prevents accidental pushes, keeps commit history clean, and ensures developers know when to restart.
+
+---
+
+## Summary Checklist
+
+- [ ] Standard directory layout with `bin/`, `data/`, `docs/`, `tests/`
+- [ ] Shell scripts in `bin/` with CommandCenter headers and tee logging
+- [ ] `Links.md` for external URLs
+- [ ] `CLAUDE.md` following section convention
+- [ ] `.env.example` committed, `.env` gitignored
+- [ ] Comprehensive `.gitignore`
+- [ ] Commit immediately, don&#x27;t push, no AI mentions</code></pre>
+<p>&lt;/pblock&gt;</p>
+<h2>CONTEXT - Read-Only Support</h2>
+<p>&lt;pblock filename=&quot;ARCHITECTURE.md&quot; role=&quot;context&quot; path=&quot;/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261024.140514/workspace/targets/DupFind/blueprint/ARCHITECTURE.md&quot; guidance=&quot;Foundational Architecture Specification&quot;&gt;</p>
+<pre><code># ARCHITECTURE: DupFind
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261024 V1 |
+| Description | Defines the Go module and package boundaries for the dupfind command-line application. |
+| Depends On  |  |
+| Provides    | Go module and application package layout |
+| Consumes    |  |
+
+## Purpose
+
+DupFind is a Go command-line application that recursively scans a requested directory and reports regular files with byte-for-byte identical contents. The executable is `./cmd/dupfind`; implementation uses Go 1.22 or newer and the standard library only.
+
+## Modules and ownership
+
+| Module | Owns | Allowed low-level access |
+|---|---|---|
+| `cmd/dupfind` | Process startup and exit status | `os.Args`, `os.Exit`, standard streams |
+| `internal/cli` | Argument parsing, validation, command flow, diagnostics, and output selection | Standard library; delegates scanning and formatting |
+| `internal/scan` | Directory traversal, candidate selection, content hashing, and duplicate groups | Read-only filesystem access and SHA-256 |
+| `internal/output` | Deterministic ordering and CSV listing or summary formatting | `encoding/csv` and standard library |
+
+Only `cmd/dupfind` calls `os.Exit`. CLI behavior is exposed through `Run(args []string, stdout, stderr io.Writer) int` so it can be exercised without terminating the test process. The CLI uses a local `flag.FlagSet` with `flag.ContinueOnError`.
+
+## Data flow
+
+The CLI validates options and the directory argument, confirms the path names a directory, and calls the scanner with the minimum size. The scanner walks the tree without following symbolic links, selects regular files at or above the minimum size, and reads file contents only when at least two selected files share a size. It groups candidates by SHA-256 digest and returns duplicate groups. The output package orders groups and paths, then writes listing or summary CSV.
+
+Scanner and output interfaces use in-memory Go types; no persistent state or external service is used. Diagnostics are written to standard error. A failing command leaves standard output empty.
+
+## Technology Stack
+
+- Go 1.22 or newer, standard library only: module, executable, CLI, scanning, formatting, and tests.
+- POSIX shell: project test entry point and supplied grader.
+
+## Guardrails
+
+- Never read, write, delete, or move files under the directory being examined; examined files are read only.
+- Do not read or depend on `sources/run.sh` from application code.
+- Do not hardcode file paths, digests, or totals.
+- Do not add third-party modules.
+- Read file contents only when another eligible regular file has the same size.
+
+## Programmatic Acceptance
+
+=== AC architecture-cli-contract ===
+Intent: The architecture exposes the documented CLI runner contract and the executable package builds.
+
+import subprocess
+
+result = subprocess.run(
+    [&quot;go&quot;, &quot;build&quot;, &quot;./cmd/dupfind&quot;],
+    capture_output=True,
+    text=True,
+)
+print(result.stdout)
+print(result.stderr)
+assert result.returncode == 0
+=== END AC architecture-cli-contract ===
+
+=== AC architecture-package-layout ===
+Intent: The internal application packages and command entry point compile together.
+
+import subprocess
+
+result = subprocess.run(
+    [&quot;go&quot;, &quot;test&quot;, &quot;./...&quot;],
+    capture_output=True,
+    text=True,
+)
+print(result.stdout)
+print(result.stderr)
+assert result.returncode == 0
+=== END AC architecture-package-layout ===
+
+## User Acceptance
+
+- None.
+
+## Guardrails
+
+- None.</code></pre>
+<p>&lt;/pblock&gt;</p>
+<p>&lt;pblock filename=&quot;run.sh&quot; role=&quot;context&quot; path=&quot;/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261024.140514/workspace/targets/DupFind/blueprint/run.sh&quot;&gt;</p>
+<pre><code>#!/bin/sh
+# run.sh — DupFind grader. Do not filter, skip, or reinterpret.
+#
+# Builds ./cmd/dupfind with `go build`, creates a fixed directory tree, and compares every
+# command&#x27;s exit code and standard output with the known answer below. Standard error is never
+# compared.
+#
+#   sh sources/run.sh                from the application root (how `drydock uat` runs it)
+#   sh uat/DupFind/bin/run.sh APP    from anywhere, grading the application root APP
+#
+# Exit 0 only when the build succeeds and every check passes.
+set -u
+
+APP=$(cd &quot;${1:-.}&quot; &amp;&amp; pwd)
+WORK=$(mktemp -d)
+trap &#x27;rm -rf &quot;$WORK&quot;&#x27; EXIT INT TERM
+BIN=&quot;$WORK/dupfind&quot;
+
+if ! (cd &quot;$APP&quot; &amp;&amp; go build -o &quot;$BIN&quot; ./cmd/dupfind); then
+    echo &quot;error: go build ./cmd/dupfind failed at the application root $APP.&quot; &gt;&amp;2
+    echo &quot;The deliverable is a Go module whose main package is ./cmd/dupfind.&quot; &gt;&amp;2
+    exit 1
+fi
+
+# make_tree &lt;dir&gt; — the exam tree. Every byte is fixed, so every hash is known.
+make_tree() {
+    T=$1
+    mkdir -p &quot;$T/a&quot; &quot;$T/b&quot; &quot;$T/c/deep/x&quot; &quot;$T/photos&quot; &quot;$T/music&quot; &quot;$T/notes&quot; &quot;$T/.hidden&quot; &quot;$T/big&quot; \
+        &quot;$T/empty&quot; &quot;$T/unique&quot;
+    printf &#x27;quarterly report\n&#x27; &gt; &quot;$T/a/report.txt&quot;
+    printf &#x27;quarterly report\n&#x27; &gt; &quot;$T/b/report-copy.txt&quot;
+    printf &#x27;quarterly report\n&#x27; &gt; &quot;$T/c/deep/x/report.txt&quot;
+    : &gt; &quot;$T/photos/img1.jpg&quot;
+    i=0
+    while [ $i -lt 16 ]; do printf &#x27;JPEG%04d&#x27; $i &gt;&gt; &quot;$T/photos/img1.jpg&quot;; i=$((i + 1)); done
+    cp &quot;$T/photos/img1.jpg&quot; &quot;$T/photos/img1 (copy).jpg&quot;
+    printf &#x27;la la la\n&#x27; &gt; &quot;$T/music/song.mp3&quot;
+    printf &#x27;la la la\n&#x27; &gt; &quot;$T/music/song,live.mp3&quot;
+    printf &#x27;abcdefgh\n&#x27; &gt; &quot;$T/notes/one.txt&quot;
+    printf &#x27;abcdefgX\n&#x27; &gt; &quot;$T/notes/two.txt&quot;
+    printf &#x27;KEY=1\n&#x27; &gt; &quot;$T/.hidden/.env&quot;
+    printf &#x27;KEY=1\n&#x27; &gt; &quot;$T/env.bak&quot;
+    head -c 1000 /dev/zero | tr &#x27;\0&#x27; z &gt; &quot;$T/big/blob-a.bin&quot;
+    head -c 1000 /dev/zero | tr &#x27;\0&#x27; z &gt; &quot;$T/big/blob-b.bin&quot;
+    head -c 1000 /dev/zero | tr &#x27;\0&#x27; y &gt; &quot;$T/big/blob-c.bin&quot;
+    : &gt; &quot;$T/empty/one&quot;
+    : &gt; &quot;$T/empty/two&quot;
+    ln -s ../a/report.txt &quot;$T/notes/report-link.txt&quot;
+    printf &#x27;only one of me\n&#x27; &gt; &quot;$T/unique/solo.txt&quot;
+}
+
+TREE=&quot;$WORK/tree&quot;
+make_tree &quot;$TREE&quot;
+
+PASSED=0
+FAILED=0
+
+# check &lt;id&gt; &lt;expected exit&gt; &lt;dupfind args...&gt;  — expected standard output on stdin.
+check() {
+    id=$1
+    want_rc=$2
+    shift 2
+    cat &gt; &quot;$WORK/want&quot;
+    (cd &quot;$WORK&quot; &amp;&amp; &quot;$BIN&quot; &quot;$@&quot;) &gt; &quot;$WORK/got&quot; 2&gt; &quot;$WORK/err&quot;
+    rc=$?
+    if [ &quot;$rc&quot; -eq &quot;$want_rc&quot; ] &amp;&amp; cmp -s &quot;$WORK/want&quot; &quot;$WORK/got&quot;; then
+        PASSED=$((PASSED + 1))
+        echo &quot;PASS $id: dupfind $*&quot;
+    else
+        FAILED=$((FAILED + 1))
+        echo &quot;FAIL $id: dupfind $*&quot;
+        echo &quot;  exit: expected $want_rc, got $rc&quot;
+        diff &quot;$WORK/want&quot; &quot;$WORK/got&quot; | sed &#x27;s/^/  /&#x27;
+        sed &#x27;s/^/  stderr: /&#x27; &quot;$WORK/err&quot;
+    fi
+}
+
+# ── A. Full listing ──────────────────────────────────────────────────────────────────────
+check A1 0 tree &lt;&lt;&#x27;EOF&#x27;
+group,size,sha256,path
+1,1000,950f88b09cf1d5e2cdbc5660c77dce3962265c548797950095629a0ea2daea46,big/blob-a.bin
+1,1000,950f88b09cf1d5e2cdbc5660c77dce3962265c548797950095629a0ea2daea46,big/blob-b.bin
+2,128,5c633a59e48621c6ca2a9c2c254792627ed975a86228be1fdf9d8a177520c0f7,photos/img1 (copy).jpg
+2,128,5c633a59e48621c6ca2a9c2c254792627ed975a86228be1fdf9d8a177520c0f7,photos/img1.jpg
+3,17,8a3c67892f82af22b58377b8e85bb41899053788d3aa3b81d2e6b4580e917c29,a/report.txt
+3,17,8a3c67892f82af22b58377b8e85bb41899053788d3aa3b81d2e6b4580e917c29,b/report-copy.txt
+3,17,8a3c67892f82af22b58377b8e85bb41899053788d3aa3b81d2e6b4580e917c29,c/deep/x/report.txt
+4,9,31f86092953fd687403924ef23270af8da18b58147a0055468ecb4dc00b1c5c5,&quot;music/song,live.mp3&quot;
+4,9,31f86092953fd687403924ef23270af8da18b58147a0055468ecb4dc00b1c5c5,music/song.mp3
+5,6,929c28f541260cd8690babe97ae61472829cdf36e059c7b14e6b963f0f9ee77b,.hidden/.env
+5,6,929c28f541260cd8690babe97ae61472829cdf36e059c7b14e6b963f0f9ee77b,env.bak
+EOF
+check A2 0 &quot;$TREE&quot; &lt;&lt;&#x27;EOF&#x27;
+group,size,sha256,path
+1,1000,950f88b09cf1d5e2cdbc5660c77dce3962265c548797950095629a0ea2daea46,big/blob-a.bin
+1,1000,950f88b09cf1d5e2cdbc5660c77dce3962265c548797950095629a0ea2daea46,big/blob-b.bin
+2,128,5c633a59e48621c6ca2a9c2c254792627ed975a86228be1fdf9d8a177520c0f7,photos/img1 (copy).jpg
+2,128,5c633a59e48621c6ca2a9c2c254792627ed975a86228be1fdf9d8a177520c0f7,photos/img1.jpg
+3,17,8a3c67892f82af22b58377b8e85bb41899053788d3aa3b81d2e6b4580e917c29,a/report.txt
+3,17,8a3c67892f82af22b58377b8e85bb41899053788d3aa3b81d2e6b4580e917c29,b/report-copy.txt
+3,17,8a3c67892f82af22b58377b8e85bb41899053788d3aa3b81d2e6b4580e917c29,c/deep/x/report.txt
+4,9,31f86092953fd687403924ef23270af8da18b58147a0055468ecb4dc00b1c5c5,&quot;music/song,live.mp3&quot;
+4,9,31f86092953fd687403924ef23270af8da18b58147a0055468ecb4dc00b1c5c5,music/song.mp3
+5,6,929c28f541260cd8690babe97ae61472829cdf36e059c7b14e6b963f0f9ee77b,.hidden/.env
+5,6,929c28f541260cd8690babe97ae61472829cdf36e059c7b14e6b963f0f9ee77b,env.bak
+EOF
+
+# ── B. Summary ───────────────────────────────────────────────────────────────────────────
+check B1 0 --summary tree &lt;&lt;&#x27;EOF&#x27;
+groups,duplicate_files,reclaimable_bytes
+5,6,1177
+EOF
+
+# ── C. Minimum size ──────────────────────────────────────────────────────────────────────
+check C1 0 --min-size 20 tree &lt;&lt;&#x27;EOF&#x27;
+group,size,sha256,path
+1,1000,950f88b09cf1d5e2cdbc5660c77dce3962265c548797950095629a0ea2daea46,big/blob-a.bin
+1,1000,950f88b09cf1d5e2cdbc5660c77dce3962265c548797950095629a0ea2daea46,big/blob-b.bin
+2,128,5c633a59e48621c6ca2a9c2c254792627ed975a86228be1fdf9d8a177520c0f7,photos/img1 (copy).jpg
+2,128,5c633a59e48621c6ca2a9c2c254792627ed975a86228be1fdf9d8a177520c0f7,photos/img1.jpg
+EOF
+check C2 0 --summary --min-size 20 tree &lt;&lt;&#x27;EOF&#x27;
+groups,duplicate_files,reclaimable_bytes
+2,2,1128
+EOF
+check C3 0 --min-size 200 tree &lt;&lt;&#x27;EOF&#x27;
+group,size,sha256,path
+1,1000,950f88b09cf1d5e2cdbc5660c77dce3962265c548797950095629a0ea2daea46,big/blob-a.bin
+1,1000,950f88b09cf1d5e2cdbc5660c77dce3962265c548797950095629a0ea2daea46,big/blob-b.bin
+EOF
+
+# ── D. No duplicates ─────────────────────────────────────────────────────────────────────
+check D1 0 tree/unique &lt;&lt;&#x27;EOF&#x27;
+group,size,sha256,path
+EOF
+check D2 0 --summary tree/empty &lt;&lt;&#x27;EOF&#x27;
+groups,duplicate_files,reclaimable_bytes
+0,0,0
+EOF
+
+# ── E. Operational failures ──────────────────────────────────────────────────────────────
+check E1 1 tree/no-such-directory &lt; /dev/null
+check E2 1 tree/env.bak &lt; /dev/null
+
+# ── U. Usage errors ──────────────────────────────────────────────────────────────────────
+check U1 2 &lt; /dev/null
+check U2 2 tree tree/a &lt; /dev/null
+check U3 2 --min-size abc tree &lt; /dev/null
+check U4 2 --min-size 0 tree &lt; /dev/null
+check U5 2 --frobnicate tree &lt; /dev/null
+
+TOTAL=$((PASSED + FAILED))
+echo &quot;DupFind: $PASSED passed, $FAILED failed (of $TOTAL)&quot;
+[ &quot;$FAILED&quot; -eq 0 ]</code></pre>
+<p>&lt;/pblock&gt;</p>
+<h2>IMPLEMENTS - Authoritative Step Specifications</h2>
+<p>&lt;pblock label=&quot;Implementation recency anchor&quot; kind=&quot;section&quot;&gt; The files in this section are the load-bearing specifications for this build block. Build these files exactly. Treat earlier sections as constraints and context.</p>
+<p>&lt;/pblock&gt;</p>
+<p>&lt;pblock filename=&quot;FEATURE-Build.md&quot; role=&quot;implements&quot; path=&quot;/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261024.140514/workspace/targets/DupFind/blueprint/FEATURE-Build.md&quot; guidance=&quot;Feature Specification&quot;&gt;</p>
+<pre><code># FEATURE: Build
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261024 V1 |
+| Description | Provides the dupfind executable at the documented Go package path. |
+| Depends On  | ARCHITECTURE.md |
+| Provides    | ./cmd/dupfind |
+| Consumes    | Go module and application package layout |
+
+## Purpose
+
+The application root is a Go module. Building from that root with `go build ./cmd/dupfind` produces the dupfind command. The main package lives in `cmd/dupfind` and uses only the standard library.
+
+## Build contract
+
+The executable delegates command behavior to the internal CLI package. Process startup passes command-line arguments and standard streams to `Run`; only the main package exits the process using the returned status code. Build output is produced by the Go toolchain, not by application code.
+
+## Programmatic Acceptance
+
+=== AC build-command ===
+Intent: Building the declared executable package succeeds.
+
+import subprocess
+
+result = subprocess.run(
+    [&quot;go&quot;, &quot;build&quot;, &quot;./cmd/dupfind&quot;],
+    capture_output=True,
+    text=True,
+)
+print(result.stdout)
+print(result.stderr)
+assert result.returncode == 0
+=== END AC build-command ===
+
+=== AC build-test-entry ===
+Intent: The Go test runner recognizes the application packages.
+
+import subprocess
+
+result = subprocess.run(
+    [&quot;go&quot;, &quot;test&quot;, &quot;./...&quot;],
+    capture_output=True,
+    text=True,
+)
+print(result.stdout)
+print(result.stderr)
+assert result.returncode == 0
+=== END AC build-test-entry ===
+
+## User Acceptance
+
+- None.
+
+## Guardrails
+
+- Use Go 1.22 or newer and the standard library only.
+- Do not add command behavior to process startup; keep it in the CLI package.</code></pre>
+<p>&lt;/pblock&gt;</p>
+<p>&lt;pblock filename=&quot;FEATURE-Command.md&quot; role=&quot;implements&quot; path=&quot;/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261024.140514/workspace/targets/DupFind/blueprint/FEATURE-Command.md&quot; guidance=&quot;Feature Specification&quot;&gt;</p>
+<pre><code># FEATURE: Command
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261024 V1 |
+| Description | Parses dupfind options and validates its directory argument. |
+| Depends On  | ARCHITECTURE.md, FEATURE-Build.md |
+| Provides    | dupfind command-line options and usage |
+| Consumes    | ./cmd/dupfind |
+
+## Command contract
+
+The command syntax is `dupfind [--summary] [--min-size &lt;bytes&gt;] &lt;directory&gt;`. Options precede exactly one directory argument. `--summary` selects summary CSV. `--min-size` accepts a positive integer and defaults to 1. Help text describes the command and its options.
+
+Unknown options, missing or extra directory arguments, and invalid minimum sizes are usage errors. They return 2, write no standard output, and write one diagnostic line to standard error. A missing path or a path that is not a directory is an operational error: return 1, leave standard output empty, and write one diagnostic line to standard error. Other operational errors use the same conventional operational-failure behavior. File read errors during scanning are handled as warnings and do not change the exit code.
+
+## Programmatic Acceptance
+
+=== AC command-help-usage ===
+Intent: Help includes a description of the command and its supported options.
+
+import subprocess
+
+result = subprocess.run(
+    [&quot;./dupfind&quot;, &quot;--help&quot;],
+    capture_output=True,
+    text=True,
+)
+print(result.stdout)
+print(result.stderr)
+assert result.returncode == 0
+=== END AC command-help-usage ===
+
+=== AC command-invalid-option ===
+Intent: Unknown options return the usage-error exit status.
+
+import subprocess
+
+result = subprocess.run(
+    [&quot;./dupfind&quot;, &quot;--frobnicate&quot;, &quot;.&quot;],
+    capture_output=True,
+    text=True,
+)
+print(result.stdout)
+print(result.stderr)
+assert result.returncode == 2
+=== END AC command-invalid-option ===
+
+=== AC command-invalid-size ===
+Intent: A zero minimum size returns the usage-error exit status.
+
+import subprocess
+
+result = subprocess.run(
+    [&quot;./dupfind&quot;, &quot;--min-size&quot;, &quot;0&quot;, &quot;.&quot;],
+    capture_output=True,
+    text=True,
+)
+print(result.stdout)
+print(result.stderr)
+assert result.returncode == 2
+=== END AC command-invalid-size ===
+
+## User Acceptance
+
+- None.
+
+## Guardrails
+
+- Malformed arguments and operational failures write nothing to standard output.
+- Diagnostics go to standard error.</code></pre>
+<p>&lt;/pblock&gt;</p>
+<p>&lt;pblock filename=&quot;FEATURE-Scanning.md&quot; role=&quot;implements&quot; path=&quot;/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261024.140514/workspace/targets/DupFind/blueprint/FEATURE-Scanning.md&quot; guidance=&quot;Feature Specification&quot;&gt;</p>
+<pre><code># FEATURE: Scanning
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261024 V1 |
+| Description | Finds exact duplicate regular files by scanning a directory tree. |
+| Depends On  | ARCHITECTURE.md, FEATURE-Command.md |
+| Provides    | duplicate groups from a directory tree |
+| Consumes    | dupfind command-line options and usage |
+
+## Scope and filtering
+
+Walk the requested directory recursively, including hidden files and directories. Examine regular files only. Do not follow or report symbolic links. Ignore files smaller than the selected minimum size; zero-byte files are therefore ignored under the default minimum of 1.
+
+## Candidate grouping and reads
+
+Partition eligible files by size. Read file contents only for sizes represented by at least two eligible files. Compute SHA-256 for each readable candidate and group files with the same size and digest. Report groups only when at least two files share both. If a candidate cannot be read, skip it, write one warning line to standard error, and keep the command&#x27;s success exit status.
+
+## Read-only behavior
+
+The scan only reads files. It never deletes, moves, or writes files in the examined directory. It does not use fixture-specific paths or expected results.
+
+## Programmatic Acceptance
+
+=== AC scan-groups-exact-files ===
+Intent: The supplied conformance grader passes its duplicate scanning cases.
+
+Suite: scoped
+
+import subprocess
+
+result = subprocess.run(
+    [&quot;sh&quot;, &quot;sources/run.sh&quot;],
+    capture_output=True,
+    text=True,
+)
+print(result.stdout)
+print(result.stderr)
+assert result.returncode == 0
+=== END AC scan-groups-exact-files ===
+
+=== AC scan-symlinks-and-empty ===
+Intent: The supplied conformance grader passes its symbolic-link and empty-file cases.
+
+Suite: scoped
+
+import subprocess
+
+result = subprocess.run(
+    [&quot;sh&quot;, &quot;sources/run.sh&quot;],
+    capture_output=True,
+    text=True,
+)
+print(result.stdout)
+print(result.stderr)
+assert result.returncode == 0
+=== END AC scan-symlinks-and-empty ===
+
+=== AC scan-read-only ===
+Intent: The supplied conformance grader passes while examined files remain untouched.
+
+Suite: scoped
+
+import subprocess
+
+result = subprocess.run(
+    [&quot;sh&quot;, &quot;sources/run.sh&quot;],
+    capture_output=True,
+    text=True,
+)
+print(result.stdout)
+print(result.stderr)
+assert result.returncode == 0
+=== END AC scan-read-only ===
+
+## User Acceptance
+
+- None.
+
+## Guardrails
+
+- Never follow or report symbolic links.
+- Never write to the examined directory.</code></pre>
+<p>&lt;/pblock&gt;</p>
+<p>&lt;pblock filename=&quot;FEATURE-Ordering.md&quot; role=&quot;implements&quot; path=&quot;/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261024.140514/workspace/targets/DupFind/blueprint/FEATURE-Ordering.md&quot; guidance=&quot;Feature Specification&quot;&gt;</p>
+<pre><code># FEATURE: Ordering
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261024 V1 |
+| Description | Orders duplicate groups and their relative paths deterministically. |
+| Depends On  | ARCHITECTURE.md, FEATURE-Scanning.md |
+| Provides    | ordered duplicate groups and relative paths |
+| Consumes    | duplicate groups from a directory tree |
+
+## Ordering contract
+
+Sort groups by reclaimable bytes descending, then by SHA-256 digest ascending. Reclaimable bytes equal file size times the number of duplicate copies beyond the first. Number groups starting at 1 in sorted order. Sort paths inside each group by byte value ascending. Emit each path relative to the requested directory using `/` separators and without a leading `./`.
+
+## Programmatic Acceptance
+
+=== AC ordering-conformance ===
+Intent: The supplied conformance grader passes the duplicate ordering cases.
+
+Suite: scoped
+
+import subprocess
+
+result = subprocess.run(
+    [&quot;sh&quot;, &quot;sources/run.sh&quot;],
+    capture_output=True,
+    text=True,
+)
+print(result.stdout)
+print(result.stderr)
+assert result.returncode == 0
+=== END AC ordering-conformance ===
+
+## User Acceptance
+
+- None.
+
+## Guardrails
+
+- Ordering is deterministic and independent of filesystem traversal order.
+- Do not include files outside the requested directory.</code></pre>
+<p>&lt;/pblock&gt;</p>
+<p>&lt;pblock filename=&quot;FEATURE-Listing.md&quot; role=&quot;implements&quot; path=&quot;/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261024.140514/workspace/targets/DupFind/blueprint/FEATURE-Listing.md&quot; guidance=&quot;Feature Specification&quot;&gt;</p>
+<pre><code># FEATURE: Duplicate Listing
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261024 V1 |
+| Description | Defines the duplicate file CSV listing. |
+| Depends On  | FEATURE-Ordering.md |
+| Provides    | default CSV listing |
+| Consumes    | ordered duplicate groups and relative paths |
+
+## Purpose
+
+The default command output is a CSV listing of every file in every duplicate group. It uses the ordered groups and relative paths provided by `FEATURE-Ordering.md`.
+
+## Output
+
+The CSV header is `group,size,sha256,path`. Each subsequent row contains the group number, file size in bytes, lowercase hexadecimal SHA-256 digest, and relative path. Emit one row per file in every duplicate group. When no duplicates exist, emit the header only.
+
+Use Go&#x27;s `encoding/csv` writer, with `\n` line endings and RFC 4180 field quoting.
+
+## Programmatic Acceptance
+
+=== AC listing-output ===
+Intent: The command emits the specified CSV header and one row for each duplicate file, with paths parsed as CSV fields.
+
+import csv
+import hashlib
+import io
+import os
+import pathlib
+import subprocess
+
+root = pathlib.Path(&quot;listing-fixture&quot;)
+(root / &quot;a&quot;).mkdir(parents=True, exist_ok=True)
+payload = b&quot;listing input\n&quot;
+(root / &quot;a&quot; / &quot;first.txt&quot;).write_bytes(payload)
+(root / &quot;second,copy.txt&quot;).write_bytes(payload)
+result = subprocess.run(
+    [&quot;./dupfind&quot;, str(root)],
+    capture_output=True,
+    text=True,
+)
+assert result.returncode == 0, (result.stdout, result.stderr)
+rows = list(csv.reader(io.StringIO(result.stdout)))
+digest = hashlib.sha256(payload).hexdigest()
+assert rows[0] == [&quot;group&quot;, &quot;size&quot;, &quot;sha256&quot;, &quot;path&quot;]
+assert rows[1:] == [
+    [&quot;1&quot;, str(len(payload)), digest, &quot;a/first.txt&quot;],
+    [&quot;1&quot;, str(len(payload)), digest, &quot;second,copy.txt&quot;],
+]
+=== END AC listing-output ===
+
+=== AC listing-empty ===
+Intent: A directory with no duplicates produces a header-only listing.
+import csv
+import io
+import pathlib
+import subprocess
+
+root = pathlib.Path(&quot;listing-empty-fixture&quot;)
+root.mkdir(parents=True, exist_ok=True)
+(root / &quot;single.txt&quot;).write_text(&quot;only one\n&quot;)
+result = subprocess.run(
+    [&quot;./dupfind&quot;, str(root)],
+    capture_output=True,
+    text=True,
+)
+assert result.returncode == 0, (result.stdout, result.stderr)
+rows = list(csv.reader(io.StringIO(result.stdout)))
+assert rows[1:] == []
+=== END AC listing-empty ===
+
+## User Acceptance
+
+- None.
+
+## Guardrails
+
+- Listing never modifies, moves, or deletes examined files.</code></pre>
+<p>&lt;/pblock&gt;</p>
+<p>&lt;pblock filename=&quot;FEATURE-Summary.md&quot; role=&quot;implements&quot; path=&quot;/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261024.140514/workspace/targets/DupFind/blueprint/FEATURE-Summary.md&quot; guidance=&quot;Feature Specification&quot;&gt;</p>
+<pre><code># FEATURE: Duplicate Summary
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261024 V1 |
+| Description | Defines the summary of duplicate groups and reclaimable space. |
+| Depends On  | FEATURE-Ordering.md |
+| Provides    | --summary CSV output |
+| Consumes    | ordered duplicate groups and relative paths |
+
+## Purpose
+
+When `--summary` is supplied, write a single CSV row summarizing the duplicate groups that the listing would produce with the same options.
+
+## Output
+
+The CSV header is `groups,duplicate_files,reclaimable_bytes`, followed by one row containing:
+
+- The number of duplicate groups.
+- The sum of `files − 1` across all groups.
+- The sum of `size × (files − 1)` across all groups.
+
+With no duplicates, emit `0,0,0` as the data row. Use `encoding/csv` and `\n` line endings.
+
+## Programmatic Acceptance
+
+=== AC summary-totals ===
+Intent: The summary reports totals derived from the same duplicate groups as the listing.
+import csv
+import io
+import pathlib
+import subprocess
+
+root = pathlib.Path(&quot;summary-fixture&quot;)
+root.mkdir(parents=True, exist_ok=True)
+payload_a = b&quot;summary group a\n&quot;
+payload_b = b&quot;summary group b\n&quot;
+(root / &quot;a1&quot;).write_bytes(payload_a)
+(root / &quot;a2&quot;).write_bytes(payload_a)
+(root / &quot;a3&quot;).write_bytes(payload_a)
+(root / &quot;b1&quot;).write_bytes(payload_b)
+(root / &quot;b2&quot;).write_bytes(payload_b)
+result = subprocess.run(
+    [&quot;./dupfind&quot;, &quot;--summary&quot;, str(root)],
+    capture_output=True,
+    text=True,
+)
+assert result.returncode == 0, (result.stdout, result.stderr)
+rows = list(csv.reader(io.StringIO(result.stdout)))
+assert rows[0] == [&quot;groups&quot;, &quot;duplicate_files&quot;, &quot;reclaimable_bytes&quot;]
+assert rows[1:] == [
+    [
+        &quot;2&quot;,
+        str((3 - 1) + (2 - 1)),
+        str(len(payload_a) * (3 - 1) + len(payload_b) * (2 - 1)),
+    ]
+]
+=== END AC summary-totals ===
+
+=== AC summary-empty ===
+Intent: A directory with no duplicates reports zero totals.
+import csv
+import io
+import pathlib
+import subprocess
+
+root = pathlib.Path(&quot;summary-empty-fixture&quot;)
+root.mkdir(parents=True, exist_ok=True)
+(root / &quot;single.txt&quot;).write_bytes(b&quot;unique&quot;)
+result = subprocess.run(
+    [&quot;./dupfind&quot;, &quot;--summary&quot;, str(root)],
+    capture_output=True,
+    text=True,
+)
+assert result.returncode == 0, (result.stdout, result.stderr)
+rows = list(csv.reader(io.StringIO(result.stdout)))
+assert rows[1:] == [[&quot;0&quot;, &quot;0&quot;, &quot;0&quot;]]
+=== END AC summary-empty ===
+
+## User Acceptance
+
+- None.
+
+## Guardrails
+
+- Summary totals are computed from the duplicate groups; do not hardcode counts or byte totals.</code></pre>
+<p>&lt;/pblock&gt;</p>
+<p>&lt;pblock filename=&quot;FEATURE-Tests.md&quot; role=&quot;implements&quot; path=&quot;/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261024.140514/workspace/targets/DupFind/blueprint/FEATURE-Tests.md&quot; guidance=&quot;Feature Specification&quot;&gt;</p>
+<pre><code># FEATURE: Go Test Harness
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261024 V1 |
+| Description | Defines the project quality test entry point. |
+| Depends On  | ARCHITECTURE.md, FEATURE-Build.md |
+| Provides    | bin/test.sh |
+| Consumes    | go vet ./..., go test ./... |
+
+## Purpose
+
+Provide a POSIX-compatible `bin/test.sh` at the application root. It runs `go vet ./...` and `go test ./...` from that root and exits zero only when both pass.
+
+## Programmatic Acceptance
+
+=== AC test-harness ===
+Intent: The test entry point runs vet and the Go test suite and succeeds when both succeed.
+import os
+import subprocess
+
+script = &quot;bin/test.sh&quot;
+os.makedirs(&quot;bin&quot;, exist_ok=True)
+result = subprocess.run(
+    [&quot;sh&quot;, script],
+    capture_output=True,
+    text=True,
+)
+assert result.returncode == 0, (result.stdout, result.stderr)
+=== END AC test-harness ===
+
+## User Acceptance
+
+- None.
+
+## Guardrails
+
+- The script must not report success when either `go vet ./...` or `go test ./...` fails.</code></pre>
+<p>&lt;/pblock&gt;</p>
+<p>&lt;pblock filename=&quot;VERIFICATION.md&quot; role=&quot;implements&quot; path=&quot;/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261024.140514/workspace/targets/DupFind/blueprint/VERIFICATION.md&quot;&gt;</p>
+<pre><code># FEATURE: Supplied Grader Verification
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261024 V1 |
+| Description | Defines the terminal verification against the supplied grader. |
+| Depends On  | ARCHITECTURE.md, FEATURE-Build.md, FEATURE-Command.md, FEATURE-Scanning.md, FEATURE-Ordering.md, FEATURE-Listing.md, FEATURE-Summary.md, FEATURE-Tests.md |
+| Provides    | full supplied grader verification |
+| Consumes    | sources/run.sh |
+
+## Purpose
+
+The supplied `sources/run.sh` is the authoritative final conformance grader. Run it from the completed application root; its exit status is the acceptance verdict. The staged grader compares command exit codes and standard output against its fixed directory tree. Standard error is diagnostic only.
+
+Do not modify, rewrite, regenerate, substitute, or read the grader from application code.
+
+## Programmatic Acceptance
+
+=== AC full-grader ===
+Intent: The complete supplied grader passes all 15 checks.
+Suite: full
+
+import subprocess
+
+result = subprocess.run(
+    [&quot;sh&quot;, &quot;sources/run.sh&quot;],
+    capture_output=True,
+    text=True,
+)
+print(result.stdout)
+print(result.stderr)
+assert result.returncode == 0
+=== END AC full-grader ===
+
+## User Acceptance
+
+- None.
+
+## Guardrails
+
+- The grader is staged context and must remain verbatim.
+- Verification runs only after all implementation stories are complete.</code></pre>
+<p>&lt;/pblock&gt;</p>
+<p>&lt;pblock label=&quot;Build instructions&quot; kind=&quot;instructions&quot;&gt;</p>
+<h3>Build instructions for this block</h3>
+<h4>Provide the dupfind executable and build contract. (build-executable)</h4>
+<p>Provide the main package at ./cmd/dupfind and ensure the application root builds it with go build ./cmd/dupfind using only the standard library.</p>
+<h4>Parse command options and validate the directory argument. (command-options)</h4>
+<p>Implement the documented command syntax, --summary, --min-size, help text, and validation of options and the single directory argument. Malformed arguments return exit code 2 and write no standard output. Missing or non-directory paths return exit code 1 and write no standard output. Operational diagnostics go to standard error.</p>
+<h4>Find exact duplicate regular files in a directory tree. (scan-and-group)</h4>
+<p>Recursively examine regular files, including hidden paths, without following or reporting symbolic links. Ignore zero-byte files and files smaller than the selected minimum size. Group by size before reading contents, then by SHA-256 digest. Skip unreadable files with one warning on standard error and do not change the exit code. Only read examined files; never delete, move, or write anything under the examined directory.</p>
+<h4>Order duplicate groups and paths deterministically. (order-results)</h4>
+<p>Order groups by reclaimable bytes descending and then digest ascending. Number groups from 1 in that order. Order paths within each group by byte value and emit paths relative to the requested directory using / separators without a leading ./.</p>
+<h4>Write the duplicate listing as CSV. (listing-csv)</h4>
+<p>Write the default listing to standard output with encoding/csv. Emit the specified header and one row per file in each duplicate group, with lowercase hexadecimal SHA-256 digests. With no duplicates, emit only the header. Use newline line endings and RFC 4180 field quoting.</p>
+<h4>Write duplicate group and reclaimable-space totals. (summary-csv)</h4>
+<p>When --summary is selected, emit the specified CSV header and one data row containing the number of duplicate groups, the sum of files minus one per group, and total reclaimable bytes. With no duplicates, emit zero for all totals. Derive the summary from the same duplicate groups as the listing.</p>
+<h4>Provide the project quality test entry point. (test-harness)</h4>
+<p>Provide a POSIX-compatible bin/test.sh that runs go vet ./... and go test ./... from the application root. Exit zero only when both commands pass.</p>
+<h4>Pass the supplied duplicate-finder conformance grader. (conformance-grader)</h4>
+<p>Run the supplied sources/run.sh from the completed application root and require its exit status to be zero. Do not modify, rewrite, regenerate, or substitute the supplied harness.</p>
+<p>&lt;/pblock&gt;</p>
+<h1>Agent Task</h1>
+<p>You are a Drydock build agent implementing exactly one build step of a larger plan. The build job block below names the target, the build working directory, and the step. Everything you need is stacked into this prompt under role headings:</p>
+<ul><li><code>compass</code> — the Target&#x27;s COMPASS.md orientation.</li><li><code>implements</code> — the Typed Specification files this step builds. These are</li></ul>
+<p>authoritative; implement them exactly.</p>
+<ul><li><code>context</code> — read-only support specifications. Do not reimplement them.</li><li><code>stack</code> — enterprise stack and technology rules. Honor them.</li><li><code>rules</code> — governance and branding rules. Honor them.</li></ul>
+<p>Operating contract:</p>
+<ol><li>Follow the write authorization and protected paths in the stacked <code>COMPASS.md</code> exactly.</li></ol>
+<p>That persisted guardrail is the sole authority for paths this build may modify.</p>
+<ol><li>Start by inspecting the build working directory. Preserve existing application</li></ol>
+<p>files unless this step&#x27;s specifications require a change. Its <code>sources/</code> subdirectory holds staged build assets — imported test corpora, conformance harnesses, and fixtures — placed there for you. They are read-only inputs: run them, import them, and write code against them, but never create, rewrite, trim, regenerate, or substitute one, even to make a check pass. A step that modifies a staged asset fails and the asset is restored. If an asset you expect is absent, report that; do not author a replacement.</p>
+<ol><li>Implement only this step. Use <code>context</code>, <code>stack</code>, and <code>rules</code> as constraints,</li></ol>
+<p>not as additional work to perform.</p>
+<ol><li>Follow the stack and rules for languages, structure, naming, and branding.</li><li>The programmatic acceptance assertions in the <code>implements</code> specifications are</li></ol>
+<p>this step&#x27;s <strong>Definition of Done</strong> — human-owned, declared before the build, and fixed. Build the story and, in this same step, write the deterministic tests that prove each declared assertion, as a TDD master would; add finer tests for coverage. Every test you write follows the same rule the acceptance assertions do: <strong>act on the system, read the state back, compare to expected.</strong> The oracle is a return value, parsed JSON, a status code, a stored row, file contents read back, or an exit status — never a substring of captured stdout or stderr, a test-runner tally, or a log line. Write tests in the project&#x27;s own language using that language&#x27;s libraries; an in-language HTTP client yields a status code and a parsed body, where <code>curl</code> yields text to scrape. Round-trip anything that stores state: act, then read back through the public interface. Assert declared failure signals on negative paths, never message wording. You may add tests but must never remove, soften, or weaken a declared acceptance assertion. A <code>Suite: full</code> conformance check gates on the entire imported test suite: the step is done only when it passes in full, never on a representative subset — reproduce the standard exactly rather than wrapping a third-party library that approximates it. For a suite, the runner&#x27;s exit status is the verdict and the whole verdict: print its captured output for diagnosis, never assert on the text of its summary. When an assertion is a static or filesystem scan (import boundary, &quot;X never appears outside Y,&quot; grep/AST gate), honor the scope the specification states and never widen it: scan production source only, exclude <code>.venv/</code>, <code>site-packages</code>, and vendored or generated code, and do not flag test doubles or fixtures that use the guarded dependency. Run every declared acceptance assertion before returning. For a conformance suite, use its section or example filters to diagnose coherent root-cause clusters, but rerun the full declared scope before reporting the result. Treat failing examples as a work queue for fixing general behavior; never add example-specific exceptions.</p>
+<ol><li>Grow the project&#x27;s own test suite as you write the code, and treat it as the project&#x27;s</li></ol>
+<p>real coverage. The acceptance assertions in <code>implements</code> are gates: few, fixed, and written before any code existed, so every expectation in them is a prediction. The tests you write are written <em>beside</em> the finished code, so their expected values are observed rather than predicted — which is why exhaustive coverage belongs here and not there. Extend the suite in the project&#x27;s established location and runner, keep it runnable by the project&#x27;s declared test command, and leave it green when you return. Cover, at minimum: every public entry point and every verb it declares, including declared error paths; the boundaries — empty, exactly one, many, absent optional fields, declared maxima; declared idempotence, applied twice; one behavior per test, named for the behavior; and isolation — database criteria use the provisioned application store and the shipped rollback fixture, passing its connection into the feature. Other connections and durability tests use criterion-owned records, idempotent setup and checked cleanup through supported interfaces. Never replace the configured store, reapply schema, or delete unrelated business records. Where a staged authoritative suite already covers a surface, that suite is the coverage: run it, and do not restate its cases. Run it <strong>only through the invocation this step&#x27;s acceptance criteria declare</strong>. A criterion marked <code>Suite: scoped</code> names the whole of this step&#x27;s obligation to that suite; running the suite&#x27;s unscoped entry point instead is not extra rigor, it is a different step&#x27;s gate executed early. A partial capability fails most of an authoritative corpus by construction and its unimplemented cases exhaust the runner&#x27;s per-case timeout rather than returning, so the unscoped run costs the most where it teaches the least, and interrupting it forfeits the step. If no criterion in this step invokes the staged suite, do not invoke it. Report the pass/fail counts of the invocations you did run in your <code>SUMMARY</code> so a reader can see coverage moving across steps.</p>
+<ol><li>Treat <code>User Acceptance</code> entries as review evidence requirements. Implement</li></ol>
+<p>the supporting behavior, but do not claim to have performed human judgment.</p>
+<ol><li>The <code>implements</code> section is authoritative and intentionally stacked late in</li></ol>
+<p>the prompt as the recency anchor. Build that WHAT exactly; do not substitute generic framework defaults.</p>
+<ol><li>Before adding or installing Python dependencies, verify each package name</li></ol>
+<p>against the declared registry. Do not invent package names. If a needed package cannot be verified or appears newly published, fail explicitly instead of installing it.</p>
+<ol><li>Use the stack&#x27;s required package manager workflow for dependency changes.</li></ol>
+<p>When the stack requires <code>uv</code>, update manifests through <code>uv</code> conventions rather than bare <code>pip install</code>.</p>
+<ol><li>Do not claim success unless you actually created or modified project files in</li></ol>
+<p>the build working directory. If you cannot write files or cannot complete the step, report failure explicitly.</p>
+<ol><li>Do not run <code>git add</code>, <code>git commit</code>, create branches, create tags, rewrite</li></ol>
+<p>history, or otherwise mutate Git history. Drydock checkpoints application changes and Target evidence after each execution and completed step. File lineage comes from Git and the Manifest&#x27;s <code>implements:</code> entries; no additional attribution response is required.</p>
+<ol><li>End your response with this exact closing structure:</li></ol>
+<pre><code>RESULT: SUCCESS | FAILED
+
+FILES CHANGED:
+- relative/path
+
+SUMMARY:
+&lt;brief reviewable summary&gt;
+
+BLOCKERS:
+- &lt;only if any&gt;</code></pre>
+<p>Before <code>RESULT</code>, you may emit one optional JSON payload when implementation required a bounded choice not already settled by the owning specification. This records what you did; it does not ask permission, create a questionnaire, or excuse incomplete work:</p>
+<pre><code>&lt;blueprint-decisions&gt;
+[{&quot;spec&quot;:&quot;FEATURE-Example.md&quot;,&quot;severity&quot;:&quot;Material&quot;,&quot;subject&quot;:&quot;Chosen behavior&quot;,&quot;decision&quot;:&quot;Options A and B were available. I implemented B because ... Is that acceptable, or should this change on replan?&quot;}]
+&lt;/blueprint-decisions&gt;</code></pre>
+<p>Name only a specification implemented by this build block. Use <code>Low</code> or <code>Material</code>; Build never emits a Blocking decision. Omit the payload when no implementation decision was necessary.</p>
+<ol><li><code>FILES CHANGED</code> must list only files actually written in the build working</li></ol>
+<p>directory. If no files were written, use <code>RESULT: FAILED</code>.</p>
+<ol><li>On <code>RESULT: FAILED</code>, append two additional lines so the failure is actionable</li></ol>
+<p>without opening logs. <code>FAILURE_SUMMARY</code> is one line naming the cause; <code>FAILURE_DETAIL</code> states what happened, why, and what to change before a rerun. Name concrete conditions when they apply: token or context limit exceeded, could not execute commands in this environment, a required input was missing, or a specific tool or command failed.</p>
+<pre><code>FAILURE_SUMMARY: &lt;one line naming the cause&gt;
+FAILURE_DETAIL: &lt;what happened, why, and what to change before rerunning&gt;</code></pre>
+<ol><li>When a declared acceptance criterion cannot pass no matter how the code is written,</li></ol>
+<p>say so with this exact token. You may not edit the criterion — it is staged and restored before grading:</p>
+<pre><code>AC_BROKEN: &lt;check-id&gt;[, &lt;check-id&gt;]</code></pre>
+<p>This is a report, not a verdict, and it stops nothing. A criterion reaches you only when its expected value is one its author could not have invented — a status code, a staged suite&#x27;s exit status, a value the criterion itself supplied as input — so your claim that the criterion rather than the code is at fault is the less likely explanation, and the budget is spent as it would be for any other failure. A criterion whose expectation <em>was</em> hand-typed already settles <code>DISPUTED</code> on its own, without you naming it. Emit the token only after running the criterion and confirming the underlying command succeeded while the assertion still failed. Name the affected check ids, emit it alongside your normal <code>RESULT</code> line, state the reasoning in <code>FAILURE_DETAIL</code>, and emit it even when <code>RESULT: SUCCESS</code>. Do not use it for a criterion you merely failed to satisfy.</p></article>
+</main>
+</body>
+</html>

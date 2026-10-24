@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>workspace/targets/DupFind/LINEAGE.json</title>
+<link rel="stylesheet" href="../../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>workspace/targets/DupFind/LINEAGE.json</h1><div class="filenav"><a href="../../../../index.html">&larr; Report</a><a href="../../../../workspace/targets/DupFind/LINEAGE.json">Raw file</a></div></header>
+<article class="doc"><pre>{
+  &quot;version&quot;: 1,
+  &quot;import&quot;: {
+    &quot;root&quot;: &quot;/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261024.140514/sources&quot;,
+    &quot;format&quot;: &quot;markdown&quot;
+  },
+  &quot;sources&quot;: {
+    &quot;INSTRUCTIONS.md&quot;: {
+      &quot;state&quot;: &quot;current&quot;,
+      &quot;versions&quot;: [
+        {
+          &quot;commit&quot;: &quot;8519fde&quot;,
+          &quot;date&quot;: &quot;2026-10-24&quot;,
+          &quot;hash&quot;: &quot;189cd54671b6072a66ab49cb47f2b4475c0beb5e75131b43b5d258fb289ec1ed&quot;,
+          &quot;release&quot;: &quot;&quot;,
+          &quot;state&quot;: &quot;consumed&quot;,
+          &quot;via&quot;: &quot;plan&quot;,
+          &quot;ticket&quot;: null,
+          &quot;requirements&quot;: [
+            {
+              &quot;name&quot;: &quot;build-and-test-contract&quot;,
+              &quot;text&quot;: &quot;Implement in Go 1.22 or newer using only the standard library. The application root is a Go module, and its executable is the main package at `./cmd/dupfind`. Tests run under `go test`.&quot;,
+              &quot;stories&quot;: [
+                &quot;architecture&quot;,
+                &quot;build-executable&quot;,
+                &quot;test-harness&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;grader-contract&quot;,
+              &quot;text&quot;: &quot;`sources/run.sh` is the scoring entry point. It is supplied, not authored, and is staged verbatim into the application root. `drydock uat` runs `sh sources/run.sh` from the completed application root and takes its exit code and output as the score.&quot;,
+              &quot;stories&quot;: [
+                &quot;conformance-grader&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;command-interface&quot;,
+              &quot;text&quot;: &quot;dupfind [--summary] [--min-size &amp;lt;bytes&amp;gt;] &amp;lt;directory&amp;gt;&quot;,
+              &quot;stories&quot;: [
+                &quot;build-executable&quot;,
+                &quot;command-options&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;walk-and-filter-files&quot;,
+              &quot;text&quot;: &quot;1. **Scope.** The tool walks &amp;lt;directory&amp;gt; recursively, including hidden files and directories (names beginning `.`). It considers regular files only. It neither follows nor reports symbolic links.\n2. **Empty files are never duplicates.** A file of zero bytes is always ignored, which the default `--min-size 1` guarantees.&quot;,
+              &quot;stories&quot;: [
+                &quot;scan-and-group&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;identify-duplicates&quot;,
+              &quot;text&quot;: &quot;3. **Duplicate test.** Files are grouped by size first. Only files that share a size are read. Within a size, files are grouped by the SHA-256 digest of their contents. A group of two or more files with the same size and digest is a duplicate group.&quot;,
+              &quot;stories&quot;: [
+                &quot;scan-and-group&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;relative-paths&quot;,
+              &quot;text&quot;: &quot;4. **Paths** are written relative to &amp;lt;directory&amp;gt;, with `/` as the separator and no leading `./`.&quot;,
+              &quot;stories&quot;: [
+                &quot;scan-and-group&quot;,
+                &quot;listing-csv&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;ordered-results&quot;,
+              &quot;text&quot;: &quot;5. **Order.** Groups are ordered by reclaimable bytes descending, then by digest ascending. A group&#x27;s reclaimable bytes are `size \u00d7 (files \u2212 1)`. Groups are numbered from 1 in that order. Within a group, paths are ordered by byte value ascending.&quot;,
+              &quot;stories&quot;: [
+                &quot;order-results&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;unreadable-files&quot;,
+              &quot;text&quot;: &quot;6. **Unreadable files.** A file that cannot be read is skipped with one warning line on standard error. It does not change the exit code.&quot;,
+              &quot;stories&quot;: [
+                &quot;scan-and-group&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;csv-output&quot;,
+              &quot;text&quot;: &quot;Output is CSV on standard output: a header row, then data rows, with `\\n` line endings. A field that contains a comma, a double quote, or a newline is quoted as RFC 4180 specifies. Go&#x27;s `encoding/csv` writer produces this format.&quot;,
+              &quot;stories&quot;: [
+                &quot;listing-csv&quot;,
+                &quot;summary-csv&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;listing-output&quot;,
+              &quot;text&quot;: &quot;**Listing** (default): header `group,size,sha256,path`, then one row per file in every duplicate group. `sha256` is the lowercase hexadecimal digest. With no duplicates, only the header is written.&quot;,
+              &quot;stories&quot;: [
+                &quot;listing-csv&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;summary-output&quot;,
+              &quot;text&quot;: &quot;**Summary** (`--summary`): header `groups,duplicate_files,reclaimable_bytes`, then one row. `duplicate_files` is the sum of `files \u2212 1` over all groups. `reclaimable_bytes` is the sum of every group&#x27;s reclaimable bytes. With no duplicates the row is `0,0,0`.&quot;,
+              &quot;stories&quot;: [
+                &quot;summary-csv&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;file-safety&quot;,
+              &quot;text&quot;: &quot;The tool reports each group of duplicates and the disk space that deleting all but one copy of each would recover. It never deletes, moves, or modifies a file.&quot;,
+              &quot;stories&quot;: [
+                &quot;scan-and-group&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;minimum-size-filter&quot;,
+              &quot;text&quot;: &quot;`--min-size &amp;lt;bytes&amp;gt;` | Ignore files smaller than `&amp;lt;bytes&amp;gt;`. A positive integer; default `1`.&quot;,
+              &quot;stories&quot;: [
+                &quot;command-options&quot;,
+                &quot;scan-and-group&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;failure-behavior&quot;,
+              &quot;text&quot;: &quot;A failing command writes nothing to standard output and one diagnostic line to standard error.&quot;,
+              &quot;stories&quot;: [
+                &quot;command-options&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;exit-codes&quot;,
+              &quot;text&quot;: &quot;| `0` | Success, whether or not duplicates were found. |\n| `1` | Operational failure: `&amp;lt;directory&amp;gt;` does not exist or is not a directory. |\n| `2` | Usage error: missing or extra arguments, unknown option, `--min-size` not a positive integer. |&quot;,
+              &quot;stories&quot;: [
+                &quot;command-options&quot;
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    &quot;run.sh&quot;: {
+      &quot;state&quot;: &quot;current&quot;,
+      &quot;versions&quot;: [
+        {
+          &quot;commit&quot;: &quot;8519fde&quot;,
+          &quot;date&quot;: &quot;2026-10-24&quot;,
+          &quot;hash&quot;: &quot;dc265eae016629662090b0465362c0642ea7deb57afd77c5725652d0969f880d&quot;,
+          &quot;release&quot;: &quot;&quot;,
+          &quot;state&quot;: &quot;consumed&quot;,
+          &quot;via&quot;: &quot;plan&quot;,
+          &quot;ticket&quot;: null,
+          &quot;requirements&quot;: [
+            {
+              &quot;name&quot;: &quot;build-dupfind-executable&quot;,
+              &quot;text&quot;: &quot;Builds ./cmd/dupfind with `go build`&quot;,
+              &quot;stories&quot;: [
+                &quot;build-executable&quot;,
+                &quot;conformance-grader&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;create-fixed-exam-tree&quot;,
+              &quot;text&quot;: &quot;# make_tree &amp;lt;dir&amp;gt; \u2014 the exam tree. Every byte is fixed, so every hash is known.&quot;,
+              &quot;stories&quot;: [
+                &quot;conformance-grader&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;compare-command-results&quot;,
+              &quot;text&quot;: &quot;# check &amp;lt;id&amp;gt; &amp;lt;expected exit&amp;gt; &amp;lt;dupfind args...&amp;gt;  \u2014 expected standard output on stdin.&quot;,
+              &quot;stories&quot;: [
+                &quot;conformance-grader&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;list-duplicate-files&quot;,
+              &quot;text&quot;: &quot;# \u2500\u2500 A. Full listing \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500&quot;,
+              &quot;stories&quot;: [
+                &quot;scan-and-group&quot;,
+                &quot;order-results&quot;,
+                &quot;listing-csv&quot;,
+                &quot;conformance-grader&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;summarize-duplicates&quot;,
+              &quot;text&quot;: &quot;# \u2500\u2500 B. Summary \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500&quot;,
+              &quot;stories&quot;: [
+                &quot;summary-csv&quot;,
+                &quot;conformance-grader&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;filter-by-minimum-size&quot;,
+              &quot;text&quot;: &quot;# \u2500\u2500 C. Minimum size \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500&quot;,
+              &quot;stories&quot;: [
+                &quot;command-options&quot;,
+                &quot;scan-and-group&quot;,
+                &quot;summary-csv&quot;,
+                &quot;listing-csv&quot;,
+                &quot;conformance-grader&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;handle-empty-duplicate-results&quot;,
+              &quot;text&quot;: &quot;# \u2500\u2500 D. No duplicates \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500&quot;,
+              &quot;stories&quot;: [
+                &quot;scan-and-group&quot;,
+                &quot;listing-csv&quot;,
+                &quot;summary-csv&quot;,
+                &quot;conformance-grader&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;report-invalid-path-errors&quot;,
+              &quot;text&quot;: &quot;# \u2500\u2500 E. Operational failures \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500&quot;,
+              &quot;stories&quot;: [
+                &quot;command-options&quot;,
+                &quot;conformance-grader&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;reject-invalid-cli-usage&quot;,
+              &quot;text&quot;: &quot;# \u2500\u2500 U. Usage errors \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500&quot;,
+              &quot;stories&quot;: [
+                &quot;command-options&quot;,
+                &quot;conformance-grader&quot;
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
+</pre></article>
+</main>
+</body>
+</html>

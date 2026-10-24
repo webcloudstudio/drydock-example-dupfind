@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>workspace/targets/DupFind/DECISIONS.json</title>
+<link rel="stylesheet" href="../../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>workspace/targets/DupFind/DECISIONS.json</h1><div class="filenav"><a href="../../../../index.html">&larr; Report</a><a href="../../../../workspace/targets/DupFind/DECISIONS.json">Raw file</a></div></header>
+<article class="doc"><pre>[
+  {
+    &quot;id&quot;: &quot;Q-001&quot;,
+    &quot;type&quot;: &quot;choice&quot;,
+    &quot;severity&quot;: &quot;material&quot;,
+    &quot;origin&quot;: &quot;plan&quot;,
+    &quot;blueprint&quot;: &quot;FEATURE-Command.md&quot;,
+    &quot;story&quot;: &quot;command-options&quot;,
+    &quot;status&quot;: &quot;recommended&quot;,
+    &quot;archived&quot;: false,
+    &quot;title&quot;: &quot;Operational failure handling&quot;,
+    &quot;description&quot;: &quot;The source defines exit codes and no-stdout behavior for missing or non-directory paths, and warning behavior for unreadable files, but does not state the response contract for other operational failures.&quot;,
+    &quot;options&quot;: [
+      {
+        &quot;value&quot;: &quot;operational-failure&quot;,
+        &quot;label&quot;: &quot;Return 1, write a diagnostic to stderr, and write nothing to stdout&quot;
+      },
+      {
+        &quot;value&quot;: &quot;usage-failure&quot;,
+        &quot;label&quot;: &quot;Return 2 for operational failures&quot;
+      }
+    ],
+    &quot;system_choice&quot;: &quot;operational-failure&quot;
+  }
+]
+</pre></article>
+</main>
+</body>
+</html>

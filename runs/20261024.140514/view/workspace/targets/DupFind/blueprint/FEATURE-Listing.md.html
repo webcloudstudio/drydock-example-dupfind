@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>workspace/targets/DupFind/blueprint/FEATURE-Listing.md</title>
+<link rel="stylesheet" href="../../../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>workspace/targets/DupFind/blueprint/FEATURE-Listing.md</h1><div class="filenav"><a href="../../../../../index.html">&larr; Report</a><a href="../../../../../workspace/targets/DupFind/blueprint/FEATURE-Listing.md">Raw file</a></div></header>
+<article class="doc"><h1>FEATURE: Duplicate Listing</h1>
+<div class="scroll"><table><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Version</td><td>20261024 V1</td></tr><tr><td>Description</td><td>Defines the duplicate file CSV listing.</td></tr><tr><td>Depends On</td><td>FEATURE-Ordering.md</td></tr><tr><td>Provides</td><td>default CSV listing</td></tr><tr><td>Consumes</td><td>ordered duplicate groups and relative paths</td></tr></tbody></table></div>
+<h2>Purpose</h2>
+<p>The default command output is a CSV listing of every file in every duplicate group. It uses the ordered groups and relative paths provided by <code>FEATURE-Ordering.md</code>.</p>
+<h2>Output</h2>
+<p>The CSV header is <code>group,size,sha256,path</code>. Each subsequent row contains the group number, file size in bytes, lowercase hexadecimal SHA-256 digest, and relative path. Emit one row per file in every duplicate group. When no duplicates exist, emit the header only.</p>
+<p>Use Go&#x27;s <code>encoding/csv</code> writer, with <code>\n</code> line endings and RFC 4180 field quoting.</p>
+<h2>Programmatic Acceptance</h2>
+<p>=== AC listing-output ===<br>Intent: The command emits the specified CSV header and one row for each duplicate file, with paths parsed as CSV fields.</p>
+<p>import csv import hashlib import io import os import pathlib import subprocess</p>
+<p>root = pathlib.Path(&quot;listing-fixture&quot;) (root / &quot;a&quot;).mkdir(parents=True, exist_ok=True) payload = b&quot;listing input\n&quot; (root / &quot;a&quot; / &quot;first.txt&quot;).write_bytes(payload) (root / &quot;second,copy.txt&quot;).write_bytes(payload) result = subprocess.run( [&quot;./dupfind&quot;, str(root)], capture_output=True, text=True, ) assert result.returncode == 0, (result.stdout, result.stderr) rows = list(csv.reader(io.StringIO(result.stdout))) digest = hashlib.sha256(payload).hexdigest() assert rows[0] == [&quot;group&quot;, &quot;size&quot;, &quot;sha256&quot;, &quot;path&quot;] assert rows[1:] == [ [&quot;1&quot;, str(len(payload)), digest, &quot;a/first.txt&quot;], [&quot;1&quot;, str(len(payload)), digest, &quot;second,copy.txt&quot;], ] === END AC listing-output ===</p>
+<p>=== AC listing-empty ===<br>Intent: A directory with no duplicates produces a header-only listing. import csv import io import pathlib import subprocess</p>
+<p>root = pathlib.Path(&quot;listing-empty-fixture&quot;) root.mkdir(parents=True, exist_ok=True) (root / &quot;single.txt&quot;).write_text(&quot;only one\n&quot;) result = subprocess.run( [&quot;./dupfind&quot;, str(root)], capture_output=True, text=True, ) assert result.returncode == 0, (result.stdout, result.stderr) rows = list(csv.reader(io.StringIO(result.stdout))) assert rows[1:] == [] === END AC listing-empty ===</p>
+<h2>User Acceptance</h2>
+<ul><li>None.</li></ul>
+<h2>Guardrails</h2>
+<ul><li>Listing never modifies, moves, or deletes examined files.</li></ul></article>
+</main>
+</body>
+</html>

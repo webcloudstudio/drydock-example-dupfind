@@ -1,0 +1,20 @@
+Drydock 0.8.0  Copyright (c) 2026 Web Cloud Studio. All rights reserved.
+Next: (no actionable steps — all done or blocked)
+
+Blueprint: DupFind
+Target: /mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261024.140514/workspace/targets/DupFind
+Rows: <state> <type>  <Name>  [<id>]   — pass [<id>] to --step
+Block: Build Block 1 · Foundational  [block-1]   — [built] story Establish the Go module and application boundaries.  [architecture] — complete
+
+Block: Build Block 2 · Service  [block-2]   — 8/8 stories complete
+  [built]   story  Provide the dupfind executable and build contract.  [build-executable]
+  [built]   story  Parse command options and validate the directory argument.  [command-options]
+  [built]   story  Find exact duplicate regular files in a directory tree.  [scan-and-group]
+  [built]   story  Order duplicate groups and paths deterministically.  [order-results]
+  [built]   story  Write the duplicate listing as CSV.  [listing-csv]
+  [built]   story  Write duplicate group and reclaimable-space totals.  [summary-csv]
+  [built]   story  Provide the project quality test entry point.  [test-harness]
+  [built]   story  Pass the supplied duplicate-finder conformance grader.  [conformance-grader]
+
+Steps: 9 total — 0 done, 9 built (await verify), 0 in review, 0 pending, 0 blocked by questions, 0 failed (0% complete)
+Buildable now: (none)

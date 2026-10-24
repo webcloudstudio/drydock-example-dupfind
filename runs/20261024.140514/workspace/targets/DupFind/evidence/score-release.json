@@ -1,0 +1,134 @@
+{
+  "schema_version": 5,
+  "recorded_at": "2026-10-24T14:14:59+00:00",
+  "target": "DupFind",
+  "verdict": "PASSED",
+  "verdict_line": "DupFind: PASSED \u2014 8 of 8",
+  "statement": "DupFind: PASSED \u2014 8 of 8\n\n  st-001  MET       [\"sh\", \"sources/run.sh\"] exited 0; governed gate: sh sources/run.sh exited 0; 15 passed, 0 failed\n  st-002  MET       bin/test.sh:1-6; sh bin/test.sh exited 0\n  st-003  MET       go.mod declares module dupfind; go build -o dupfind ./cmd/dupfind succeeded; cmd/dupfind/main.go and its imported application packages use standard-library dependencies\n  st-004  MET       probe: listing contained both identical files with their correct digest and relative paths; internal/output/output.go: Ordered sorts paths and groups by the required keys\n  st-005  MET       probe: listing included only a and sub/b; empty files and links were absent; internal/scan/scan.go: skips ModeSymlink entries and requires regular files\n  st-006  MET       probe: summary output was 1 group, 1 duplicate file, 5 reclaimable bytes; internal/output/output.go: Summary computes totals from ordered groups\n  st-007  MET       probe: missing directory exited 1 with empty stdout; internal/cli/cli.go: malformed parsing, nonpositive size, and wrong argument count return 2 after writing errors to stderr\n  st-008  MET       internal/scan/scan.go: uses os.Open and io.Copy to read examined files; internal/cli/cli.go, internal/scan/scan.go, and internal/output/output.go: no filesystem mutation calls\n  reported: Build directory has uncommitted changes",
+  "complete": true,
+  "governed_gate": {
+    "name": "full",
+    "outcome": "PASS",
+    "argv": [
+      "sh",
+      "sources/run.sh"
+    ],
+    "return_code": 0,
+    "duration_ms": 1861,
+    "detail": "",
+    "timed_out": false,
+    "build_identity": "8638d4ffb9d9a83f",
+    "stdout": "PASS A1: dupfind tree\nPASS A2: dupfind /tmp/tmp.ldAcimCEVf/tree\nPASS B1: dupfind --summary tree\nPASS C1: dupfind --min-size 20 tree\nPASS C2: dupfind --summary --min-size 20 tree\nPASS C3: dupfind --min-size 200 tree\nPASS D1: dupfind tree/unique\nPASS D2: dupfind --summary tree/empty\nPASS E1: dupfind tree/no-such-directory\nPASS E2: dupfind tree/env.bak\nPASS U1: dupfind \nPASS U2: dupfind tree tree/a\nPASS U3: dupfind --min-size abc tree\nPASS U4: dupfind --min-size 0 tree\nPASS U5: dupfind --frobnicate tree\nDupFind: 15 passed, 0 failed (of 15)\n",
+    "stderr": ""
+  },
+  "criteria": [
+    {
+      "criterion_id": "st-001",
+      "verdict": "MET",
+      "rationale": "The supplied gate passed against this tree and reported all 15 checks passing.",
+      "evidence": [
+        "[\"sh\", \"sources/run.sh\"] exited 0",
+        "governed gate: sh sources/run.sh exited 0; 15 passed, 0 failed"
+      ]
+    },
+    {
+      "criterion_id": "st-002",
+      "verdict": "MET",
+      "rationale": "The POSIX test script exists and runs go vet and go test successfully.",
+      "evidence": [
+        "bin/test.sh:1-6",
+        "sh bin/test.sh exited 0"
+      ]
+    },
+    {
+      "criterion_id": "st-003",
+      "verdict": "MET",
+      "rationale": "The application root is a Go module, and go build ./cmd/dupfind succeeded with standard-library imports in the executable\u2019s dependency tree.",
+      "evidence": [
+        "go.mod declares module dupfind",
+        "go build -o dupfind ./cmd/dupfind succeeded",
+        "cmd/dupfind/main.go and its imported application packages use standard-library dependencies"
+      ]
+    },
+    {
+      "criterion_id": "st-004",
+      "verdict": "MET",
+      "rationale": "A probe found the matching files with the expected SHA-256 and relative paths, while the output code sorts paths by byte order and groups by reclaimable bytes descending then digest ascending.",
+      "evidence": [
+        "probe: listing contained both identical files with their correct digest and relative paths",
+        "internal/output/output.go: Ordered sorts paths and groups by the required keys"
+      ]
+    },
+    {
+      "criterion_id": "st-005",
+      "verdict": "MET",
+      "rationale": "The probe\u2019s output excluded empty files and symbolic links, and the scanner skips symbolic links and rejects non-regular files.",
+      "evidence": [
+        "probe: listing included only a and sub/b; empty files and links were absent",
+        "internal/scan/scan.go: skips ModeSymlink entries and requires regular files"
+      ]
+    },
+    {
+      "criterion_id": "st-006",
+      "verdict": "MET",
+      "rationale": "The probe\u2019s summary reported one group, one duplicate file, and five reclaimable bytes, matching its listing.",
+      "evidence": [
+        "probe: summary output was 1 group, 1 duplicate file, 5 reclaimable bytes",
+        "internal/output/output.go: Summary computes totals from ordered groups"
+      ]
+    },
+    {
+      "criterion_id": "st-007",
+      "verdict": "MET",
+      "rationale": "The probe confirmed a missing directory exits 1 with empty standard output, and the CLI source maps malformed arguments to exit 2 without writing to standard output.",
+      "evidence": [
+        "probe: missing directory exited 1 with empty stdout",
+        "internal/cli/cli.go: malformed parsing, nonpositive size, and wrong argument count return 2 after writing errors to stderr"
+      ]
+    },
+    {
+      "criterion_id": "st-008",
+      "verdict": "MET",
+      "rationale": "The scanner opens examined files for reading, and the inspected application code contains no operation that writes, moves, or deletes files under the scanned directory.",
+      "evidence": [
+        "internal/scan/scan.go: uses os.Open and io.Copy to read examined files",
+        "internal/cli/cli.go, internal/scan/scan.go, and internal/output/output.go: no filesystem mutation calls"
+      ]
+    }
+  ],
+  "guardrail_ids": [],
+  "observations": [
+    {
+      "criterion_id": "st-001",
+      "kind": "command",
+      "source": "[\"sh\", \"sources/run.sh\"]",
+      "return_code": 0,
+      "pinned": "MET",
+      "detail": "[\"sh\", \"sources/run.sh\"] exited 0",
+      "output": "PASS A1: dupfind tree\nPASS A2: dupfind /tmp/tmp.OVxFIwVQ7F/tree\nPASS B1: dupfind --summary tree\nPASS C1: dupfind --min-size 20 tree\nPASS C2: dupfind --summary --min-size 20 tree\nPASS C3: dupfind --min-size 200 tree\nPASS D1: dupfind tree/unique\nPASS D2: dupfind --summary tree/empty\nPASS E1: dupfind tree/no-such-directory\nPASS E2: dupfind tree/env.bak\nPASS U1: dupfind \nPASS U2: dupfind tree tree/a\nPASS U3: dupfind --min-size abc tree\nPASS U4: dupfind --min-size 0 tree\nPASS U5: dupfind --frobnicate tree\nDupFind: 15 passed, 0 failed (of 15)"
+    }
+  ],
+  "blockers": [],
+  "attestations": [],
+  "kit_faults": [],
+  "warnings": [
+    "Build directory has uncommitted changes"
+  ],
+  "improvements": [],
+  "identities": {
+    "code": "68eaa4f2431dca96edfc23be4d44533b8b17f16c",
+    "sea_trials": "4f35b7ec8182f582dbadcc5a547e02f8f4fc916845bcdbef78754be73c69c3f8",
+    "blueprint": {
+      "ARCHITECTURE.md": "27895ac5b7eedfdb61f0173fdf005a797cd8f496bdce6af4d28dff4066c667a2",
+      "FEATURE-Build.md": "ca517c3e3d49f8648fb94d53d7bd1be8f6d8bf1cbd7207e1d426192fcab46cd5",
+      "FEATURE-Command.md": "6913d12ffa50e16c76e990e059520a9a1de8f7d4826e6eb35999591026f56fca",
+      "FEATURE-Listing.md": "00ec23f399fbc248203586bc42ec9f8a714e9fcda6e3b221b6680157b8850202",
+      "FEATURE-Ordering.md": "a8a77eb8fc4793037fdee75f4077785e07b2cb705d5e782100a9881dbf6b49c1",
+      "FEATURE-Scanning.md": "856647526b5dba10af0b423ebf5efe1f2865988f0c05334004d7a9ff28b049ec",
+      "FEATURE-Summary.md": "2d6e27a9298bac8137fb4bc4c3ae80061b4a24f70100ff79f9f865c6e8e3cb1e",
+      "FEATURE-Tests.md": "18fd086294424f4420cffb68977075ae6f002a63e4cb2d0e71e510c1fedd3f87",
+      "VERIFICATION.md": "5c2c08c97adaef587f9a218a3777357113395c5dbe9932b9d9dc9aac535010da"
+    }
+  },
+  "execution_id": "20261024.141425.598Z-68c102a9"
+}

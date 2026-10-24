@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>build/DupFind/README.md</title>
+<link rel="stylesheet" href="../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>build/DupFind/README.md</h1><div class="filenav"><a href="../../../index.html">&larr; Report</a><a href="../../../build/DupFind/README.md">Raw file</a></div></header>
+<article class="doc"><h1>drydock DupFind Uat Case</h1>
+<p>Drydock uat - DupFind is the simplest Go kit and exercises go build end to end. The source is an original brief for a command-line duplicate file finder that groups regular files by size and SHA-256 digest and reports each group or a summary of reclaimable bytes. The supplied grader, sources/run.sh, builds ./cmd/dupfind with go build, creates a fixed directory tree (hidden files, a symbolic link, empty files, a path with a comma), and runs 15 checks of exit code and output. Standard library only, no database. Run with drydock uat DupFind. Source Repo: none, the brief is original to this kit.</p>
+<h2>Intent</h2>
+<p>Build a command-line duplicate file finder, the Go executable <code>./cmd/dupfind</code>, as described in <code>sources/INSTRUCTIONS.md</code>. It walks a directory, groups regular files by size and then by SHA-256 digest, and reports each duplicate group or a one-row summary of the space that removing the copies would recover.</p>
+<p>Correctness is measured by <code>sources/run.sh</code>: it builds the executable with <code>go build</code> and makes 15 checks of exit code and standard output against a fixed directory tree. The goal is every check passing.</p>
+<h2>What It Does</h2>
+<p>The application root is a Go module. Building from that root with <code>go build ./cmd/dupfind</code> produces the dupfind command. The main package lives in <code>cmd/dupfind</code> and uses only the standard library.</p>
+<p>The default command output is a CSV listing of every file in every duplicate group. It uses the ordered groups and relative paths provided by <code>FEATURE-Ordering.md</code>.</p>
+<p>When <code>--summary</code> is supplied, write a single CSV row summarizing the duplicate groups that the listing would produce with the same options.</p>
+<p>Provide a POSIX-compatible <code>bin/test.sh</code> at the application root. It runs <code>go vet ./...</code> and <code>go test ./...</code> from that root and exits zero only when both pass.</p>
+<h2>Stack</h2>
+<p>Go</p>
+<h2>Verification</h2>
+<pre><code>bash bin/test.sh</code></pre>
+<h2>Next Steps</h2>
+<ul><li>Complete the first-run checks above.</li><li>Run <code>bash bin/test.sh</code> before making release or deployment changes.</li></ul></article>
+</main>
+</body>
+</html>

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>workspace/targets/DupFind/blueprint/FEATURE-Summary.md</title>
+<link rel="stylesheet" href="../../../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>workspace/targets/DupFind/blueprint/FEATURE-Summary.md</h1><div class="filenav"><a href="../../../../../index.html">&larr; Report</a><a href="../../../../../workspace/targets/DupFind/blueprint/FEATURE-Summary.md">Raw file</a></div></header>
+<article class="doc"><h1>FEATURE: Duplicate Summary</h1>
+<div class="scroll"><table><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Version</td><td>20261024 V1</td></tr><tr><td>Description</td><td>Defines the summary of duplicate groups and reclaimable space.</td></tr><tr><td>Depends On</td><td>FEATURE-Ordering.md</td></tr><tr><td>Provides</td><td>--summary CSV output</td></tr><tr><td>Consumes</td><td>ordered duplicate groups and relative paths</td></tr></tbody></table></div>
+<h2>Purpose</h2>
+<p>When <code>--summary</code> is supplied, write a single CSV row summarizing the duplicate groups that the listing would produce with the same options.</p>
+<h2>Output</h2>
+<p>The CSV header is <code>groups,duplicate_files,reclaimable_bytes</code>, followed by one row containing:</p>
+<ul><li>The number of duplicate groups.</li><li>The sum of <code>files − 1</code> across all groups.</li><li>The sum of <code>size × (files − 1)</code> across all groups.</li></ul>
+<p>With no duplicates, emit <code>0,0,0</code> as the data row. Use <code>encoding/csv</code> and <code>\n</code> line endings.</p>
+<h2>Programmatic Acceptance</h2>
+<p>=== AC summary-totals ===<br>Intent: The summary reports totals derived from the same duplicate groups as the listing. import csv import io import pathlib import subprocess</p>
+<p>root = pathlib.Path(&quot;summary-fixture&quot;) root.mkdir(parents=True, exist_ok=True) payload_a = b&quot;summary group a\n&quot; payload_b = b&quot;summary group b\n&quot; (root / &quot;a1&quot;).write_bytes(payload_a) (root / &quot;a2&quot;).write_bytes(payload_a) (root / &quot;a3&quot;).write_bytes(payload_a) (root / &quot;b1&quot;).write_bytes(payload_b) (root / &quot;b2&quot;).write_bytes(payload_b) result = subprocess.run( [&quot;./dupfind&quot;, &quot;--summary&quot;, str(root)], capture_output=True, text=True, ) assert result.returncode == 0, (result.stdout, result.stderr) rows = list(csv.reader(io.StringIO(result.stdout))) assert rows[0] == [&quot;groups&quot;, &quot;duplicate_files&quot;, &quot;reclaimable_bytes&quot;] assert rows[1:] == [ [ &quot;2&quot;, str((3 - 1) + (2 - 1)), str(len(payload_a) * (3 - 1) + len(payload_b) * (2 - 1)), ] ] === END AC summary-totals ===</p>
+<p>=== AC summary-empty ===<br>Intent: A directory with no duplicates reports zero totals. import csv import io import pathlib import subprocess</p>
+<p>root = pathlib.Path(&quot;summary-empty-fixture&quot;) root.mkdir(parents=True, exist_ok=True) (root / &quot;single.txt&quot;).write_bytes(b&quot;unique&quot;) result = subprocess.run( [&quot;./dupfind&quot;, &quot;--summary&quot;, str(root)], capture_output=True, text=True, ) assert result.returncode == 0, (result.stdout, result.stderr) rows = list(csv.reader(io.StringIO(result.stdout))) assert rows[1:] == [[&quot;0&quot;, &quot;0&quot;, &quot;0&quot;]] === END AC summary-empty ===</p>
+<h2>User Acceptance</h2>
+<ul><li>None.</li></ul>
+<h2>Guardrails</h2>
+<ul><li>Summary totals are computed from the duplicate groups; do not hardcode counts or byte totals.</li></ul></article>
+</main>
+</body>
+</html>

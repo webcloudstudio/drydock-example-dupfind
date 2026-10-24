@@ -1,0 +1,25 @@
+[
+  {
+    "id": "Q-001",
+    "type": "choice",
+    "severity": "material",
+    "origin": "plan",
+    "blueprint": "FEATURE-Command.md",
+    "story": "command-options",
+    "status": "recommended",
+    "archived": false,
+    "title": "Operational failure handling",
+    "description": "The source defines exit codes and no-stdout behavior for missing or non-directory paths, and warning behavior for unreadable files, but does not state the response contract for other operational failures.",
+    "options": [
+      {
+        "value": "operational-failure",
+        "label": "Return 1, write a diagnostic to stderr, and write nothing to stdout"
+      },
+      {
+        "value": "usage-failure",
+        "label": "Return 2 for operational failures"
+      }
+    ],
+    "system_choice": "operational-failure"
+  }
+]

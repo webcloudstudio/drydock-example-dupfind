@@ -1,0 +1,19 @@
+Drydock 0.8.0  Copyright (c) 2026 Web Cloud Studio. All rights reserved.
+
+Build report: DupFind
+  evidence: /mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261024.140514/workspace/targets/DupFind/evidence
+  usage:    /mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261024.140514/workspace/logs/llm.jsonl
+
+  Blueprint acceptance (last `score ac`): PASS 13  FAIL 0  UNVERIFIED 0  PREPASSED 4  (17 AC)
+
+  Block                     Build AC  Calls   Cached  Uncached    Hit  Output    Time
+  ───────────────────────────────────────────────────────────────────────────────────
+  ✓ Block 1 · Foundational       2/2      1  155,392    25,347  86.0%   2,615  1m 24s
+  ✓ Block 2 · Service          15/15      1  419,968    36,681  92.0%   5,487  1m 14s
+  ───────────────────────────────────────────────────────────────────────────────────
+  TOTAL                        17/17      2  575,360    62,028  90.3%   8,102  2m 39s
+
+  Blocks: 2/2 verified · 2 on first call · 0 repaired
+  Model:  gpt-6-luna
+  Tokens: 575,360 cached · 62,028 uncached · 8,102 out
+

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>workspace/targets/DupFind/blueprint/FEATURE-Scanning.md</title>
+<link rel="stylesheet" href="../../../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>workspace/targets/DupFind/blueprint/FEATURE-Scanning.md</h1><div class="filenav"><a href="../../../../../index.html">&larr; Report</a><a href="../../../../../workspace/targets/DupFind/blueprint/FEATURE-Scanning.md">Raw file</a></div></header>
+<article class="doc"><h1>FEATURE: Scanning</h1>
+<div class="scroll"><table><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Version</td><td>20261024 V1</td></tr><tr><td>Description</td><td>Finds exact duplicate regular files by scanning a directory tree.</td></tr><tr><td>Depends On</td><td>ARCHITECTURE.md, FEATURE-Command.md</td></tr><tr><td>Provides</td><td>duplicate groups from a directory tree</td></tr><tr><td>Consumes</td><td>dupfind command-line options and usage</td></tr></tbody></table></div>
+<h2>Scope and filtering</h2>
+<p>Walk the requested directory recursively, including hidden files and directories. Examine regular files only. Do not follow or report symbolic links. Ignore files smaller than the selected minimum size; zero-byte files are therefore ignored under the default minimum of 1.</p>
+<h2>Candidate grouping and reads</h2>
+<p>Partition eligible files by size. Read file contents only for sizes represented by at least two eligible files. Compute SHA-256 for each readable candidate and group files with the same size and digest. Report groups only when at least two files share both. If a candidate cannot be read, skip it, write one warning line to standard error, and keep the command&#x27;s success exit status.</p>
+<h2>Read-only behavior</h2>
+<p>The scan only reads files. It never deletes, moves, or writes files in the examined directory. It does not use fixture-specific paths or expected results.</p>
+<h2>Programmatic Acceptance</h2>
+<p>=== AC scan-groups-exact-files ===<br>Intent: The supplied conformance grader passes its duplicate scanning cases.</p>
+<p>Suite: scoped</p>
+<p>import subprocess</p>
+<p>result = subprocess.run( [&quot;sh&quot;, &quot;sources/run.sh&quot;], capture_output=True, text=True, ) print(result.stdout) print(result.stderr) assert result.returncode == 0 === END AC scan-groups-exact-files ===</p>
+<p>=== AC scan-symlinks-and-empty ===<br>Intent: The supplied conformance grader passes its symbolic-link and empty-file cases.</p>
+<p>Suite: scoped</p>
+<p>import subprocess</p>
+<p>result = subprocess.run( [&quot;sh&quot;, &quot;sources/run.sh&quot;], capture_output=True, text=True, ) print(result.stdout) print(result.stderr) assert result.returncode == 0 === END AC scan-symlinks-and-empty ===</p>
+<p>=== AC scan-read-only ===<br>Intent: The supplied conformance grader passes while examined files remain untouched.</p>
+<p>Suite: scoped</p>
+<p>import subprocess</p>
+<p>result = subprocess.run( [&quot;sh&quot;, &quot;sources/run.sh&quot;], capture_output=True, text=True, ) print(result.stdout) print(result.stderr) assert result.returncode == 0 === END AC scan-read-only ===</p>
+<h2>User Acceptance</h2>
+<ul><li>None.</li></ul>
+<h2>Guardrails</h2>
+<ul><li>Never follow or report symbolic links.</li><li>Never write to the examined directory.</li></ul></article>
+</main>
+</body>
+</html>

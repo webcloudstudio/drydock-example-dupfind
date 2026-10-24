@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>workspace/targets/DupFind/evidence/block-1.md</title>
+<link rel="stylesheet" href="../../../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>workspace/targets/DupFind/evidence/block-1.md</h1><div class="filenav"><a href="../../../../../index.html">&larr; Report</a><a href="../../../../../workspace/targets/DupFind/evidence/block-1.md">Raw file</a></div></header>
+<article class="doc"><h1>Evidence: Block 1 · Foundational (block-1)</h1>
+<ul><li>block type: block</li><li>date: 2026-10-24</li><li>resulting state: closed/verified</li><li>story points (combined assembled cost): 6530</li><li>execution id: 20261024.140854.923Z-00f76a5e</li></ul>
+<h2>Stories built</h2>
+<ul><li>Establish the Go module and application boundaries. (architecture) [story]</li></ul>
+<h2>Stacked context</h2>
+<ul><li>implements: go.md (SP 4944)</li><li>compass: COMPASS.md (SP 641)</li><li>implements: ARCHITECTURE.md (SP 864)</li></ul>
+<h2>Build directory changes</h2>
+<ul><li>cmd/dupfind/main.go</li><li>cmd/dupfind/main_test.go</li><li>go.mod</li><li>internal/cli/cli.go</li><li>internal/cli/cli_test.go</li><li>internal/output/output.go</li><li>internal/scan/scan.go</li></ul>
+<h2>Pre-build acceptance observation</h2>
+<ul><li>RED: architecture-cli-contract (ARCHITECTURE.md)</li></ul>
+<p>intent: The architecture exposes the documented CLI runner contract and the executable package builds. return code: 1 stdout: go: cannot find main module, but found .git/config in /mnt/c/Users/barlo/projects/drydock/uat/DupFind to create a module there, run: cd ../../../.. &amp;&amp; go mod init stderr: --- drydock: values at failure --- result = CompletedProcess(args=[&#x27;go&#x27;, &#x27;build&#x27;, &#x27;./cmd/dupfind&#x27;], returncode=1, stdout=&#x27;&#x27;, stderr=&#x27;go: cannot find main module, but found .git/config in /mnt/c/Users/barlo/projects/drydock/uat/DupFind\n\tto create a module there, run:\n\tcd ../../../.. &amp;&amp; go mod init\n&#x27;) --- drydock: end values --- Traceback (most recent call last): File &quot;architecture-cli-contract.py&quot;, line 10, in &lt;module&gt; assert result.returncode == 0 ^^^^^^^^^^^^^^^^^^^^^^ AssertionError</p>
+<ul><li>RED: architecture-package-layout (ARCHITECTURE.md)</li></ul>
+<p>intent: The internal application packages and command entry point compile together. return code: 1 stdout: FAIL	./... [setup failed] FAIL</p>
+<p># ./... pattern ./...: directory prefix . does not contain main module or its selected dependencies stderr: --- drydock: values at failure --- result = CompletedProcess(args=[&#x27;go&#x27;, &#x27;test&#x27;, &#x27;./...&#x27;], returncode=1, stdout=&#x27;FAIL\t./... [setup failed]\nFAIL\n&#x27;, stderr=&#x27;# ./...\npattern ./...: directory prefix . does not contain main module or its selected dependencies\n&#x27;) --- drydock: end values --- Traceback (most recent call last): File &quot;architecture-package-layout.py&quot;, line 10, in &lt;module&gt; assert result.returncode == 0 ^^^^^^^^^^^^^^^^^^^^^^ AssertionError</p>
+<h2>Post-build programmatic acceptance</h2>
+<ul><li>PASS: architecture-cli-contract (ARCHITECTURE.md)</li></ul>
+<p>intent: The architecture exposes the documented CLI runner contract and the executable package builds. target interpreter: /mnt/c/Users/barlo/projects/drydock/.venv/bin/python provisioning: not required return code: 0</p>
+<ul><li>PASS: architecture-package-layout (ARCHITECTURE.md)</li></ul>
+<p>intent: The internal application packages and command entry point compile together. target interpreter: /mnt/c/Users/barlo/projects/drydock/.venv/bin/python provisioning: not required return code: 0 stdout: ok  	dupfind/cmd/dupfind	3.494s ok  	dupfind/internal/cli	(cached) ?   	dupfind/internal/output	[no test files] ?   	dupfind/internal/scan	[no test files]</p>
+<h2>Build summary</h2>
+<p>RESULT: SUCCESS</p>
+<p>FILES CHANGED:</p>
+<ul><li>go.mod</li><li>cmd/dupfind/main.go</li><li>cmd/dupfind/main_test.go</li><li>internal/cli/cli.go</li><li>internal/cli/cli_test.go</li><li>internal/scan/scan.go</li><li>internal/output/output.go</li></ul>
+<p>SUMMARY: Established the Go 1.22 module and <code>cmd/dupfind</code>, <code>internal/cli</code>, <code>internal/scan</code>, and <code>internal/output</code> package boundaries. Added Go tests for the executable build, package layout, and initial CLI contract. <code>go build ./cmd/dupfind</code> and <code>go test ./...</code> passed.</p>
+<p>BLOCKERS:</p>
+<ul><li>None.</li></ul></article>
+</main>
+</body>
+</html>

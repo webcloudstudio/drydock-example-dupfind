@@ -1,0 +1,30 @@
+<requirement name="build-dupfind-executable" stories="build-executable,conformance-grader">
+Builds ./cmd/dupfind with `go build`
+</requirement>
+<requirement name="create-fixed-exam-tree" stories="conformance-grader">
+# make_tree &lt;dir&gt; — the exam tree. Every byte is fixed, so every hash is known.
+</requirement>
+<requirement name="compare-command-results" stories="conformance-grader">
+# check &lt;id&gt; &lt;expected exit&gt; &lt;dupfind args...&gt;  — expected standard output on stdin.
+</requirement>
+<requirement name="list-duplicate-files" stories="scan-and-group,order-results,listing-csv,conformance-grader">
+# ── A. Full listing ──────────────────────────────────────────────────────────────────────
+</requirement>
+<requirement name="summarize-duplicates" stories="summary-csv,conformance-grader">
+# ── B. Summary ───────────────────────────────────────────────────────────────────────────
+</requirement>
+<requirement name="filter-by-minimum-size" stories="command-options,scan-and-group,summary-csv,listing-csv,conformance-grader">
+# ── C. Minimum size ──────────────────────────────────────────────────────────────────────
+</requirement>
+<requirement name="handle-empty-duplicate-results" stories="scan-and-group,listing-csv,summary-csv,conformance-grader">
+# ── D. No duplicates ─────────────────────────────────────────────────────────────────────
+</requirement>
+<requirement name="report-invalid-path-errors" stories="command-options,conformance-grader">
+# ── E. Operational failures ─────────────────────────────────────────────────────────────
+</requirement>
+<requirement name="reject-invalid-cli-usage" stories="command-options,conformance-grader">
+# ── U. Usage errors ──────────────────────────────────────────────────────────────────────
+</requirement>
+<unattached story="architecture"/>
+<unattached story="order-results"/>
+<unattached story="test-harness"/>

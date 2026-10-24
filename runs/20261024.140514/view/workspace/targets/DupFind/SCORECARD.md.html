@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>workspace/targets/DupFind/SCORECARD.md</title>
+<link rel="stylesheet" href="../../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>workspace/targets/DupFind/SCORECARD.md</h1><div class="filenav"><a href="../../../../index.html">&larr; Report</a><a href="../../../../workspace/targets/DupFind/SCORECARD.md">Raw file</a></div></header>
+<article class="doc"><h1>Scorecard: DupFind</h1>
+<h2>Specification</h2>
+<blockquote><p><strong>NOT YET RUN</strong> drydock score spec DupFind</p></blockquote>
+<h2>Acceptance</h2>
+<blockquote><p><strong>PASSED</strong> drydock score ac DupFind · 2026-10-24T14:14:15.065+00:00</p></blockquote>
+<p>PASS 13   FAIL 0   UNVERIFIED 0   PREPASSED 4   (17 AC total)</p>
+<h2>Build</h2>
+<blockquote><p><strong>RECORDED</strong> drydock score build DupFind</p></blockquote>
+<p>Blocks: 2   Repaired: 0   Failed: 0<br>Tokens: 645,490 (cached 575,360, output 8,102)   Cache hit rate: 90.3%</p>
+<h2>Release</h2>
+<blockquote><p><strong>RELEASED</strong> drydock score release DupFind · 2026-10-24T14:15:00.108+00:00</p></blockquote>
+<ul><li>Verdict: PASSED</li></ul>
+<p>DupFind: PASSED — 8 of 8</p>
+<p>st-001  MET       [&quot;sh&quot;, &quot;sources/run.sh&quot;] exited 0; governed gate: sh sources/run.sh exited 0; 15 passed, 0 failed st-002  MET       bin/test.sh:1-6; sh bin/test.sh exited 0 st-003  MET       go.mod declares module dupfind; go build -o dupfind ./cmd/dupfind succeeded; cmd/dupfind/main.go and its imported application packages use standard-library dependencies st-004  MET       probe: listing contained both identical files with their correct digest and relative paths; internal/output/output.go: Ordered sorts paths and groups by the required keys st-005  MET       probe: listing included only a and sub/b; empty files and links were absent; internal/scan/scan.go: skips ModeSymlink entries and requires regular files st-006  MET       probe: summary output was 1 group, 1 duplicate file, 5 reclaimable bytes; internal/output/output.go: Summary computes totals from ordered groups st-007  MET       probe: missing directory exited 1 with empty stdout; internal/cli/cli.go: malformed parsing, nonpositive size, and wrong argument count return 2 after writing errors to stderr st-008  MET       internal/scan/scan.go: uses os.Open and io.Copy to read examined files; internal/cli/cli.go, internal/scan/scan.go, and internal/output/output.go: no filesystem mutation calls reported: Build directory has uncommitted changes</p>
+<h2>Project acceptance</h2>
+<div class="scroll"><table><thead><tr><th>ID</th><th>Type</th><th>Criterion</th><th>Verdict</th><th>Observed</th></tr></thead><tbody><tr><td>st-001</td><td>technical</td><td>The completed dupfind shall make sh sources/run.sh exit zero; that script&#x27;s exit status is the sole acceptance verdict.</td><td>MET</td><td>[&quot;sh&quot;, &quot;sources/run.sh&quot;] exited 0; governed gate: sh sources/run.sh exited 0; 15 passed, 0 failed</td></tr><tr><td>st-002</td><td>technical</td><td>The application shall provide a POSIX-compatible bin/test.sh that exits zero when go vet and every automated test pass.</td><td>MET</td><td>bin/test.sh:1-6; sh bin/test.sh exited 0</td></tr><tr><td>st-003</td><td>technical</td><td>The application root shall be a Go module from which go build ./cmd/dupfind produces the dupfind executable using only the standard library.</td><td>MET</td><td>go.mod declares module dupfind; go build -o dupfind ./cmd/dupfind succeeded; cmd/dupfind/main.go and its imported application packages use standard-library dependencies</td></tr><tr><td>st-004</td><td>behavioral</td><td>When dupfind lists a directory, the application shall report every group of two or more regular files with identical size and SHA-256 digest, ordered by reclaimable bytes descending then digest ascending, with paths relative to the directory in byte order.</td><td>MET</td><td>probe: listing contained both identical files with their correct digest and relative paths; internal/output/output.go: Ordered sorts paths and groups by the required keys</td></tr><tr><td>st-005</td><td>behavioral</td><td>The application shall ignore zero-byte files and shall neither follow nor report symbolic links.</td><td>MET</td><td>probe: listing included only a and sub/b; empty files and links were absent; internal/scan/scan.go: skips ModeSymlink entries and requires regular files</td></tr><tr><td>st-006</td><td>behavioral</td><td>When --summary is given, the application shall write the group count, the duplicate file count, and the reclaimable bytes of the listing that the same options would produce.</td><td>MET</td><td>probe: summary output was 1 group, 1 duplicate file, 5 reclaimable bytes; internal/output/output.go: Summary computes totals from ordered groups</td></tr><tr><td>st-007</td><td>behavioral</td><td>If the directory is missing or is not a directory, then the application shall exit 1; if the arguments are malformed, then the application shall exit 2; in both cases it shall write nothing to standard output.</td><td>MET</td><td>probe: missing directory exited 1 with empty stdout; internal/cli/cli.go: malformed parsing, nonpositive size, and wrong argument count return 2 after writing errors to stderr</td></tr><tr><td>st-008</td><td>technical</td><td>The application shall only read the files it examines and shall never delete, move, or write any file under the directory.</td><td>MET</td><td>internal/scan/scan.go: uses os.Open and io.Copy to read examined files; internal/cli/cli.go, internal/scan/scan.go, and internal/output/output.go: no filesystem mutation calls</td></tr></tbody></table></div>
+<p><strong>Advisory warnings:</strong></p>
+<ul><li>Build directory has uncommitted changes</li></ul>
+<p><strong>Material decisions:</strong></p>
+<ul><li>Operational failure handling — </li></ul></article>
+</main>
+</body>
+</html>

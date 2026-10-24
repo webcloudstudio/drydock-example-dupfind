@@ -1,0 +1,123 @@
+{
+  "criteria": {
+    "architecture-cli-contract": {
+      "status": "VALID",
+      "error_code": "baseline-red",
+      "code_sha256": "330d4431c84c9befd5fd8dc917c178a4353be445e08a5d039b3cc05822f11a00",
+      "updated_at": "2026-10-24T14:08:51+00:00",
+      "detail": ""
+    },
+    "architecture-package-layout": {
+      "status": "VALID",
+      "error_code": "baseline-red",
+      "code_sha256": "2ae284fe4a2d815e65e800600b61114dfbfba29c2edcc3d508f1655c82d8692b",
+      "updated_at": "2026-10-24T14:08:51+00:00",
+      "detail": ""
+    },
+    "build-command": {
+      "status": "VALID",
+      "error_code": "existing-behavior",
+      "code_sha256": "330d4431c84c9befd5fd8dc917c178a4353be445e08a5d039b3cc05822f11a00",
+      "updated_at": "2026-10-24T14:11:16+00:00",
+      "detail": ""
+    },
+    "build-test-entry": {
+      "status": "VALID",
+      "error_code": "existing-behavior",
+      "code_sha256": "2ae284fe4a2d815e65e800600b61114dfbfba29c2edcc3d508f1655c82d8692b",
+      "updated_at": "2026-10-24T14:11:16+00:00",
+      "detail": ""
+    },
+    "command-help-usage": {
+      "status": "VALID",
+      "error_code": "existing-behavior",
+      "code_sha256": "b42cda4a1accde639b8671b5af5d21127a68a46ca07441231192b911a989f621",
+      "updated_at": "2026-10-24T14:11:16+00:00",
+      "detail": ""
+    },
+    "command-invalid-option": {
+      "status": "VALID",
+      "error_code": "baseline-red",
+      "code_sha256": "030a46335285444a1c81af6a9a275d479429c540e2a4d99f508bad0714a5ad4f",
+      "updated_at": "2026-10-24T14:11:16+00:00",
+      "detail": ""
+    },
+    "command-invalid-size": {
+      "status": "VALID",
+      "error_code": "baseline-red",
+      "code_sha256": "f501f77bafe4f197f65014705886c9d7a394f49cb0354c809dfb7bd9f3d28156",
+      "updated_at": "2026-10-24T14:11:16+00:00",
+      "detail": ""
+    },
+    "full-grader": {
+      "status": "VALID",
+      "error_code": "baseline-red",
+      "code_sha256": "7a2cd7dc984b67ce2d5e52d0d35d65091ed2efa3a89b6bcedacca63811e97d84",
+      "updated_at": "2026-10-24T14:11:16+00:00",
+      "detail": ""
+    },
+    "listing-empty": {
+      "status": "VALID",
+      "error_code": "existing-behavior",
+      "code_sha256": "55003bc34e6bfc82ad07e3720f10057c220b41dfd13087d7cb5d121a44c251e0",
+      "updated_at": "2026-10-24T14:11:16+00:00",
+      "detail": ""
+    },
+    "listing-output": {
+      "status": "VALID",
+      "error_code": "baseline-red",
+      "code_sha256": "44e54b747ff931f319c62e008ac805f5ce58c0a08c428f0371a0b55ef9702e4b",
+      "updated_at": "2026-10-24T14:11:16+00:00",
+      "detail": ""
+    },
+    "ordering-conformance": {
+      "status": "VALID",
+      "error_code": "baseline-red",
+      "code_sha256": "7a2cd7dc984b67ce2d5e52d0d35d65091ed2efa3a89b6bcedacca63811e97d84",
+      "updated_at": "2026-10-24T14:11:16+00:00",
+      "detail": ""
+    },
+    "scan-groups-exact-files": {
+      "status": "VALID",
+      "error_code": "baseline-red",
+      "code_sha256": "7a2cd7dc984b67ce2d5e52d0d35d65091ed2efa3a89b6bcedacca63811e97d84",
+      "updated_at": "2026-10-24T14:11:16+00:00",
+      "detail": ""
+    },
+    "scan-read-only": {
+      "status": "VALID",
+      "error_code": "baseline-red",
+      "code_sha256": "7a2cd7dc984b67ce2d5e52d0d35d65091ed2efa3a89b6bcedacca63811e97d84",
+      "updated_at": "2026-10-24T14:11:16+00:00",
+      "detail": ""
+    },
+    "scan-symlinks-and-empty": {
+      "status": "VALID",
+      "error_code": "baseline-red",
+      "code_sha256": "7a2cd7dc984b67ce2d5e52d0d35d65091ed2efa3a89b6bcedacca63811e97d84",
+      "updated_at": "2026-10-24T14:11:16+00:00",
+      "detail": ""
+    },
+    "summary-empty": {
+      "status": "VALID",
+      "error_code": "baseline-red",
+      "code_sha256": "e12844fba6206bbd430e3ec8c314dd51575d0e08f8d40d58ee94bf746b630ede",
+      "updated_at": "2026-10-24T14:11:16+00:00",
+      "detail": ""
+    },
+    "summary-totals": {
+      "status": "VALID",
+      "error_code": "baseline-red",
+      "code_sha256": "c2a0b4d0bc67fa97fde2ca37f35e9a1f6de2b6c7b45a7469fded53dc3037bfa8",
+      "updated_at": "2026-10-24T14:11:16+00:00",
+      "detail": ""
+    },
+    "test-harness": {
+      "status": "VALID",
+      "error_code": "baseline-red",
+      "code_sha256": "75474bfceec620996f7c5106be7ac589b92f98dace2ad4d2cf28370fc99cd475",
+      "updated_at": "2026-10-24T14:11:16+00:00",
+      "detail": ""
+    }
+  }
+}

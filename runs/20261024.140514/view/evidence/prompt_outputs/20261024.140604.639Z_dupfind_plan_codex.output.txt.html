@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>evidence/prompt_outputs/20261024.140604.639Z_dupfind_plan_codex.output.txt</title>
+<link rel="stylesheet" href="../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>evidence/prompt_outputs/20261024.140604.639Z_dupfind_plan_codex.output.txt</h1><div class="filenav"><a href="../../../index.html">&larr; Report</a><a href="../../../evidence/prompt_outputs/20261024.140604.639Z_dupfind_plan_codex.output.txt">Raw file</a></div></header>
+<article class="doc"><pre>=== BEGIN ARTIFACT TOPOLOGY.md ===
+## Declarations
+
+## story architecture
+summary:      Establish the Go module and application boundaries.
+type:         foundational
+kind:         capability
+phase:        1
+implements:   ARCHITECTURE.md
+stack:        go.md
+provides:     Go module and application package layout
+acceptance:   yes
+instructions: |
+  Establish the Go module and package boundaries required by the command-line application. Keep the implementation in Go 1.22 or newer and use only the standard library. Define clear ownership for command startup, CLI behavior, scanning, and output formatting. Do not read or modify files under the directory being examined.
+
+## story build-executable
+summary:      Provide the dupfind executable and build contract.
+type:         service
+kind:         capability
+phase:        1
+implements:   FEATURE-Build.md
+covers:       DEL-001
+accepts:       st-003
+depends:       architecture
+stack:         go.md
+provides:      ./cmd/dupfind
+acceptance:    yes
+instructions: |
+  Provide the main package at ./cmd/dupfind and ensure the application root builds it with go build ./cmd/dupfind using only the standard library.
+
+## story command-options
+summary:      Parse command options and validate the directory argument.
+type:         service
+kind:         capability
+phase:        1
+implements:   FEATURE-Command.md
+covers:       CLI-001
+accepts:       st-007
+depends:       build-executable
+stack:         go.md
+consumes:      ./cmd/dupfind
+provides:      dupfind command-line options and usage
+acceptance:    yes
+instructions: |
+  Implement the documented command syntax, --summary, --min-size, help text, and validation of options and the single directory argument. Malformed arguments return exit code 2 and write no standard output. Missing or non-directory paths return exit code 1 and write no standard output. Operational diagnostics go to standard error.
+
+## story scan-and-group
+summary:      Find exact duplicate regular files in a directory tree.
+type:         service
+kind:         capability
+phase:        1
+implements:   FEATURE-Scanning.md
+covers:       CLI-002
+accepts:       st-004, st-005, st-008
+depends:       command-options
+stack:         go.md
+consumes:      dupfind command-line options and usage
+provides:      duplicate groups from a directory tree
+acceptance:    yes
+instructions: |
+  Recursively examine regular files, including hidden paths, without following or reporting symbolic links. Ignore zero-byte files and files smaller than the selected minimum size. Group by size before reading contents, then by SHA-256 digest. Skip unreadable files with one warning on standard error and do not change the exit code. Only read examined files; never delete, move, or write anything under the examined directory.
+
+## story order-results
+summary:      Order duplicate groups and paths deterministically.
+type:         service
+kind:         capability
+phase:        1
+implements:   FEATURE-Ordering.md
+covers:       CLI-003
+accepts:       st-004
+depends:       scan-and-group
+stack:         go.md
+consumes:      duplicate groups from a directory tree
+provides:      ordered duplicate groups and relative paths
+acceptance:    yes
+instructions: |
+  Order groups by reclaimable bytes descending and then digest ascending. Number groups from 1 in that order. Order paths within each group by byte value and emit paths relative to the requested directory using / separators without a leading ./.
+
+## story listing-csv
+summary:      Write the duplicate listing as CSV.
+type:         service
+kind:         capability
+phase:        1
+implements:   FEATURE-Listing.md
+covers:       OUT-001
+accepts:       st-004
+depends:       order-results
+stack:         go.md
+consumes:      ordered duplicate groups and relative paths
+provides:      default CSV listing
+acceptance:    yes
+instructions: |
+  Write the default listing to standard output with encoding/csv. Emit the specified header and one row per file in each duplicate group, with lowercase hexadecimal SHA-256 digests. With no duplicates, emit only the header. Use newline line endings and RFC 4180 field quoting.
+
+## story summary-csv
+summary:      Write duplicate group and reclaimable-space totals.
+type:         service
+kind:         capability
+phase:        1
+implements:   FEATURE-Summary.md
+covers:       OUT-002
+accepts:       st-006
+depends:       order-results
+stack:         go.md
+consumes:      ordered duplicate groups and relative paths
+provides:      --summary CSV output
+acceptance:    yes
+instructions: |
+  When --summary is selected, emit the specified CSV header and one data row containing the number of duplicate groups, the sum of files minus one per group, and total reclaimable bytes. With no duplicates, emit zero for all totals. Derive the summary from the same duplicate groups as the listing.
+
+## story test-harness
+summary:      Provide the project quality test entry point.
+type:         service
+kind:         test harness
+phase:        1
+implements:   FEATURE-Tests.md
+covers:       DEL-002
+accepts:       st-002
+depends:       build-executable
+stack:         go.md, common.md
+provides:      bin/test.sh
+acceptance:    yes
+instructions: |
+  Provide a POSIX-compatible bin/test.sh that runs go vet ./... and go test ./... from the application root. Exit zero only when both commands pass.
+
+## story conformance-grader
+summary:      Pass the supplied duplicate-finder conformance grader.
+type:         service
+kind:         test harness
+phase:        1
+implements:   VERIFICATION.md
+covers:       DEL-003
+accepts:       st-001
+depends:       architecture, build-executable, command-options, scan-and-group, order-results, listing-csv, summary-csv, test-harness
+context:       sources/run.sh
+context_roles: |
+  sources/run.sh: conformance harness
+stack:         go.md, common.md
+acceptance:    yes
+instructions: |
+  Run the supplied sources/run.sh from the completed application root and require its exit status to be zero. Do not modify, rewrite, regenerate, or substitute the supplied harness.
+
+=== END ARTIFACT ===
+=== BEGIN ARTIFACT DECISIONS.json ===
+[
+  {
+    &quot;id&quot;: &quot;Q-001&quot;,
+    &quot;type&quot;: &quot;choice&quot;,
+    &quot;severity&quot;: &quot;material&quot;,
+    &quot;blueprint&quot;: &quot;FEATURE-Command.md&quot;,
+    &quot;story&quot;: &quot;command-options&quot;,
+    &quot;title&quot;: &quot;Operational failure handling&quot;,
+    &quot;description&quot;: &quot;The source defines exit codes and no-stdout behavior for missing or non-directory paths, and warning behavior for unreadable files, but does not state the response contract for other operational failures.&quot;,
+    &quot;options&quot;: [
+      {
+        &quot;value&quot;: &quot;operational-failure&quot;,
+        &quot;label&quot;: &quot;Return 1, write a diagnostic to stderr, and write nothing to stdout&quot;
+      },
+      {
+        &quot;value&quot;: &quot;usage-failure&quot;,
+        &quot;label&quot;: &quot;Return 2 for operational failures&quot;
+      }
+    ],
+    &quot;system_choice&quot;: &quot;operational-failure&quot;
+  }
+]
+=== END ARTIFACT</pre></article>
+</main>
+</body>
+</html>

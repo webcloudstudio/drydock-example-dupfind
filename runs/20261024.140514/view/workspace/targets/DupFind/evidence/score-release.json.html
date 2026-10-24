@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>workspace/targets/DupFind/evidence/score-release.json</title>
+<link rel="stylesheet" href="../../../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>workspace/targets/DupFind/evidence/score-release.json</h1><div class="filenav"><a href="../../../../../index.html">&larr; Report</a><a href="../../../../../workspace/targets/DupFind/evidence/score-release.json">Raw file</a></div></header>
+<article class="doc"><pre>{
+  &quot;schema_version&quot;: 5,
+  &quot;recorded_at&quot;: &quot;2026-10-24T14:14:59+00:00&quot;,
+  &quot;target&quot;: &quot;DupFind&quot;,
+  &quot;verdict&quot;: &quot;PASSED&quot;,
+  &quot;verdict_line&quot;: &quot;DupFind: PASSED \u2014 8 of 8&quot;,
+  &quot;statement&quot;: &quot;DupFind: PASSED \u2014 8 of 8\n\n  st-001  MET       [\&quot;sh\&quot;, \&quot;sources/run.sh\&quot;] exited 0; governed gate: sh sources/run.sh exited 0; 15 passed, 0 failed\n  st-002  MET       bin/test.sh:1-6; sh bin/test.sh exited 0\n  st-003  MET       go.mod declares module dupfind; go build -o dupfind ./cmd/dupfind succeeded; cmd/dupfind/main.go and its imported application packages use standard-library dependencies\n  st-004  MET       probe: listing contained both identical files with their correct digest and relative paths; internal/output/output.go: Ordered sorts paths and groups by the required keys\n  st-005  MET       probe: listing included only a and sub/b; empty files and links were absent; internal/scan/scan.go: skips ModeSymlink entries and requires regular files\n  st-006  MET       probe: summary output was 1 group, 1 duplicate file, 5 reclaimable bytes; internal/output/output.go: Summary computes totals from ordered groups\n  st-007  MET       probe: missing directory exited 1 with empty stdout; internal/cli/cli.go: malformed parsing, nonpositive size, and wrong argument count return 2 after writing errors to stderr\n  st-008  MET       internal/scan/scan.go: uses os.Open and io.Copy to read examined files; internal/cli/cli.go, internal/scan/scan.go, and internal/output/output.go: no filesystem mutation calls\n  reported: Build directory has uncommitted changes&quot;,
+  &quot;complete&quot;: true,
+  &quot;governed_gate&quot;: {
+    &quot;name&quot;: &quot;full&quot;,
+    &quot;outcome&quot;: &quot;PASS&quot;,
+    &quot;argv&quot;: [
+      &quot;sh&quot;,
+      &quot;sources/run.sh&quot;
+    ],
+    &quot;return_code&quot;: 0,
+    &quot;duration_ms&quot;: 1861,
+    &quot;detail&quot;: &quot;&quot;,
+    &quot;timed_out&quot;: false,
+    &quot;build_identity&quot;: &quot;8638d4ffb9d9a83f&quot;,
+    &quot;stdout&quot;: &quot;PASS A1: dupfind tree\nPASS A2: dupfind /tmp/tmp.ldAcimCEVf/tree\nPASS B1: dupfind --summary tree\nPASS C1: dupfind --min-size 20 tree\nPASS C2: dupfind --summary --min-size 20 tree\nPASS C3: dupfind --min-size 200 tree\nPASS D1: dupfind tree/unique\nPASS D2: dupfind --summary tree/empty\nPASS E1: dupfind tree/no-such-directory\nPASS E2: dupfind tree/env.bak\nPASS U1: dupfind \nPASS U2: dupfind tree tree/a\nPASS U3: dupfind --min-size abc tree\nPASS U4: dupfind --min-size 0 tree\nPASS U5: dupfind --frobnicate tree\nDupFind: 15 passed, 0 failed (of 15)\n&quot;,
+    &quot;stderr&quot;: &quot;&quot;
+  },
+  &quot;criteria&quot;: [
+    {
+      &quot;criterion_id&quot;: &quot;st-001&quot;,
+      &quot;verdict&quot;: &quot;MET&quot;,
+      &quot;rationale&quot;: &quot;The supplied gate passed against this tree and reported all 15 checks passing.&quot;,
+      &quot;evidence&quot;: [
+        &quot;[\&quot;sh\&quot;, \&quot;sources/run.sh\&quot;] exited 0&quot;,
+        &quot;governed gate: sh sources/run.sh exited 0; 15 passed, 0 failed&quot;
+      ]
+    },
+    {
+      &quot;criterion_id&quot;: &quot;st-002&quot;,
+      &quot;verdict&quot;: &quot;MET&quot;,
+      &quot;rationale&quot;: &quot;The POSIX test script exists and runs go vet and go test successfully.&quot;,
+      &quot;evidence&quot;: [
+        &quot;bin/test.sh:1-6&quot;,
+        &quot;sh bin/test.sh exited 0&quot;
+      ]
+    },
+    {
+      &quot;criterion_id&quot;: &quot;st-003&quot;,
+      &quot;verdict&quot;: &quot;MET&quot;,
+      &quot;rationale&quot;: &quot;The application root is a Go module, and go build ./cmd/dupfind succeeded with standard-library imports in the executable\u2019s dependency tree.&quot;,
+      &quot;evidence&quot;: [
+        &quot;go.mod declares module dupfind&quot;,
+        &quot;go build -o dupfind ./cmd/dupfind succeeded&quot;,
+        &quot;cmd/dupfind/main.go and its imported application packages use standard-library dependencies&quot;
+      ]
+    },
+    {
+      &quot;criterion_id&quot;: &quot;st-004&quot;,
+      &quot;verdict&quot;: &quot;MET&quot;,
+      &quot;rationale&quot;: &quot;A probe found the matching files with the expected SHA-256 and relative paths, while the output code sorts paths by byte order and groups by reclaimable bytes descending then digest ascending.&quot;,
+      &quot;evidence&quot;: [
+        &quot;probe: listing contained both identical files with their correct digest and relative paths&quot;,
+        &quot;internal/output/output.go: Ordered sorts paths and groups by the required keys&quot;
+      ]
+    },
+    {
+      &quot;criterion_id&quot;: &quot;st-005&quot;,
+      &quot;verdict&quot;: &quot;MET&quot;,
+      &quot;rationale&quot;: &quot;The probe\u2019s output excluded empty files and symbolic links, and the scanner skips symbolic links and rejects non-regular files.&quot;,
+      &quot;evidence&quot;: [
+        &quot;probe: listing included only a and sub/b; empty files and links were absent&quot;,
+        &quot;internal/scan/scan.go: skips ModeSymlink entries and requires regular files&quot;
+      ]
+    },
+    {
+      &quot;criterion_id&quot;: &quot;st-006&quot;,
+      &quot;verdict&quot;: &quot;MET&quot;,
+      &quot;rationale&quot;: &quot;The probe\u2019s summary reported one group, one duplicate file, and five reclaimable bytes, matching its listing.&quot;,
+      &quot;evidence&quot;: [
+        &quot;probe: summary output was 1 group, 1 duplicate file, 5 reclaimable bytes&quot;,
+        &quot;internal/output/output.go: Summary computes totals from ordered groups&quot;
+      ]
+    },
+    {
+      &quot;criterion_id&quot;: &quot;st-007&quot;,
+      &quot;verdict&quot;: &quot;MET&quot;,
+      &quot;rationale&quot;: &quot;The probe confirmed a missing directory exits 1 with empty standard output, and the CLI source maps malformed arguments to exit 2 without writing to standard output.&quot;,
+      &quot;evidence&quot;: [
+        &quot;probe: missing directory exited 1 with empty stdout&quot;,
+        &quot;internal/cli/cli.go: malformed parsing, nonpositive size, and wrong argument count return 2 after writing errors to stderr&quot;
+      ]
+    },
+    {
+      &quot;criterion_id&quot;: &quot;st-008&quot;,
+      &quot;verdict&quot;: &quot;MET&quot;,
+      &quot;rationale&quot;: &quot;The scanner opens examined files for reading, and the inspected application code contains no operation that writes, moves, or deletes files under the scanned directory.&quot;,
+      &quot;evidence&quot;: [
+        &quot;internal/scan/scan.go: uses os.Open and io.Copy to read examined files&quot;,
+        &quot;internal/cli/cli.go, internal/scan/scan.go, and internal/output/output.go: no filesystem mutation calls&quot;
+      ]
+    }
+  ],
+  &quot;guardrail_ids&quot;: [],
+  &quot;observations&quot;: [
+    {
+      &quot;criterion_id&quot;: &quot;st-001&quot;,
+      &quot;kind&quot;: &quot;command&quot;,
+      &quot;source&quot;: &quot;[\&quot;sh\&quot;, \&quot;sources/run.sh\&quot;]&quot;,
+      &quot;return_code&quot;: 0,
+      &quot;pinned&quot;: &quot;MET&quot;,
+      &quot;detail&quot;: &quot;[\&quot;sh\&quot;, \&quot;sources/run.sh\&quot;] exited 0&quot;,
+      &quot;output&quot;: &quot;PASS A1: dupfind tree\nPASS A2: dupfind /tmp/tmp.OVxFIwVQ7F/tree\nPASS B1: dupfind --summary tree\nPASS C1: dupfind --min-size 20 tree\nPASS C2: dupfind --summary --min-size 20 tree\nPASS C3: dupfind --min-size 200 tree\nPASS D1: dupfind tree/unique\nPASS D2: dupfind --summary tree/empty\nPASS E1: dupfind tree/no-such-directory\nPASS E2: dupfind tree/env.bak\nPASS U1: dupfind \nPASS U2: dupfind tree tree/a\nPASS U3: dupfind --min-size abc tree\nPASS U4: dupfind --min-size 0 tree\nPASS U5: dupfind --frobnicate tree\nDupFind: 15 passed, 0 failed (of 15)&quot;
+    }
+  ],
+  &quot;blockers&quot;: [],
+  &quot;attestations&quot;: [],
+  &quot;kit_faults&quot;: [],
+  &quot;warnings&quot;: [
+    &quot;Build directory has uncommitted changes&quot;
+  ],
+  &quot;improvements&quot;: [],
+  &quot;identities&quot;: {
+    &quot;code&quot;: &quot;68eaa4f2431dca96edfc23be4d44533b8b17f16c&quot;,
+    &quot;sea_trials&quot;: &quot;4f35b7ec8182f582dbadcc5a547e02f8f4fc916845bcdbef78754be73c69c3f8&quot;,
+    &quot;blueprint&quot;: {
+      &quot;ARCHITECTURE.md&quot;: &quot;27895ac5b7eedfdb61f0173fdf005a797cd8f496bdce6af4d28dff4066c667a2&quot;,
+      &quot;FEATURE-Build.md&quot;: &quot;ca517c3e3d49f8648fb94d53d7bd1be8f6d8bf1cbd7207e1d426192fcab46cd5&quot;,
+      &quot;FEATURE-Command.md&quot;: &quot;6913d12ffa50e16c76e990e059520a9a1de8f7d4826e6eb35999591026f56fca&quot;,
+      &quot;FEATURE-Listing.md&quot;: &quot;00ec23f399fbc248203586bc42ec9f8a714e9fcda6e3b221b6680157b8850202&quot;,
+      &quot;FEATURE-Ordering.md&quot;: &quot;a8a77eb8fc4793037fdee75f4077785e07b2cb705d5e782100a9881dbf6b49c1&quot;,
+      &quot;FEATURE-Scanning.md&quot;: &quot;856647526b5dba10af0b423ebf5efe1f2865988f0c05334004d7a9ff28b049ec&quot;,
+      &quot;FEATURE-Summary.md&quot;: &quot;2d6e27a9298bac8137fb4bc4c3ae80061b4a24f70100ff79f9f865c6e8e3cb1e&quot;,
+      &quot;FEATURE-Tests.md&quot;: &quot;18fd086294424f4420cffb68977075ae6f002a63e4cb2d0e71e510c1fedd3f87&quot;,
+      &quot;VERIFICATION.md&quot;: &quot;5c2c08c97adaef587f9a218a3777357113395c5dbe9932b9d9dc9aac535010da&quot;
+    }
+  },
+  &quot;execution_id&quot;: &quot;20261024.141425.598Z-68c102a9&quot;
+}
+</pre></article>
+</main>
+</body>
+</html>

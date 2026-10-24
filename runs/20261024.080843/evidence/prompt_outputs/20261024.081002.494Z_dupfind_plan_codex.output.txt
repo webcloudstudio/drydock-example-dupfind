@@ -1,0 +1,262 @@
+=== BEGIN ARTIFACT FEATURE-Listing.md ===
+# FEATURE: Duplicate Listing
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261024 V1 |
+| Description | Renders duplicate file groups as ordered CSV rows. |
+| Depends On  | FEATURE-Discovery.md |
+| Provides    | CSV duplicate listing |
+| Consumes    | duplicate file groups |
+
+## Questions
+
+- None.
+
+## Purpose
+
+Render the duplicate groups discovered by `FEATURE-Discovery.md` as a CSV listing.
+
+## Behavior
+
+- Write the header `group,size,sha256,path`, followed by one row for each file in every duplicate group.
+- Use lowercase hexadecimal SHA-256 digests.
+- Write paths relative to the scanned directory, using `/` separators and no leading `./`.
+- Order groups by reclaimable bytes descending, then digest ascending.
+- Number groups from 1 in that order.
+- Order paths within each group by byte value ascending.
+- Use `encoding/csv` so fields containing commas, double quotes, or newlines follow RFC 4180 quoting. Use `\n` line endings.
+- With no duplicate groups, write only the header.
+
+## Programmatic Acceptance
+
+=== AC listing-conformance ===
+Intent: The supplied grader's listing, ordering, path, CSV, and empty-result cases pass.
+Suite: scoped
+
+import os
+import subprocess
+
+result = subprocess.run(
+    ["sh", "sources/run.sh"],
+    capture_output=True,
+    text=True,
+    env=os.environ.copy(),
+)
+print(result.stdout)
+print(result.stderr)
+assert result.returncode == 0
+=== END AC listing-conformance ===
+
+## User Acceptance
+
+- None.
+
+## Guardrails
+
+- Never modify files under the directory being examined.
+- Do not read or depend on `sources/run.sh` from application code.
+=== END ARTIFACT ===
+=== BEGIN ARTIFACT FEATURE-MinimumSize.md ===
+# FEATURE: Minimum Size Filter
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261024 V1 |
+| Description | Excludes files below the configured minimum size from duplicate results. |
+| Depends On  | FEATURE-Discovery.md |
+| Provides    | `--min-size` |
+| Consumes    | duplicate file groups |
+
+## Questions
+
+- None.
+
+## Purpose
+
+Let callers set the minimum file size considered by duplicate discovery.
+
+## Behavior
+
+- Accept `--min-size <bytes>` before the directory argument.
+- Require a positive integer. The default is `1`.
+- Exclude files smaller than the configured size before forming duplicate results.
+- Apply the same filtered duplicate groups to listing and summary output.
+
+## Programmatic Acceptance
+
+=== AC minimum-size-conformance ===
+Intent: The supplied grader's minimum-size listing and summary cases pass.
+Suite: scoped
+
+import os
+import subprocess
+
+result = subprocess.run(
+    ["sh", "sources/run.sh"],
+    capture_output=True,
+    text=True,
+    env=os.environ.copy(),
+)
+print(result.stdout)
+print(result.stderr)
+assert result.returncode == 0
+=== END AC minimum-size-conformance ===
+
+## User Acceptance
+
+- None.
+
+## Guardrails
+
+- Do not modify files under the directory being examined.
+=== END ARTIFACT ===
+=== BEGIN ARTIFACT FEATURE-Summary.md ===
+# FEATURE: Duplicate Summary
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261024 V1 |
+| Description | Reports duplicate-group totals as a CSV summary. |
+| Depends On  | FEATURE-Discovery.md, FEATURE-Listing.md, FEATURE-MinimumSize.md |
+| Provides    | `--summary` CSV |
+| Consumes    | duplicate file groups, `--min-size` |
+
+## Questions
+
+- None.
+
+## Purpose
+
+Provide a compact report of duplicate groups, redundant file counts, and reclaimable bytes.
+
+## Behavior
+
+- With `--summary`, write the header `groups,duplicate_files,reclaimable_bytes` and exactly one data row.
+- Compute `groups` as the number of duplicate groups.
+- Compute `duplicate_files` as the sum of `files - 1` over each group.
+- Compute `reclaimable_bytes` as the sum of `size × (files - 1)` over each group.
+- When there are no duplicate groups, report zero for all totals.
+- Use the same groups selected by the active options, including `--min-size`.
+
+## Programmatic Acceptance
+
+=== AC summary-conformance ===
+Intent: The supplied grader's summary and minimum-size summary cases pass.
+Suite: scoped
+
+import os
+import subprocess
+
+result = subprocess.run(
+    ["sh", "sources/run.sh"],
+    capture_output=True,
+    text=True,
+    env=os.environ.copy(),
+)
+print(result.stdout)
+print(result.stderr)
+assert result.returncode == 0
+=== END AC summary-conformance ===
+
+## User Acceptance
+
+- None.
+
+## Guardrails
+
+- Never modify files under the directory being examined.
+=== END ARTIFACT ===
+=== BEGIN ARTIFACT FEATURE-Command.md ===
+# FEATURE: Command Operation
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261024 V1 |
+| Description | Validates command arguments and directories and completes grader conformance. |
+| Depends On  | FEATURE-Listing.md, FEATURE-MinimumSize.md, FEATURE-Summary.md |
+| Provides    | `./cmd/dupfind` |
+| Consumes    | CSV duplicate listing, `--min-size`, `--summary` CSV |
+
+## Questions
+
+- None.
+
+## Purpose
+
+Define command invocation, argument validation, directory validation, and the final supplied-grader check.
+
+## Command
+
+`dupfind [--summary] [--min-size <bytes>] <directory>`
+
+Options precede the directory, and exactly one directory is required.
+
+## Behavior
+
+- Return `0` on success, whether or not duplicates are found.
+- Return `1` when the directory does not exist or is not a directory.
+- Return `2` for missing or extra arguments, unknown options, or a `--min-size` value that is not a positive integer.
+- On failure, leave standard output empty and write one diagnostic line to standard error.
+- The completed implementation must pass the supplied grader, run from the application root as `sh sources/run.sh`.
+
+## Programmatic Acceptance
+
+=== AC command-errors ===
+Intent: Missing and extra arguments, unknown options, invalid minimum sizes, and invalid directories return their specified exit codes without producing output.
+Cite: sources/INSTRUCTIONS.md:51-66
+
+import csv
+import io
+import subprocess
+
+cases = [
+    ([], 2),
+    (["tree", "tree/a"], 2),
+    (["--frobnicate", "tree"], 2),
+    (["--min-size", "abc", "tree"], 2),
+    (["--min-size", "0", "tree"], 2),
+    (["tree/no-such-directory"], 1),
+    (["tree/env.bak"], 1),
+]
+for args, expected in cases:
+    result = subprocess.run(
+        ["./cmd/dupfind", *args],
+        capture_output=True,
+        text=True,
+    )
+    print(result.stdout)
+    print(result.stderr)
+    assert result.returncode == expected
+    assert result.stdout == ""
+=== END AC command-errors ===
+
+=== AC command-success ===
+Intent: A valid invocation returns success and emits parseable CSV.
+Cite: sources/INSTRUCTIONS.md:36-50
+
+import csv
+import io
+import subprocess
+
+result = subprocess.run(
+    ["./cmd/dupfind", "sources"],
+    capture_output=True,
+    text=True,
+)
+print(result.stdout)
+print(result.stderr)
+assert result.returncode == 0
+rows = list(csv.reader(io.StringIO(result.stdout)))
+assert rows
+=== END AC command-success ===
+
+## User Acceptance
+
+- None.
+
+## Guardrails
+
+- The application must never delete, move, or modify files under the directory examined.
+- Application code must not read the supplied grader or hardcode its answers.
+=== END ARTIFACT

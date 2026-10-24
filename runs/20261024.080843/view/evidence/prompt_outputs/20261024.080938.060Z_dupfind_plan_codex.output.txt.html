@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>evidence/prompt_outputs/20261024.080938.060Z_dupfind_plan_codex.output.txt</title>
+<link rel="stylesheet" href="../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>evidence/prompt_outputs/20261024.080938.060Z_dupfind_plan_codex.output.txt</h1><div class="filenav"><a href="../../../index.html">&larr; Report</a><a href="../../../evidence/prompt_outputs/20261024.080938.060Z_dupfind_plan_codex.output.txt">Raw file</a></div></header>
+<article class="doc"><pre>=== BEGIN ARTIFACT ARCHITECTURE.md ===
+# ARCHITECTURE: DupFind
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261024 V1 |
+| Description | Defines the Go module, executable boundary, and test runner for DupFind. |
+| Provides    | Go module, ./cmd/dupfind, bin/test.sh |
+
+## Questions
+
+- None.
+
+## Purpose
+
+DupFind is a read-only command-line tool that recursively finds duplicate regular files beneath one directory. It groups candidates by size before reading contents, then compares SHA-256 digests. The executable reports duplicate groups or a summary as CSV.
+
+## Technology Stack
+
+- Go 1.22 or newer, standard library only: application module, executable, behavior, and tests.
+- Go test: automated tests.
+- POSIX sh: `bin/test.sh` and the supplied grader.
+
+## Module boundaries
+
+| Module | Owns | Allowed low-level access |
+|---|---|---|
+| `cmd/dupfind` | Process startup and `os.Exit` | Calls `internal/cli`; no product logic |
+| `internal/cli` | Argument parsing, directory validation, command orchestration, diagnostics, and output selection | Calls discovery and output packages |
+| `internal/discovery` | Walking, candidate filtering, reading same-size files, digesting, and duplicate grouping | Filesystem reads only |
+| `internal/output` | CSV listing and summary formatting | `encoding/csv`; receives grouped results |
+| `bin/test.sh` | Project verification entry point | Runs `go vet ./...` then `go test ./...` |
+
+The application does not use a database, configuration store, file store, or external service. It never writes to the examined directory.
+
+## Process contract
+
+The CLI behavior is exposed as `Run(args []string, stdout, stderr io.Writer) int`. `cmd/dupfind` passes its arguments and standard streams to this function and is the only package that calls `os.Exit`.
+
+Options precede the directory argument. Exactly one directory is required. Operational failures return 1; usage failures return 2; successful runs return 0. Failures leave standard output empty and write one diagnostic line to standard error.
+
+## Test and build contract
+
+The root is a Go module declaring Go 1.22 or newer. Build the executable with `go build ./cmd/dupfind`. `bin/test.sh` runs `go vet ./...` and `go test ./...` from the module root and succeeds only if both commands succeed.
+
+## Programmatic Acceptance
+
+=== AC module-build ===
+Intent: The module builds the declared executable package.
+
+import subprocess
+
+result = subprocess.run(
+    [&quot;go&quot;, &quot;build&quot;, &quot;./cmd/dupfind&quot;],
+    capture_output=True,
+    text=True,
+)
+print(result.stdout)
+print(result.stderr)
+assert result.returncode == 0
+=== END AC module-build ===
+
+=== AC test-runner ===
+Intent: The project test runner succeeds when vet and all Go tests pass.
+
+import subprocess
+
+result = subprocess.run(
+    [&quot;sh&quot;, &quot;bin/test.sh&quot;],
+    capture_output=True,
+    text=True,
+)
+print(result.stdout)
+print(result.stderr)
+assert result.returncode == 0
+=== END AC test-runner ===
+
+## User Acceptance
+
+- None.
+
+## Guardrails
+
+- Use only Go&#x27;s standard library.
+- Keep product behavior outside `cmd/dupfind`; only main handles process startup and `os.Exit`.
+- Never modify, move, delete, or write files under the examined directory.
+- Do not modify, rewrite, regenerate, substitute, or read `sources/run.sh` from application code.
+=== END ARTIFACT ===
+=== BEGIN ARTIFACT FEATURE-Discovery.md ===
+# FEATURE: Duplicate Discovery
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261024 V1 |
+| Description | Finds duplicate regular files by size and SHA-256 digest. |
+| Depends On  | ARCHITECTURE.md |
+| Provides    | duplicate file groups |
+
+## Questions
+
+- None.
+
+## Purpose
+
+Discover duplicate files beneath the requested directory. Recursively include hidden files and directories. Consider regular files only; do not follow or report symbolic links. Ignore zero-byte files.
+
+## Discovery behavior
+
+Walk the directory tree and retain eligible files that meet the configured minimum size. Group candidates by size before opening them. Read contents only when at least two candidates share a size, then group by SHA-256 digest. Only groups with at least two files sharing both size and digest are duplicates.
+
+A file that cannot be read is skipped, produces one warning line on standard error, and does not change the command&#x27;s exit status. Discovery must not modify any examined file.
+
+Paths in discovered results are relative to the requested directory. The listing capability formats those paths with `/` separators and sorts them by byte value.
+
+## Programmatic Acceptance
+
+=== AC discovery-groups ===
+Intent: Duplicate discovery returns the paths supplied in the fixture for identical nonempty files.
+
+import csv
+import io
+import tempfile
+from pathlib import Path
+from drydock_go import cli_runner
+
+with tempfile.TemporaryDirectory() as directory:
+    root = Path(directory)
+    left = root / &quot;left&quot;
+    right = root / &quot;nested&quot; / &quot;right&quot;
+    right.parent.mkdir()
+    payload = b&quot;same contents&quot;
+    left.write_bytes(payload)
+    right.write_bytes(payload)
+    code, out, err = cli_runner(str(root), package=&quot;./cmd/dupfind&quot;)
+    rows = list(csv.reader(io.StringIO(out)))
+    expected = {str(left.relative_to(root)), str(right.relative_to(root))}
+    assert code == 0, (code, out, err)
+    assert {row[3] for row in rows[1:]} == expected
+=== END AC discovery-groups ===
+
+=== AC discovery-filters-links-and-empty ===
+Intent: Discovery ignores empty files and symbolic links while including hidden regular files.
+
+import csv
+import io
+import tempfile
+from pathlib import Path
+from drydock_go import cli_runner
+
+with tempfile.TemporaryDirectory() as directory:
+    root = Path(directory)
+    hidden_dir = root / &quot;.hidden&quot;
+    hidden_dir.mkdir()
+    hidden = hidden_dir / &quot;copy&quot;
+    hidden.write_bytes(b&quot;hidden data&quot;)
+    ordinary = root / &quot;ordinary&quot;
+    ordinary.write_bytes(hidden.read_bytes())
+    empty_a = root / &quot;empty-a&quot;
+    empty_b = root / &quot;empty-b&quot;
+    empty_a.write_bytes(b&quot;&quot;)
+    empty_b.write_bytes(b&quot;&quot;)
+    link = root / &quot;linked-copy&quot;
+    link.symlink_to(hidden)
+    code, out, err = cli_runner(str(root), package=&quot;./cmd/dupfind&quot;)
+    rows = list(csv.reader(io.StringIO(out)))
+    paths = {row[3] for row in rows[1:]}
+    expected = {str(hidden.relative_to(root)), str(ordinary.relative_to(root))}
+    assert code == 0, (code, out, err)
+    assert paths == expected
+=== END AC discovery-filters-links-and-empty ===
+
+=== AC discovery-preserves-files ===
+Intent: Scanning leaves examined file contents unchanged.
+
+import tempfile
+from pathlib import Path
+from drydock_go import cli_runner
+
+with tempfile.TemporaryDirectory() as directory:
+    root = Path(directory)
+    first = root / &quot;first&quot;
+    second = root / &quot;second&quot;
+    first.write_bytes(b&quot;preserve me&quot;)
+    second.write_bytes(first.read_bytes())
+    before = {path.name: path.read_bytes() for path in (first, second)}
+    code, out, err = cli_runner(str(root), package=&quot;./cmd/dupfind&quot;)
+    after = {path.name: path.read_bytes() for path in (first, second)}
+    assert code == 0, (code, out, err)
+    assert after == before
+=== END AC discovery-preserves-files ===
+
+## User Acceptance
+
+- None.
+
+## Guardrails
+
+- Read file contents only after multiple eligible files share a size.
+- Skip unreadable files with one standard-error warning and no exit-status change.
+- Never follow or report symbolic links.
+- Never modify files beneath the examined directory.
+=== END ARTIFACT ===
+=== BEGIN ARTIFACT FEATURE-Listing.md ===
+# FEATURE: Duplicate Listing
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261024 V1 |
+| Description | Writes duplicate groups as ordered CSV rows. |
+| Depends On  | ARCHITECTURE.md, FEATURE-Discovery.md |
+| Provides    | CSV duplicate listing |
+| Consumes    | duplicate file groups |
+
+## Questions
+
+- None.
+
+## Purpose
+
+Render discovered duplicate groups as CSV on standard output. Use Go&#x27;s `encoding/csv` writer, which quotes fields containing commas, quotes, or newlines and writes `\n` line endings.
+
+## Listing contract
+
+The listing header is `group,size,sha256,path`. Emit one row for each file in every duplicate group. Use lowercase hexadecimal SHA-256 digests and paths relative to the scanned directory, with `/` separators and no leading `./`.
+
+Order groups by reclaimable bytes descending, then digest ascending. Reclaimable bytes equal file size multiplied by the number of copies beyond the first. Number groups from 1 in that order. Sort paths within each group by byte value ascending. When no duplicates exist, emit only the header row.
+
+## Programmatic Acceptance
+
+=== AC listing-csv-and-quoting ===
+Intent: Listing CSV parses into the expected rows, including a path containing a comma.
+
+import csv
+import io
+import tempfile
+from pathlib import Path
+from drydock_go import cli_runner
+
+with tempfile.TemporaryDirectory() as directory:
+    root = Path(directory)
+    comma_path = root / &quot;a,copy&quot;
+    plain_path = root / &quot;b&quot;
+    payload = b&quot;identical&quot;
+    comma_path.write_bytes(payload)
+    plain_path.write_bytes(payload)
+    code, out, err = cli_runner(str(root), package=&quot;./cmd/dupfind&quot;)
+    rows = list(csv.reader(io.StringIO(out)))
+    expected_paths = {comma_path.name, plain_path.name}
+    assert code == 0, (code, out, err)
+    assert {row[3] for row in rows[1:]} == expected_paths
+    assert all(len(row) == 4 for row in rows)
+=== END AC listing-csv-and-quoting ===
+
+=== AC listing-group-order ===
+Intent: Groups are ordered by reclaimable bytes descending, with digest as the tie breaker.
+
+import csv
+import io
+import tempfile
+from pathlib import Path
+from drydock_go import cli_runner
+
+with tempfile.TemporaryDirectory() as directory:
+    root = Path(directory)
+    contents = [b&quot;alpha&quot;, b&quot;bravo&quot;, b&quot;charlie&quot;]
+    for index, content in enumerate(contents):
+        (root / f&quot;large-{index}&quot;).write_bytes(content)
+        (root / f&quot;large-copy-{index}&quot;).write_bytes(content)
+    contents[0] = b&quot;x&quot;
+    contents[1] = b&quot;yy&quot;
+    contents[2] = b&quot;zzz&quot;
+    for index, content in enumerate(contents):
+        (root / f&quot;small-{index}&quot;).write_bytes(content)
+        (root / f&quot;small-copy-{index}&quot;).write_bytes(content)
+    code, out, err = cli_runner(str(root), package=&quot;./cmd/dupfind&quot;)
+    rows = list(csv.reader(io.StringIO(out)))
+    group_order = []
+    for row in rows[1:]:
+        if row[0] not in group_order:
+            group_order.append(row[0])
+    assert code == 0, (code, out, err)
+    assert group_order == [str(index) for index in range(1, len(group_order) + 1)]
+    assert len(group_order) == 6
+    assert all(len([row for row in rows[1:] if row[0] == group]) == 2 for group in group_order)
+=== END AC ARTIFACT===
+</pre></article>
+</main>
+</body>
+</html>

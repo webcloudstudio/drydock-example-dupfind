@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>workspace/targets/DupFind/blueprint/FEATURE-Summary.md</title>
+<link rel="stylesheet" href="../../../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>workspace/targets/DupFind/blueprint/FEATURE-Summary.md</h1><div class="filenav"><a href="../../../../../index.html">&larr; Report</a><a href="../../../../../workspace/targets/DupFind/blueprint/FEATURE-Summary.md">Raw file</a></div></header>
+<article class="doc"><h1>FEATURE: Duplicate Summary</h1>
+<div class="scroll"><table><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Version</td><td>20261024 V1</td></tr><tr><td>Description</td><td>Reports duplicate-group totals as a CSV summary.</td></tr><tr><td>Depends On</td><td>FEATURE-Discovery.md, FEATURE-Listing.md, FEATURE-MinimumSize.md</td></tr><tr><td>Provides</td><td><code>--summary</code> CSV</td></tr><tr><td>Consumes</td><td>duplicate file groups, <code>--min-size</code></td></tr></tbody></table></div>
+<h2>Purpose</h2>
+<p>Provide a compact report of duplicate groups, redundant file counts, and reclaimable bytes.</p>
+<h2>Behavior</h2>
+<ul><li>With <code>--summary</code>, write the header <code>groups,duplicate_files,reclaimable_bytes</code> and exactly one data row.</li><li>Compute <code>groups</code> as the number of duplicate groups.</li><li>Compute <code>duplicate_files</code> as the sum of <code>files - 1</code> over each group.</li><li>Compute <code>reclaimable_bytes</code> as the sum of <code>size × (files - 1)</code> over each group.</li><li>When there are no duplicate groups, report zero for all totals.</li><li>Use the same groups selected by the active options, including <code>--min-size</code>.</li></ul>
+<h2>Programmatic Acceptance</h2>
+<p>=== AC summary-conformance ===<br>Intent: The supplied grader&#x27;s summary and minimum-size summary cases pass.<br>Suite: scoped</p>
+<p>import os import subprocess</p>
+<p>result = subprocess.run( [&quot;sh&quot;, &quot;sources/run.sh&quot;], capture_output=True, text=True, env=os.environ.copy(), ) print(result.stdout) print(result.stderr) assert result.returncode == 0 === END AC summary-conformance ===</p>
+<h2>User Acceptance</h2>
+<ul><li>None.</li></ul>
+<h2>Guardrails</h2>
+<ul><li>Never modify files under the directory being examined.</li></ul></article>
+</main>
+</body>
+</html>

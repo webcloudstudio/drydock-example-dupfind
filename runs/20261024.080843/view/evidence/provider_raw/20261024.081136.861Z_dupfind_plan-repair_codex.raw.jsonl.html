@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>evidence/provider_raw/20261024.081136.861Z_dupfind_plan-repair_codex.raw.jsonl</title>
+<link rel="stylesheet" href="../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>evidence/provider_raw/20261024.081136.861Z_dupfind_plan-repair_codex.raw.jsonl</h1><div class="filenav"><a href="../../../index.html">&larr; Report</a><a href="../../../evidence/provider_raw/20261024.081136.861Z_dupfind_plan-repair_codex.raw.jsonl">Raw file</a></div></header>
+<article class="doc"><pre>{&quot;type&quot;:&quot;thread.started&quot;,&quot;thread_id&quot;:&quot;01a16cf7-1f4f-7e11-bf6b-d88ba9f3653a&quot;}
+{&quot;type&quot;:&quot;turn.started&quot;}
+{&quot;type&quot;:&quot;item.completed&quot;,&quot;item&quot;:{&quot;id&quot;:&quot;item_0&quot;,&quot;type&quot;:&quot;agent_message&quot;,&quot;text&quot;:&quot;=== AC FEATURE-Command.md :: command-errors ===\nIntent: Missing and extra arguments, unknown options, invalid minimum sizes, and invalid directories return their specified exit codes without producing output.\nCite: sources/INSTRUCTIONS.md:51-66\n\n```python\nfrom drydock_go import cli_runner\n\ncases = [\n    ([], 2),\n    ([\&quot;tree\&quot;, \&quot;tree/a\&quot;], 2),\n    ([\&quot;--frobnicate\&quot;, \&quot;tree\&quot;], 2),\n    ([\&quot;--min-size\&quot;, \&quot;abc\&quot;, \&quot;tree\&quot;], 2),\n    ([\&quot;--min-size\&quot;, \&quot;0\&quot;, \&quot;tree\&quot;], 2),\n    ([\&quot;tree/no-such-directory\&quot;], 1),\n    ([\&quot;tree/env.bak\&quot;], 1),\n]\nfor args, expected in cases:\n    code, out, err = cli_runner(*args)\n    print(out)\n    print(err)\n    assert code == expected\n    assert out == \&quot;\&quot;\n```\n=== END AC FEATURE-Command.md :: command-errors ===\nREPAIR_IMPOSSIBLE: FEATURE-Command.md :: command-errors — the correct source lines for the expected exit codes are not included, so the citation cannot be repaired without guessing.\n\n=== AC FEATURE-Command.md :: command-success ===\nIntent: A valid invocation returns success and emits parseable CSV.\nCite: sources/INSTRUCTIONS.md:36-50\n\n```python\nimport csv\nimport io\nfrom drydock_go import cli_runner\n\ncode, out, err = cli_runner(\&quot;sources\&quot;)\nprint(out)\nprint(err)\nassert code == 0\nrows = list(csv.reader(io.StringIO(out)))\nassert rows\n```\n=== END AC FEATURE-Command.md :: command-success ===\nREPAIR_IMPOSSIBLE: FEATURE-Command.md :: command-success — the correct source lines that state the expected success value are not included, so the citation cannot be repaired without guessing.&quot;}}
+{&quot;type&quot;:&quot;turn.completed&quot;,&quot;usage&quot;:{&quot;input_tokens&quot;:16402,&quot;cached_input_tokens&quot;:11520,&quot;cache_write_input_tokens&quot;:0,&quot;output_tokens&quot;:510,&quot;reasoning_output_tokens&quot;:121}}
+</pre></article>
+</main>
+</body>
+</html>

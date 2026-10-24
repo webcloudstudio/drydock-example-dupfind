@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>evidence/commands/09-after-plan-target-status.stdout.log</title>
+<link rel="stylesheet" href="../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>evidence/commands/09-after-plan-target-status.stdout.log</h1><div class="filenav"><a href="../../../index.html">&larr; Report</a><a href="../../../evidence/commands/09-after-plan-target-status.stdout.log">Raw file</a></div></header>
+<article class="doc"><pre>Drydock 0.8.0  Copyright (c) 2026 Web Cloud Studio. All rights reserved.
+Drydock status
+
+  Target          /mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261024.080843/workspace/targets/DupFind
+  Name            drydock DupFind Uat Case
+  Description     Drydock uat - DupFind is the simplest Go kit and exercises go build end to end. The source is an
+                  original brief for a command-line duplicate file finder that groups regular files by size and SHA-256…
+  Phase           Implement
+  State           Error: plan cannot be built as written
+  Metadata        planned · unbuildable
+  Sources         2 imported · 6 authored blueprint files
+  Analysis        Ready · 5 stories · 0 questions · 0 blockers
+  Blueprint       ✓  0 errors · 0 warnings
+  Plan            6 pending
+  Frontier        go-foundation: Establish the Go application module, executable scaffold, and test runner.
+  Workflow        5 steps
+                  Initialize         complete at 2026-10-24T08:08:45.791+00:00
+                  Import             complete at 2026-10-24T08:08:52.196+00:00
+                  Analyze            complete at 2026-10-24T08:09:14.036+00:00
+                  Plan               failed at 2026-10-24T08:11:24.052+00:00
+                  Plan repair        failed at 2026-10-24T08:12:05.309+00:00
+  Next step       drydock run quarterdeck DupFind
+
+========================================================================
+STOPPED: DupFind  ·  plan-repair  ·  2026-10-24T08:12:07Z
+========================================================================
+
+  acceptance criteria still cannot run after one repair pass
+
+  Clear: delete STOP_NOW.md, or answer y when a command offers to.
+========================================================================
+</pre></article>
+</main>
+</body>
+</html>

@@ -1,0 +1,25 @@
+<requirement name="build-dupfind" stories="go-foundation">
+Build `./cmd/dupfind` with `go build`
+</requirement>
+<requirement name="fixed-tree-and-known-answer-checks" stories="go-foundation,command-operation">
+creates a fixed directory tree, and compares every
+# command's exit code and standard output with the known answer below.
+</requirement>
+<requirement name="list-duplicate-files" stories="duplicate-discovery,duplicate-listing">
+# ── A. Full listing ──────────────────────────────────────────────────────────────────────
+</requirement>
+<requirement name="summarize-duplicates" stories="duplicate-discovery,duplicate-summary">
+# ── B. Summary ───────────────────────────────────────────────────────────────────────────
+</requirement>
+<requirement name="filter-by-minimum-size" stories="minimum-size,duplicate-discovery,duplicate-listing">
+# ── C. Minimum size ──────────────────────────────────────────────────────────────────────
+</requirement>
+<requirement name="handle-empty-results" stories="duplicate-discovery,duplicate-listing,duplicate-summary">
+# ── D. No duplicates ─────────────────────────────────────────────────────────────────────
+</requirement>
+<requirement name="handle-operational-failures" stories="command-operation">
+# ── E. Operational failures ──────────────────────────────────────────────────────────────
+</requirement>
+<requirement name="handle-usage-errors" stories="command-operation">
+# ── U. Usage errors ──────────────────────────────────────────────────────────────────────
+</requirement>

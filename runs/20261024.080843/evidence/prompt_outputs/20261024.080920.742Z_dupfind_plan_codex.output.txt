@@ -1,0 +1,97 @@
+=== BEGIN ARTIFACT TOPOLOGY.md ===
+## Declarations
+
+## story go-foundation
+summary:      Establish the Go application module, executable scaffold, and test runner.
+type:         foundational
+kind:         capability
+phase:        1
+implements:   ARCHITECTURE.md
+stack:        go.md, common.md
+provides:     Go module, ./cmd/dupfind, bin/test.sh
+accepts:      st-002, st-003
+acceptance:   yes
+instructions: |
+  Establish the Go 1.22+ standard-library-only module and ./cmd/dupfind entry point. Add a POSIX-compatible bin/test.sh that runs go vet ./... and go test ./... from the application root and exits successfully only when both pass. Keep application behavior in internal packages and keep only startup and os.Exit handling in main.
+
+## story duplicate-discovery
+summary:      Discover and group duplicate regular files by size and SHA-256.
+type:         service
+kind:         capability
+phase:        1
+implements:   FEATURE-Discovery.md
+covers:       DISCOVERY-001
+accepts:      st-004, st-005, st-008
+stack:        go.md, common.md
+depends:      go-foundation
+provides:     duplicate file groups
+acceptance:   yes
+instructions: |
+  Recursively inspect the requested directory, including hidden paths. Consider regular files only, do not follow or report symbolic links, ignore zero-byte files, and skip unreadable files with one warning on standard error without changing the exit status. Read contents only for files sharing a size, then group by size and SHA-256 digest. Do not modify files under the examined directory.
+
+## story duplicate-listing
+summary:      Render ordered duplicate groups as CSV.
+type:         service
+kind:         capability
+phase:        1
+implements:   FEATURE-Listing.md
+covers:       DISCOVERY-002
+stack:        go.md, common.md
+depends:      duplicate-discovery
+provides:     CSV duplicate listing
+consumes:     duplicate file groups
+acceptance:   yes
+instructions: |
+  Write the listing as CSV using encoding/csv with the required header and one row per file in each duplicate group. Use paths relative to the scanned directory with forward-slash separators and no leading ./; order paths by byte value. Order groups by reclaimable bytes descending, then digest ascending, and number them from 1. Emit only the header when there are no duplicates.
+
+## story minimum-size
+summary:      Filter scan candidates using the minimum file size option.
+type:         service
+kind:         capability
+phase:        1
+implements:   FEATURE-MinimumSize.md
+covers:       DISCOVERY-003
+stack:        go.md, common.md
+depends:      duplicate-discovery
+provides:     --min-size
+consumes:     duplicate file groups
+acceptance:   yes
+instructions: |
+  Accept --min-size <bytes> before the directory argument. Require a positive integer, default to 1 byte, and exclude smaller files from duplicate discovery. Apply the same filtered groups to listing and summary output.
+
+## story duplicate-summary
+summary:      Report duplicate counts and reclaimable bytes as CSV.
+type:         service
+kind:         capability
+phase:        1
+implements:   FEATURE-Summary.md
+covers:       COMMAND-001
+accepts:      st-006
+stack:        go.md, common.md
+depends:      duplicate-listing, minimum-size
+provides:     --summary CSV
+consumes:     duplicate file groups, --min-size
+acceptance:   yes
+instructions: |
+  When --summary is supplied, write the required CSV header and exactly one data row. Compute groups, duplicate_files as the sum of files minus one per group, and reclaimable_bytes as the sum of size times files minus one. With no duplicate groups, report zero for every total.
+
+## story command-operation
+summary:      Validate CLI arguments and directory and complete release conformance.
+type:         service
+kind:         capability
+phase:        1
+implements:   FEATURE-Command.md
+covers:       COMMAND-002
+accepts:      st-001, st-007
+stack:        go.md, common.md
+depends:      duplicate-listing, minimum-size, duplicate-summary
+context:      sources/run.sh
+context_roles: |
+  FEATURE-Command.md: conformance harness
+acceptance:   yes
+instructions: |
+  Validate that exactly one directory is supplied and options precede it. Return exit 2 for missing or extra arguments, unknown options, or a non-positive or invalid --min-size value. Return exit 1 when the directory does not exist or is not a directory. On failure, leave standard output empty and write one diagnostic line to standard error. Successful commands return 0. As the final implementation step, run the complete supplied grader via sh sources/run.sh and make it pass.
+=== END ARTIFACT ===
+=== BEGIN ARTIFACT DECISIONS.json ===
+[]
+=== END ARTIFACT ===

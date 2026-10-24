@@ -1,0 +1,191 @@
+=== BEGIN ARTIFACT ANALYSIS.md ===
+# Blueprint Analysis: DupFind
+
+## Commander Expectations
+
+- assert the product finds and reports duplicate regular files and the space reclaimable by keeping one copy.
+- assert the product never deletes, moves, or modifies files.
+
+## Crew
+
+| Crew | Charge |
+|---|---|
+| Commander | Defines intent and decides what done means. |
+| Team Lead | Confirms epic completeness and stakeholder expectations. |
+| Planning Crew | Authors atomic specifications and the ordered Manifest. |
+| Shipyard Crew | Builds the tickets without synchronous Commander access. |
+
+## Story List
+
+### Feature: Duplicate Discovery
+
+| ID | Story | High-level AC |
+|---|---|---|
+| DISCOVERY-001 | Scan a directory for duplicate files | Recursively inspect regular files, including hidden paths, skip symbolic links and unreadable files with a warning, and group eligible files by size and SHA-256 digest. |
+| DISCOVERY-002 | List duplicate groups as CSV | Emit the required CSV header and rows, ordered by reclaimable bytes descending, digest ascending, and paths by byte order; quote CSV fields as required. |
+| DISCOVERY-003 | Filter files by minimum size | Accept a positive `--min-size` value and exclude smaller files, defaulting to 1 byte. |
+
+### Feature: Summary and Command Operation
+
+| ID | Story | High-level AC |
+|---|---|---|
+| COMMAND-001 | Summarize duplicate results | With `--summary`, emit group count, duplicate file count, and reclaimable bytes for the matching listing. |
+| COMMAND-002 | Handle command errors and usage | Return the specified exit codes and a diagnostic on standard error for operational and usage failures; leave standard output empty on failure. |
+
+## Surfaced Acceptance Criteria
+
+None.
+
+## Relationship Model
+
+| Source or group | Relationship type | Related source or group | Evidence | Delivery implication |
+|---|---|---|---|---|
+| `sources/INSTRUCTIONS.md` | instruction-to-test | `sources/run.sh` | Instructions identify the staged grader and specify its command, fixed tree, and expected outputs; runner builds `./cmd/dupfind`. | Build the CLI behavior to the source requirements; preserve and run the supplied harness as the terminal conformance check. |
+| `sources/run.sh` | test-kit-to-implementation | `./cmd/dupfind` | Harness builds and invokes the executable for listing, summary, filtering, and error cases. | The executable must expose all required command behavior through its CLI. |
+
+## Source Roles
+
+| Path | Role | Plan disposition | Build disposition |
+|---|---|---|---|
+| `sources/INSTRUCTIONS.md` | normative specification and conformance test suite | context | prompt-only |
+| `sources/run.sh` | conformance harness | context | stage |
+
+## Planning Instructions
+
+### Delivery Shape
+
+A Go command-line tool accepts options followed by one directory, recursively discovers eligible files, groups duplicates, and emits either a CSV listing or CSV summary. The flow validates arguments and directory, scans candidates, hashes same-size files, forms and orders duplicate groups, then writes the selected output.
+
+### Story Realization Map
+
+| Story ID | Blueprint scope | Evidence | Related files | Requires |
+|---|---|---|---|---|
+| DISCOVERY-001 | Recursive file discovery and duplicate grouping | `sources/INSTRUCTIONS.md` Rules 1–3, 6 | `./cmd/dupfind` | capability |
+| DISCOVERY-002 | Listing output format and ordering | `sources/INSTRUCTIONS.md` Rules 4–5 and Output | `./cmd/dupfind` | capability |
+| DISCOVERY-003 | Minimum-size option | `sources/INSTRUCTIONS.md` Command and Options | `./cmd/dupfind` | capability |
+| COMMAND-001 | Summary output | `sources/INSTRUCTIONS.md` Command and Output | `./cmd/dupfind` | capability |
+| COMMAND-002 | Argument validation and operational errors | `sources/INSTRUCTIONS.md` Exit codes and failing command behavior | `./cmd/dupfind` | capability |
+
+### Test and Acceptance Strategy
+
+Keep focused tests bounded to each story: temporary directory cases for scanning/grouping, CSV and ordering, minimum-size filtering, summary totals, and argument and directory failures. The supplied `sources/run.sh` is the terminal verification gate and must pass in full; no story-level test substitutes for that conformance run.
+
+### Sequencing and Dependencies
+
+The Go module and executable entry point underpin all stories. Argument parsing and directory validation precede scanning; scanning and grouping precede listing or summary formatting. The final conformance verification follows implementation of all stories. No migration or external service dependency is described.
+
+### Source Conflicts and Gaps
+
+The source consistently specifies a Go CLI and its behavior. It does not define an interactive help screen or a dedicated help flag; the core command contract otherwise gives the required options, arguments, and errors.
+
+## Analysis Notes
+
+generated: 2026-10-24
+blueprint: /mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261024.080843/workspace/targets/DupFind/blueprint
+
+Quality: Ready
+  blockers: 0
+  questions: 0
+  features: 2
+  stories: 5
+  stack: Go 1.22+, standard library
+  display_name: not proposed
+  short_description: not proposed
+
+None.
+=== END ARTIFACT ===
+
+=== BEGIN ARTIFACT SEA_TRIALS.md ===
+# Sea Trials: DupFind
+
+## st-001: The supplied grader passes
+
+Type: technical
+Required: yes
+Criterion: The completed dupfind shall make sh sources/run.sh exit zero; that script's exit status is the sole acceptance verdict.
+Testability: deterministic
+Consequence: blocks
+Verification: proof
+Command: ["sh", "sources/run.sh"]
+Pattern: ubiquitous
+
+## st-002: Test suite passes
+
+Type: technical
+Required: yes
+Criterion: The application shall provide a POSIX-compatible bin/test.sh that exits zero when go vet and every automated test pass.
+Testability: deterministic
+Consequence: blocks
+Verification: proof
+Pattern: ubiquitous
+
+## st-003: The executable builds with go build
+
+Type: technical
+Required: yes
+Criterion: The application root shall be a Go module from which go build ./cmd/dupfind produces the dupfind executable using only the standard library.
+Testability: deterministic
+Consequence: blocks
+Verification: proof
+Pattern: ubiquitous
+
+## st-004: Duplicate groups are exact and ordered
+
+Type: behavioral
+Required: yes
+Criterion: When dupfind lists a directory, the application shall report every group of two or more regular files with identical size and SHA-256 digest, ordered by reclaimable bytes descending then digest ascending, with paths relative to the directory in byte order.
+Testability: deterministic
+Consequence: blocks
+Verification: proof
+Pattern: event
+
+## st-005: Empty files and symbolic links are never reported
+
+Type: behavioral
+Required: yes
+Criterion: The application shall ignore zero-byte files and shall neither follow nor report symbolic links.
+Testability: deterministic
+Consequence: blocks
+Verification: proof
+Pattern: ubiquitous
+
+## st-006: The summary totals the listing
+
+Type: behavioral
+Required: yes
+Criterion: When --summary is given, the application shall write the group count, the duplicate file count, and the reclaimable bytes of the listing that the same options would produce.
+Testability: deterministic
+Consequence: blocks
+Verification: proof
+Pattern: event
+
+## st-007: Errors map to exit codes
+
+Type: behavioral
+Required: yes
+Criterion: If the directory is missing or is not a directory, then the application shall exit 1; if the arguments are malformed, then the application shall exit 2; in both cases it shall write nothing to standard output.
+Testability: deterministic
+Consequence: blocks
+Verification: proof
+Pattern: unwanted
+
+## st-008: Files are never modified
+
+Type: technical
+Required: yes
+Criterion: The application shall only read the files it examines and shall never delete, move, or write any file under the directory.
+Testability: judgeable
+Consequence: scores
+Verification: llm
+Pattern: ubiquitous
+=== END ARTIFACT ===
+
+=== BEGIN ARTIFACT TECHNOLOGY_STACK.md ===
+# Technology Stack
+
+| Technology | Rigging | Notes |
+|---|---|---|
+| Go 1.22+ | go.md | Standard library only; executable package at `./cmd/dupfind`. |
+| CLI command behavior | cli.md | One `dupfind` command with `--summary` and `--min-size` options. |
+| Test and vet tooling | go.md | Go test and vet commands; POSIX `bin/test.sh` runner. |
+=== END ARTIFACT

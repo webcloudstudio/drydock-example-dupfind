@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>evidence/prompt_outputs/20261024.081055.335Z_dupfind_lineage_attribute_codex.output.txt</title>
+<link rel="stylesheet" href="../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>evidence/prompt_outputs/20261024.081055.335Z_dupfind_lineage_attribute_codex.output.txt</h1><div class="filenav"><a href="../../../index.html">&larr; Report</a><a href="../../../evidence/prompt_outputs/20261024.081055.335Z_dupfind_lineage_attribute_codex.output.txt">Raw file</a></div></header>
+<article class="doc"><pre>&lt;requirement name=&quot;build-dupfind&quot; stories=&quot;go-foundation&quot;&gt;
+Build `./cmd/dupfind` with `go build`
+&lt;/requirement&gt;
+&lt;requirement name=&quot;fixed-tree-and-known-answer-checks&quot; stories=&quot;go-foundation,command-operation&quot;&gt;
+creates a fixed directory tree, and compares every
+# command&#x27;s exit code and standard output with the known answer below.
+&lt;/requirement&gt;
+&lt;requirement name=&quot;list-duplicate-files&quot; stories=&quot;duplicate-discovery,duplicate-listing&quot;&gt;
+# ── A. Full listing ──────────────────────────────────────────────────────────────────────
+&lt;/requirement&gt;
+&lt;requirement name=&quot;summarize-duplicates&quot; stories=&quot;duplicate-discovery,duplicate-summary&quot;&gt;
+# ── B. Summary ───────────────────────────────────────────────────────────────────────────
+&lt;/requirement&gt;
+&lt;requirement name=&quot;filter-by-minimum-size&quot; stories=&quot;minimum-size,duplicate-discovery,duplicate-listing&quot;&gt;
+# ── C. Minimum size ──────────────────────────────────────────────────────────────────────
+&lt;/requirement&gt;
+&lt;requirement name=&quot;handle-empty-results&quot; stories=&quot;duplicate-discovery,duplicate-listing,duplicate-summary&quot;&gt;
+# ── D. No duplicates ─────────────────────────────────────────────────────────────────────
+&lt;/requirement&gt;
+&lt;requirement name=&quot;handle-operational-failures&quot; stories=&quot;command-operation&quot;&gt;
+# ── E. Operational failures ──────────────────────────────────────────────────────────────
+&lt;/requirement&gt;
+&lt;requirement name=&quot;handle-usage-errors&quot; stories=&quot;command-operation&quot;&gt;
+# ── U. Usage errors ──────────────────────────────────────────────────────────────────────
+&lt;/requirement&gt;</pre></article>
+</main>
+</body>
+</html>

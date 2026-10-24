@@ -1,0 +1,44 @@
+=== AC FEATURE-Command.md :: command-errors ===
+Intent: Missing and extra arguments, unknown options, invalid minimum sizes, and invalid directories return their specified exit codes without producing output.
+Cite: sources/INSTRUCTIONS.md:51-66
+
+```python
+from drydock_go import cli_runner
+
+cases = [
+    ([], 2),
+    (["tree", "tree/a"], 2),
+    (["--frobnicate", "tree"], 2),
+    (["--min-size", "abc", "tree"], 2),
+    (["--min-size", "0", "tree"], 2),
+    (["tree/no-such-directory"], 1),
+    (["tree/env.bak"], 1),
+]
+for args, expected in cases:
+    code, out, err = cli_runner(*args)
+    print(out)
+    print(err)
+    assert code == expected
+    assert out == ""
+```
+=== END AC FEATURE-Command.md :: command-errors ===
+REPAIR_IMPOSSIBLE: FEATURE-Command.md :: command-errors — the correct source lines for the expected exit codes are not included, so the citation cannot be repaired without guessing.
+
+=== AC FEATURE-Command.md :: command-success ===
+Intent: A valid invocation returns success and emits parseable CSV.
+Cite: sources/INSTRUCTIONS.md:36-50
+
+```python
+import csv
+import io
+from drydock_go import cli_runner
+
+code, out, err = cli_runner("sources")
+print(out)
+print(err)
+assert code == 0
+rows = list(csv.reader(io.StringIO(out)))
+assert rows
+```
+=== END AC FEATURE-Command.md :: command-success ===
+REPAIR_IMPOSSIBLE: FEATURE-Command.md :: command-success — the correct source lines that state the expected success value are not included, so the citation cannot be repaired without guessing.

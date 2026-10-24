@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>workspace/targets/DupFind/blueprint/FEATURE-Command-Interface.md</title>
+<link rel="stylesheet" href="../../../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>workspace/targets/DupFind/blueprint/FEATURE-Command-Interface.md</h1><div class="filenav"><a href="../../../../../index.html">&larr; Report</a><a href="../../../../../workspace/targets/DupFind/blueprint/FEATURE-Command-Interface.md">Raw file</a></div></header>
+<article class="doc"><h1>FEATURE: Command Interface</h1>
+<div class="scroll"><table><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Version</td><td>20261024 V1</td></tr><tr><td>Description</td><td>Defines DupFind&#x27;s command options, argument validation, and operational error behavior.</td></tr><tr><td>Depends On</td><td>ARCHITECTURE.md</td></tr><tr><td>Provides</td><td>dupfind command interface</td></tr><tr><td>Consumes</td><td>./cmd/dupfind</td></tr></tbody></table></div>
+<h2>Purpose</h2>
+<p>The command is <code>dupfind [--summary] [--min-size &lt;bytes&gt;] &lt;directory&gt;</code>. Options precede exactly one directory argument. <code>--summary</code> selects summary CSV output. <code>--min-size</code> takes a positive integer; files smaller than it are ignored, and the default is 1 byte.</p>
+<h2>Behavior</h2>
+<ul><li>Accept options before the directory and reject unknown options, missing values, non-positive or non-integer minimum sizes, a missing directory argument, and extra arguments with usage exit code 2.</li><li>A nonexistent path or a path that is not a directory exits with code 1.</li><li>On success, return exit code 0 whether or not duplicates exist.</li><li>On failure, write nothing to stdout and one diagnostic line to stderr.</li><li>The process entry point is <code>./cmd/dupfind</code>; only <code>main</code> calls <code>os.Exit</code>. CLI behavior is exposed through <code>Run(args []string, stdout, stderr io.Writer) int</code>.</li></ul>
+<h2>Guardrails</h2>
+<ul><li>Do not print output to stdout for malformed arguments or invalid directory paths.</li><li>Do not write diagnostic text to stdout.</li><li>Do not change files in the directory being examined.</li></ul>
+<h2>Programmatic Acceptance</h2>
+<p>=== AC command-options ===<br>Intent: The command accepts the summary option and a positive minimum size before its directory argument.</p>
+<p>from drydock_go import cli_runner import tempfile from pathlib import Path</p>
+<p>with tempfile.TemporaryDirectory() as tmp: root = Path(tmp) a = root / &quot;a&quot; b = root / &quot;b&quot; a.write_bytes(b&quot;sample&quot;) b.write_bytes(b&quot;sample&quot;) code, out, err = cli_runner(&quot;--summary&quot;, &quot;--min-size&quot;, &quot;2&quot;, str(root)) print(out) print(err) assert code == 0 === END AC command-options ===</p>
+<p>=== AC usage-exit ===<br>Intent: Malformed and incomplete invocations return the usage exit status.</p>
+<p>from drydock_go import cli_runner</p>
+<p>cases = [ [], [&quot;one&quot;, &quot;two&quot;], [&quot;--min-size&quot;, &quot;0&quot;, &quot;dir&quot;], [&quot;--frobnicate&quot;, &quot;dir&quot;], ]</p>
+<p>for args in cases: code, out, err = cli_runner(*args) print(out) print(err) assert code == 2 === END AC usage-exit ===</p>
+<p>=== AC directory-errors ===<br>Intent: Missing and non-directory paths return the operational failure status.</p>
+<p>from drydock_go import cli_runner import tempfile from pathlib import Path</p>
+<p>with tempfile.TemporaryDirectory() as tmp: root = Path(tmp) file_path = root / &quot;file&quot; file_path.write_bytes(b&quot;x&quot;) missing = root / &quot;missing&quot; for path in (missing, file_path): code, out, err = cli_runner(str(path)) print(out) print(err) assert code == 1 assert out == &quot;&quot; === END AC directory-errors ===</p>
+<p>=== AC minimum-size-validation ===<br>Intent: A non-integer minimum size is rejected with the usage exit status.</p>
+<p>from drydock_go import cli_runner</p>
+<p>code, out, err = cli_runner(&quot;--min-size&quot;, &quot;abc&quot;, &quot;dir&quot;) print(out) print(err) assert code == 2 === END AC minimum-size-validation ===</p>
+<h2>User Acceptance</h2>
+<ul><li>None.</li></ul>
+<h2>Guardrails</h2>
+<ul><li>None.</li></ul></article>
+</main>
+</body>
+</html>

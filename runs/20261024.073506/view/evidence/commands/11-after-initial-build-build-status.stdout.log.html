@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>evidence/commands/11-after-initial-build-build-status.stdout.log</title>
+<link rel="stylesheet" href="../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>evidence/commands/11-after-initial-build-build-status.stdout.log</h1><div class="filenav"><a href="../../../index.html">&larr; Report</a><a href="../../../evidence/commands/11-after-initial-build-build-status.stdout.log">Raw file</a></div></header>
+<article class="doc"><pre>Drydock 0.8.0  Copyright (c) 2026 Web Cloud Studio. All rights reserved.
+Next: drydock build DupFind
+
+Blueprint: DupFind
+Target: /mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261024.073506/workspace/targets/DupFind
+Rows: &lt;state&gt; &lt;type&gt;  &lt;Name&gt;  [&lt;id&gt;]   — pass [&lt;id&gt;] to --step
+Block: Build Block 1 · Foundational  [block-1]   — [built] story Establish the Go module and command scaffold.  [foundation] — complete
+
+Block: Build Block 2 · Service  [block-2]   — 0/5 stories complete
+  [FAILED]  story  Parse command options and validate directory arguments.  [command_interface]  &lt;- resume (repairs in place)
+  [FAILED]  story  Find duplicate regular files recursively.  [duplicate_discovery]  &lt;- resume (repairs in place)
+  [FAILED]  story  Emit duplicate summary totals as CSV.  [summary_output]  &lt;- resume (repairs in place)
+  [FAILED]  story  Emit ordered duplicate groups as CSV.  [listing_output]  &lt;- resume (repairs in place)
+  [FAILED]  story  Provide and run the project verification suite.  [verification]  &lt;- resume (repairs in place)
+
+Steps: 6 total — 0 done, 1 built (await verify), 0 in review, 0 pending, 0 blocked by questions, 5 failed (0% complete)
+Buildable now: block-2
+Failed (resume with drydock build, or --step &lt;id&gt;; --reset discards work instead): command_interface, duplicate_discovery, summary_output, listing_output, verification
+Target - committed project workspace git store
+</pre></article>
+</main>
+</body>
+</html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>evidence/commands/12-after-initial-build-target-status.stdout.log</title>
+<link rel="stylesheet" href="../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>evidence/commands/12-after-initial-build-target-status.stdout.log</h1><div class="filenav"><a href="../../../index.html">&larr; Report</a><a href="../../../evidence/commands/12-after-initial-build-target-status.stdout.log">Raw file</a></div></header>
+<article class="doc"><pre>Drydock 0.8.0  Copyright (c) 2026 Web Cloud Studio. All rights reserved.
+Drydock status
+
+  Target          /mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261024.073506/workspace/targets/DupFind
+  Name            drydock DupFind Uat Case
+  Description     Drydock uat - DupFind is the simplest Go kit and exercises go build end to end. The source is an
+                  original brief for a command-line duplicate file finder that groups regular files by size and SHA-256…
+  Phase           Implement
+  State           Failed: programmatic acceptance failed: summary-no-duplicates, summary-filtered, listing-empty, listing-relative-paths, listing-csv-path
+  Metadata        building · running
+  Sources         2 imported · 6 authored blueprint files
+  Analysis        Ready · 6 stories · 0 questions · 0 blockers
+  Blueprint       ✓  0 errors · 0 warnings
+  Plan            1 closed/implemented · 5 closed/failed
+  Frontier        (none)
+  Workflow        5 steps
+                  Initialize         complete at 2026-10-24T07:35:09.417+00:00
+                  Import             complete at 2026-10-24T07:35:16.119+00:00
+                  Analyze            complete at 2026-10-24T07:35:42.550+00:00
+                  Plan               complete at 2026-10-24T07:38:03.872+00:00
+                  Build              failed at 2026-10-24T07:45:06.908+00:00
+  Next step       drydock run quarterdeck DupFind
+
+========================================================================
+STOPPED: DupFind  ·  initial-build-1  ·  2026-10-24T07:45:08Z
+========================================================================
+
+  The build exited 1 with work still on the frontier. Diagnose the failing block from its evidence before rerunning; a score taken over a partial build grades the absence, not the product.
+
+  Clear: delete STOP_NOW.md, or answer y when a command offers to.
+========================================================================
+</pre></article>
+</main>
+</body>
+</html>

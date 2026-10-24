@@ -1,0 +1,19 @@
+Drydock 0.8.0  Copyright (c) 2026 Web Cloud Studio. All rights reserved.
+Next: drydock build DupFind
+
+Blueprint: DupFind
+Target: /mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261024.073506/workspace/targets/DupFind
+Rows: <state> <type>  <Name>  [<id>]   — pass [<id>] to --step
+Block: Build Block 1 · Foundational  [block-1]   — [built] story Establish the Go module and command scaffold.  [foundation] — complete
+
+Block: Build Block 2 · Service  [block-2]   — 0/5 stories complete
+  [FAILED]  story  Parse command options and validate directory arguments.  [command_interface]  <- resume (repairs in place)
+  [FAILED]  story  Find duplicate regular files recursively.  [duplicate_discovery]  <- resume (repairs in place)
+  [FAILED]  story  Emit duplicate summary totals as CSV.  [summary_output]  <- resume (repairs in place)
+  [FAILED]  story  Emit ordered duplicate groups as CSV.  [listing_output]  <- resume (repairs in place)
+  [FAILED]  story  Provide and run the project verification suite.  [verification]  <- resume (repairs in place)
+
+Steps: 6 total — 0 done, 1 built (await verify), 0 in review, 0 pending, 0 blocked by questions, 5 failed (0% complete)
+Buildable now: block-2
+Failed (resume with drydock build, or --step <id>; --reset discards work instead): command_interface, duplicate_discovery, summary_output, listing_output, verification
+Target - committed project workspace git store

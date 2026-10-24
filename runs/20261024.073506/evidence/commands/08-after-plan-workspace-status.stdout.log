@@ -1,0 +1,16 @@
+Drydock 0.8.0  Copyright (c) 2026 Web Cloud Studio. All rights reserved.
+Drydock status — workspace
+
+Target: DupFind
+   Phase:     Implement
+   State:     6 pending
+   Detail:    2 imported · 6 authored · metadata planned
+   Analysis:  Ready · 6 stories · 0 questions · 0 blockers
+   Plan:      6 pending
+   Next Step: drydock build DupFind  (frontier: Establish the Go module and command scaffold.)
+   10-24:     ✅  drydock build status DupFind
+   10-24:     ✅  drydock plan verify DupFind
+   10-24:     ✅  drydock plan DupFind --override
+   10-24:     ✅  drydock analyze DupFind
+   10-24:     ✅  drydock import DupFind /mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261024.073506/sources --format markdown
+

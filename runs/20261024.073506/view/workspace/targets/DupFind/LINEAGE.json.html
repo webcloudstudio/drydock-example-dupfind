@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>workspace/targets/DupFind/LINEAGE.json</title>
+<link rel="stylesheet" href="../../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>workspace/targets/DupFind/LINEAGE.json</h1><div class="filenav"><a href="../../../../index.html">&larr; Report</a><a href="../../../../workspace/targets/DupFind/LINEAGE.json">Raw file</a></div></header>
+<article class="doc"><pre>{
+  &quot;version&quot;: 1,
+  &quot;import&quot;: {
+    &quot;root&quot;: &quot;/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261024.073506/sources&quot;,
+    &quot;format&quot;: &quot;markdown&quot;
+  },
+  &quot;sources&quot;: {
+    &quot;INSTRUCTIONS.md&quot;: {
+      &quot;state&quot;: &quot;current&quot;,
+      &quot;versions&quot;: [
+        {
+          &quot;commit&quot;: &quot;94dc15a&quot;,
+          &quot;date&quot;: &quot;2026-10-24&quot;,
+          &quot;hash&quot;: &quot;189cd54671b6072a66ab49cb47f2b4475c0beb5e75131b43b5d258fb289ec1ed&quot;,
+          &quot;release&quot;: &quot;&quot;,
+          &quot;state&quot;: &quot;consumed&quot;,
+          &quot;via&quot;: &quot;plan&quot;,
+          &quot;ticket&quot;: null,
+          &quot;requirements&quot;: [
+            {
+              &quot;name&quot;: &quot;build-go-command&quot;,
+              &quot;text&quot;: &quot;Implement in Go 1.22 or newer using only the standard library. The application root is a Go module, and its executable is the main package at `./cmd/dupfind`.&quot;,
+              &quot;stories&quot;: []
+            },
+            {
+              &quot;name&quot;: &quot;command-options-and-validation&quot;,
+              &quot;text&quot;: &quot;dupfind [--summary] [--min-size &lt;bytes&gt;] &lt;directory&gt;&quot;,
+              &quot;stories&quot;: [
+                &quot;command_interface&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;walk-and-filter-files&quot;,
+              &quot;text&quot;: &quot;1. **Scope.** The tool walks `&lt;directory&gt;` recursively, including hidden files and directories\n(names beginning `.`). It considers regular files only. It neither follows nor reports\nsymbolic links.\n2. **Empty files are never duplicates.** A file of zero bytes is always ignored, which the\ndefault `--min-size 1` guarantees.\n3. **Duplicate test.** Files are grouped by size first. Only files that share a size are read.\nWithin a size, files are grouped by the SHA-256 digest of their contents. A group of two or\nmore files with the same size and digest is a duplicate group.&quot;,
+              &quot;stories&quot;: [
+                &quot;duplicate_discovery&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;listing-csv-output&quot;,
+              &quot;text&quot;: &quot;**Listing** (default): header `group,size,sha256,path`, then one row per file in every duplicate\ngroup. `sha256` is the lowercase hexadecimal digest. With no duplicates, only the header is\nwritten.&quot;,
+              &quot;stories&quot;: [
+                &quot;listing_output&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;ordered-groups-and-paths&quot;,
+              &quot;text&quot;: &quot;5. **Order.** Groups are ordered by reclaimable bytes descending, then by digest ascending.\nA group&#x27;s reclaimable bytes are `size \u00d7 (files \u2212 1)`. Groups are numbered from 1 in that order.\nWithin a group, paths are ordered by byte value ascending.&quot;,
+              &quot;stories&quot;: [
+                &quot;listing_output&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;summary-csv-output&quot;,
+              &quot;text&quot;: &quot;**Summary** (`--summary`): header `groups,duplicate_files,reclaimable_bytes`, then one row.\n`duplicate_files` is the sum of `files \u2212 1` over all groups. `reclaimable_bytes` is the sum of\nevery group&#x27;s reclaimable bytes. With no duplicates the row is `0,0,0`.&quot;,
+              &quot;stories&quot;: [
+                &quot;summary_output&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;verification-suite&quot;,
+              &quot;text&quot;: &quot;The completed application provides a POSIX-compatible `bin/test.sh` that runs `go vet ./...` and `go test ./...` from the application root and exits zero only when both pass. The suite covers\neach rule, each output form, and each exit code against real temporary directories.&quot;,
+              &quot;stories&quot;: [
+                &quot;verification&quot;
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    &quot;run.sh&quot;: {
+      &quot;state&quot;: &quot;current&quot;,
+      &quot;versions&quot;: [
+        {
+          &quot;commit&quot;: &quot;94dc15a&quot;,
+          &quot;date&quot;: &quot;2026-10-24&quot;,
+          &quot;hash&quot;: &quot;dc265eae016629662090b0465362c0642ea7deb57afd77c5725652d0969f880d&quot;,
+          &quot;release&quot;: &quot;&quot;,
+          &quot;state&quot;: &quot;consumed&quot;,
+          &quot;via&quot;: &quot;plan&quot;,
+          &quot;ticket&quot;: null,
+          &quot;requirements&quot;: [
+            {
+              &quot;name&quot;: &quot;build-application&quot;,
+              &quot;text&quot;: &quot;if ! (cd \&quot;$APP\&quot; &amp;&amp; go build -o \&quot;$BIN\&quot; ./cmd/dupfind); then&quot;,
+              &quot;stories&quot;: []
+            },
+            {
+              &quot;name&quot;: &quot;find-recursive-duplicates&quot;,
+              &quot;text&quot;: &quot;Find duplicate regular files recursively.&quot;,
+              &quot;stories&quot;: []
+            },
+            {
+              &quot;name&quot;: &quot;list-duplicate-groups&quot;,
+              &quot;text&quot;: &quot;# \u2500\u2500 A. Full listing \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500&quot;,
+              &quot;stories&quot;: []
+            },
+            {
+              &quot;name&quot;: &quot;summarize-duplicates&quot;,
+              &quot;text&quot;: &quot;# \u2500\u2500 B. Summary \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500&quot;,
+              &quot;stories&quot;: []
+            },
+            {
+              &quot;name&quot;: &quot;filter-minimum-size&quot;,
+              &quot;text&quot;: &quot;# \u2500\u2500 C. Minimum size \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500&quot;,
+              &quot;stories&quot;: []
+            },
+            {
+              &quot;name&quot;: &quot;validate-command-usage&quot;,
+              &quot;text&quot;: &quot;# \u2500\u2500 U. Usage errors \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500&quot;,
+              &quot;stories&quot;: []
+            },
+            {
+              &quot;name&quot;: &quot;handle-operational-failures&quot;,
+              &quot;text&quot;: &quot;# \u2500\u2500 E. Operational failures \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500&quot;,
+              &quot;stories&quot;: []
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
+</pre></article>
+</main>
+</body>
+</html>

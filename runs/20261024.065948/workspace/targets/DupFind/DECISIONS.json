@@ -1,0 +1,48 @@
+[
+  {
+    "id": "Q-001",
+    "type": "choice",
+    "severity": "material",
+    "origin": "plan",
+    "blueprint": "FEATURE-Duplicate-Finding.md",
+    "story": "duplicate-discovery",
+    "status": "recommended",
+    "archived": false,
+    "title": "Consolidate command behaviors into one feature scope",
+    "description": "The analyzed behaviors all belong to one CLI command and share discovery, grouping, option filtering, and output assembly. Keeping them in one feature gives the command one coherent, independently testable implementation boundary.",
+    "options": [
+      {
+        "value": "single-command-feature",
+        "label": "One feature specification for the command"
+      },
+      {
+        "value": "split-command-features",
+        "label": "Separate feature specifications for listing, summary, and errors"
+      }
+    ],
+    "system_choice": "single-command-feature"
+  },
+  {
+    "id": "Q-002",
+    "type": "choice",
+    "severity": "material",
+    "origin": "plan",
+    "blueprint": "ARCHITECTURE.md",
+    "story": "language-foundation",
+    "status": "recommended",
+    "archived": false,
+    "title": "Keep the module dependency graph acyclic",
+    "description": "The Go module foundation must precede application behavior, while the command contract names the eventual executable and test script. The foundation therefore provides the module and scaffolding boundary, and the feature consumes that foundation.",
+    "options": [
+      {
+        "value": "feature-consumes-foundation",
+        "label": "Feature depends on the Go foundation"
+      },
+      {
+        "value": "foundation-consumes-feature",
+        "label": "Foundation depends on the command feature"
+      }
+    ],
+    "system_choice": "feature-consumes-foundation"
+  }
+]

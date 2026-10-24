@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>evidence/prompts/20261024.073854.707Z_dupfind_build_codex.prompt.md</title>
+<link rel="stylesheet" href="../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>evidence/prompts/20261024.073854.707Z_dupfind_build_codex.prompt.md</h1><div class="filenav"><a href="../../../index.html">&larr; Report</a><a href="../../../evidence/prompts/20261024.073854.707Z_dupfind_build_codex.prompt.md">Raw file</a></div></header>
+<article class="doc"><h1>System Instructions</h1>
+<p>This prompt is divided into three sections:</p>
+<ol><li><strong>System Instructions</strong> (this section) — structural orientation only. Do not treat this</li></ol>
+<p>section as task input.</p>
+<ol><li><strong>Input Context</strong> — begins with the heading <code># Input Context</code>. All blocks are wrapped in</li></ol>
+<p><code>&lt;pblock&gt;</code> tags. Two block types:</p>
+<ul><li>File blocks: <code>&lt;pblock filename=&quot;&lt;name&gt;&quot; role=&quot;&lt;role&gt;&quot; guidance=&quot;...&quot;&gt;</code> — optional</li></ul>
+<p><code>guidance</code> attribute carries context-specific instructions; content is in a fenced block.</p>
+<ul><li>Metadata/section blocks: <code>&lt;pblock label=&quot;&lt;label&gt;&quot; kind=&quot;&lt;kind&gt;&quot;&gt;</code> — job parameters,</li></ul>
+<p>rules, instructions, or group headers.</p>
+<ol><li><strong>Agent Task</strong> — begins with the heading <code># Agent Task</code>. Defines your persona, constraints,</li></ol>
+<p>and required outputs. Read all input context before acting on this section.</p>
+<h1>Input Context</h1>
+<p>&lt;pblock label=&quot;Build block job&quot; kind=&quot;job&quot;&gt;</p>
+<h2>Build block job</h2>
+<ul><li>TARGET: DupFind</li><li>BUILD_DIRECTORY: /mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261024.073506/build/DupFind</li><li>WORKING_DIRECTORY: /mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261024.073506/build/DupFind</li><li>BUILD_BLOCK: Block 1 · Foundational (block-1)</li><li>STORIES: Establish the Go module and command scaffold. (foundation)</li><li>DATE: 2026-10-24</li><li>BUILD_SCOPE: exactly one MANIFEST.md build block</li></ul>
+<p>&lt;/pblock&gt;</p>
+<p>&lt;pblock label=&quot;Stories in this block&quot; kind=&quot;section&quot;&gt;</p>
+<h2>Stories in this block</h2>
+<ul><li>Establish the Go module and command scaffold. (foundation) [story]</li></ul>
+<p>&lt;/pblock&gt;</p>
+<p>&lt;pblock label=&quot;Files on disk&quot; kind=&quot;section&quot;&gt;</p>
+<h2>Files on disk in the build directory</h2>
+<ul><li>sources/run.sh</li></ul>
+<p>These are the only imported files present on disk. Every other file named in this prompt is supplied as prompt context and is not on disk; read it here and do not report it as a missing input.</p>
+<p>&lt;/pblock&gt;</p>
+<h2>COMPASS - Target Orientation</h2>
+<p>&lt;pblock filename=&quot;COMPASS.md&quot; role=&quot;compass&quot; path=&quot;/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261024.073506/workspace/targets/DupFind/COMPASS.md&quot; guidance=&quot;Important: This is the core project intent, constraints, and guardrails. It should have presecedence in conflicts.&quot;&gt;</p>
+<pre><code># COMPASS: DupFind
+
+## Compass
+
+Build a command-line duplicate file finder, the Go executable `./cmd/dupfind`, as described in
+`sources/INSTRUCTIONS.md`. It walks a directory, groups regular files by size and then by SHA-256
+digest, and reports each duplicate group or a one-row summary of the space that removing the
+copies would recover.
+
+Correctness is measured by `sources/run.sh`: it builds the executable with `go build` and makes
+15 checks of exit code and standard output against a fixed directory tree. The goal is every check
+passing.
+
+## Constraints
+
+- Implement in Go 1.22 or newer with the standard library only. No third-party modules.
+- The application root is a Go module; the executable&#x27;s main package is `./cmd/dupfind`.
+- Read a file&#x27;s contents only when another file has the same size.
+- Write CSV with `encoding/csv`; diagnostics go to standard error and are never compared.
+
+## Guardrails
+
+- Do not modify, rewrite, regenerate, or substitute `sources/run.sh`.
+- Do not read `sources/run.sh` from application code, and do not hardcode a digest, a path, or a
+  total. Every value is computed from the directory examined.
+- Never delete, move, or write a file under the directory examined.
+
+## Verification Protocol
+
+| Story kind | Command | Asserts |
+|---|---|---|
+| Every behavioral story | `sh bin/test.sh` | exit `0` |
+| Terminal story (once, last) | `sh sources/run.sh` | exit `0` |
+
+&lt;!-- drydock:build-write-guardrail:start --&gt;
+## Build Write Guardrail
+
+- Authorized build directory: `/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261024.073506/build/DupFind`
+- Authorized Target directory: `/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261024.073506/workspace/targets/DupFind`
+- Build agents have permission to create, modify, and remove files required by the active build block inside these authorized directories.
+- No path outside these authorized directories may be modified.
+- Protected Drydock artifacts:
+  - `/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261024.073506/workspace/targets/DupFind/blueprint/`
+  - `/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261024.073506/workspace/targets/DupFind/MANIFEST.md`
+  - `/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261024.073506/workspace/targets/DupFind/COMPASS.md`
+  - `/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261024.073506/workspace/targets/DupFind/QuarterDeck/`
+  - `/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261024.073506/workspace/targets/DupFind/evidence/`
+&lt;!-- drydock:build-write-guardrail:end --&gt;</code></pre>
+<p>&lt;/pblock&gt;</p>
+<h2>STACK - Technology HOW</h2>
+<p>&lt;pblock filename=&quot;common.md&quot; role=&quot;stack&quot; path=&quot;/mnt/c/Users/barlo/projects/drydock/Rigging/stack/common.md&quot;&gt;</p>
+<pre><code># Common Best Practices
+
+**Type:** guidance
+**Version:** 20260320 V1  
+**Category:** Technologies
+**Description:** Common development patterns shared across all stack configurations
+
+Always included regardless of technology stack. Covers project structure conventions, shell scripts, metadata files, git hygiene, and development workflow. This file does not change between projects.
+
+---
+
+## 1. Project Directory Layout
+
+**Rule**: Every project follows a predictable directory structure.
+
+```
+project-name/
+├── bin/                # Operation scripts (see Shell Scripts section)
+├── data/               # Runtime data (DB, logs, backups) — gitignored
+│   ├── logs/           # Script and process output logs
+│   └── backups/        # Database and file backups
+├── docs/               # Project documentation
+├── tests/              # Test suite
+├── PROJECT/            # Build specification (optional, for specification-driven projects)
+├── .env                # Environment config — gitignored
+├── .env.example        # Template with placeholder values — committed
+├── .gitignore
+├── CLAUDE.md           # AI agent instructions
+└── Links.md            # External links
+```
+
+Additional directories depend on the stack (e.g., `templates/`, `static/`, `migrations/`).
+
+**Why**: Consistent layout lets any developer or AI agent locate files instantly.
+
+---
+
+## 2. Shell Scripts (bin/ Directory)
+
+**Rule**: All user-facing operations live in `bin/` as bash scripts with standardized headers, logging, and error handling.
+
+### Script Template
+
+```bash
+#!/bin/bash
+# CommandCenter Operation
+# Name: Human Readable Name
+# Type: daemon|batch
+# Port: 8000
+
+# --- Standard Preamble ---
+set -euo pipefail
+SCRIPT_DIR=&quot;$(cd &quot;$(dirname &quot;${BASH_SOURCE[0]}&quot;)&quot; &amp;&amp; pwd)&quot;
+PROJECT_DIR=&quot;$(cd &quot;$SCRIPT_DIR/..&quot; &amp;&amp; pwd)&quot;
+LOG_DIR=&quot;$PROJECT_DIR/data/logs&quot;
+mkdir -p &quot;$LOG_DIR&quot;
+
+TIMESTAMP=$(date &#x27;+%Y-%m-%d_%H%M%S&#x27;)
+SCRIPT_NAME=$(basename &quot;$0&quot; .sh)
+LOG_FILE=&quot;$LOG_DIR/${SCRIPT_NAME}_${TIMESTAMP}.log&quot;
+
+echo &quot;=== $SCRIPT_NAME started at $(date &#x27;+%Y-%m-%d %H:%M:%S&#x27;) ===&quot; | tee &quot;$LOG_FILE&quot;
+echo &quot;Arguments: $*&quot; | tee -a &quot;$LOG_FILE&quot;
+echo &quot;Working dir: $PROJECT_DIR&quot; | tee -a &quot;$LOG_FILE&quot;
+echo &quot;---&quot; | tee -a &quot;$LOG_FILE&quot;
+
+cd &quot;$PROJECT_DIR&quot;
+
+# --- Your Commands Here ---
+# All output goes to both console and log file via tee
+your_command 2&gt;&amp;1 | tee -a &quot;$LOG_FILE&quot;
+
+echo &quot;=== $SCRIPT_NAME finished at $(date &#x27;+%Y-%m-%d %H:%M:%S&#x27;) ===&quot; | tee -a &quot;$LOG_FILE&quot;
+```
+
+### Header Fields
+
+The first comment block is parsed by Command Center&#x27;s scanner for auto-discovery:
+
+| Field | Required | Values | Description |
+|-------|----------|--------|-------------|
+| `# CommandCenter Operation` | Yes | literal | Marks script as discoverable |
+| `# Name:` | Yes | free text | Display name in UI |
+| `# Type:` | No | `daemon` or `batch` | Default: `batch`. Daemons stay running. |
+| `# Port:` | No | integer | Port number for daemon services |
+
+Scripts without the `# CommandCenter Operation` header are still valid scripts but won&#x27;t appear in Command Center&#x27;s UI.
+
+### Standard Scripts
+
+Every project should have these scripts (where applicable):
+
+| Script | Type | Purpose |
+|--------|------|---------|
+| `bin/start.sh` | daemon | Start the dev server |
+| `bin/stop.sh` | batch | Stop the dev server |
+| `bin/test.sh` | batch | Run test suite |
+| `bin/build.sh` | batch | Build/compile the project |
+| `bin/deploy.sh` | batch | Deploy to production |
+| `bin/backup.sh` | batch | Backup data/database |
+
+### Logging Pattern
+
+- All stdout and stderr captured via `tee` to `data/logs/`
+- Log filename includes script name and timestamp: `start_2026-03-07_143022.log`
+- First lines of log always record: timestamp, arguments, working directory
+- These logs are viewable from Command Center&#x27;s Process Monitor
+
+**Why**: Standardized scripts make every project operable the same way. Log capture enables monitoring, alerting, and post-mortem analysis.
+
+---
+
+## 3. External Links (Links.md)
+
+**Rule**: Every project maintains a `Links.md` file at its root with a markdown table of relevant URLs.
+
+```markdown
+| Label | URL |
+|-------|-----|
+| Local Dev | http://localhost:5001 |
+| Production | https://example.com |
+| Docs | https://docs.example.com |
+| GitHub | https://github.com/user/repo |
+```
+
+Rules:
+- One table, two columns: Label and URL
+- Labels are short and descriptive
+- Command Center&#x27;s scanner reads this on startup and stores links in the project&#x27;s `extra` JSON
+- Links appear in the project&#x27;s configuration page
+
+**Why**: Centralizes all project URLs in one discoverable, parseable location. Both AI agents and Command Center consume it.
+
+---
+
+## 4. CLAUDE.md Convention
+
+**Rule**: Every project has a `CLAUDE.md` at its root following this section structure:
+
+1. `## Project Overview` — What the project does, key features
+2. `## Architecture` — Tech stack, key files, patterns
+3. `## Dev Commands` — Bash commands to run the project (in a code block)
+4. `## Service Endpoints` — URLs: `- Label: https://url`
+5. `## Bookmarks` — Grouped links: `### Group` then `- [Title](URL)`
+
+Section rename rules — always use the standard name:
+- `## Commands` / `## Development Commands` / `## Build Commands` → `## Dev Commands`
+- `## Overview` / `## Project Purpose` → `## Project Overview`
+- `## Stack` → `## Architecture`
+
+**Why**: Consistent structure lets AI agents parse project context reliably.
+
+---
+
+## 5. Git Hygiene
+
+**Rule**: Maintain a comprehensive `.gitignore`. Never commit secrets, generated files, or runtime data.
+
+```gitignore
+# Runtime
+data/
+*.db
+*.log
+
+# Environment
+.env
+venv/
+node_modules/
+
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+dist/
+build/
+
+# OS
+.DS_Store
+Thumbs.db
+```
+
+Rules:
+- `data/` — runtime databases, logs, backups, uploads
+- `.env` — secrets and local config
+- Commit `.env.example` with placeholder values
+- Write imperative commit messages: &quot;Add health endpoint&quot; not &quot;Added health endpoint&quot;
+
+**Why**: Clean repos are cloneable and runnable. No secrets in history.
+
+---
+
+## 6. Development Workflow
+
+**Rule**: Follow these rules when working in any git-managed project.
+
+1. **Always commit changes immediately** after completing a task if the task has no errors
+2. **Commit messages** should have descriptive text (no AI/tool mentions)
+3. **DO NOT push** — only commit to local git
+4. **NO co-authored-by lines** in commits
+5. **Always end code change responses with a restart notice** for any project that runs a web server:
+   - If only templates/CSS/static files changed: &quot;No restart needed — browser refresh is enough.&quot;
+   - If any Python/JS server files changed: &quot;Restart required — run the start script or equivalent.&quot;
+
+**Why**: Consistent workflow prevents accidental pushes, keeps commit history clean, and ensures developers know when to restart.
+
+---
+
+## Summary Checklist
+
+- [ ] Standard directory layout with `bin/`, `data/`, `docs/`, `tests/`
+- [ ] Shell scripts in `bin/` with CommandCenter headers and tee logging
+- [ ] `Links.md` for external URLs
+- [ ] `CLAUDE.md` following section convention
+- [ ] `.env.example` committed, `.env` gitignored
+- [ ] Comprehensive `.gitignore`
+- [ ] Commit immediately, don&#x27;t push, no AI mentions</code></pre>
+<p>&lt;/pblock&gt;</p>
+<h2>IMPLEMENTS - Authoritative Step Specifications</h2>
+<p>&lt;pblock label=&quot;Implementation recency anchor&quot; kind=&quot;section&quot;&gt; The files in this section are the load-bearing specifications for this build block. Build these files exactly. Treat earlier sections as constraints and context.</p>
+<p>&lt;/pblock&gt;</p>
+<p>&lt;pblock filename=&quot;go.md&quot; role=&quot;implements&quot; path=&quot;/mnt/c/Users/barlo/projects/drydock/Rigging/languages/go/go.md&quot;&gt;</p>
+<pre><code># Go Best Practices
+
+**Type:** language
+**Version:** 20261018 V4
+**Foundation:** language
+**Tier:** language
+**Category:** Language
+**Description:** Go language conventions and patterns for specification-driven projects
+
+Technology reference for Go development. Framework-agnostic — applies to any Go project. This file does not change between projects.
+
+Prerequisite: `stack/common.md`
+
+---
+
+## Foundation Contract
+
+The published shape of this foundation. It is built before every other foundation: a web server,
+a database, or a CLI is built *into* this tree, this environment, and this test runner. Carried
+verbatim into `go_compact.md`.
+
+- source_root: internal/
+- test_command: go test ./...
+- environment: the module declared in `go.mod`; no vendored toolchain
+- dependencies: `go.mod`
+
+```
+project/
+  go.mod                  # module path; the Go toolchain version
+  cmd/                    # one directory per binary, each package main
+  internal/               # application packages; not importable outside this module
+  bin/                    # launchers; each runs the toolchain, never a vendored copy
+```
+
+Application foundations add packages under `internal/`. The generated persistence library is a
+separate module at `persistence/`, linked by the root `go.mod`.
+
+### Native application layouts and fixtures
+
+Initialize the root `go.mod` in the language foundation before the DATABASE block.
+Use `cmd/app/main.go` for process startup, `internal/cli` for CLI behavior, and
+`internal/appserver` for HTTP behavior. The root application module requires
+`drydock.local/persistence v0.0.0` with `replace drydock.local/persistence =&gt; ./persistence`;
+the generated persistence directory owns its nested module. Run both module test suites.
+
+For a CLI, expose `Run(args []string, stdout, stderr io.Writer) int`, use a local
+`flag.FlagSet` with `flag.ContinueOnError`, and test with `bytes.Buffer`. Only main calls
+`os.Exit`. For HTTP, expose `NewHandler(...) http.Handler` using `net/http.ServeMux`.
+Use `httptest.NewRecorder` and `httptest.NewRequest` for handler tests, or
+`httptest.NewServer` with `t.Cleanup(server.Close)` when testing a real HTTP client.
+Keep business logic in application packages and persistence access in the shipped library.
+
+### How do we execute and measure Acceptance Criteria in this language?
+
+An Acceptance Criterion (AC) is an executable check of Blueprint-required behavior. Native tests
+use `testing` in `*_test.go`; the project gate is `go test ./...`. Within the existing Blueprint
+Python AC container, execute a named test through the shipped helper:
+
+```python
+from drydock_go import run_test
+result = run_test(&quot;./internal/orders&quot;, &quot;TestCreateOrder&quot;)
+assert result.passed, (result.status, result.stdout, result.stderr)
+```
+
+Drydock stages this helper beside the criterion. It runs `go test -json -count=1 -run` with an
+exact test name, retains output and per-test outcomes, and rejects absent/skipped tests as proof.
+The enclosing AC provides identity, timeout, result storage and repair state. Compilation errors
+remain distinct from assertion failures in `result.status`. Coverage and persistence observations
+require explicit instrumentation per criterion; unavailable observations are unknown.
+
+A criterion that exercises the command line runs the built executable through the same helper,
+never `go run`, which reports every non-zero program exit as 1:
+
+```python
+from drydock_go import cli_runner
+code, out, err = cli_runner(&quot;--top&quot;, &quot;0&quot;, &quot;data.csv&quot;)
+assert code == 2, (code, out, err)
+```
+
+`cli_runner` builds the single `./cmd/&lt;name&gt;` main package once with `go build` and returns
+`(exit_code, stdout, stderr)`; pass `package=&quot;./cmd/&lt;name&gt;&quot;` when there are several, and `input=`
+for standard input. A failed build settles the criterion as `execution-error`.
+
+### How does this language provide the shared persistence contract?
+
+Use the shipped module in `Rigging/languages/go/persistence/`. Drydock copies it to the Target&#x27;s
+`persistence/`, generates `schema.go`, `testing.go` and a schema command from `DATABASE.md`, and
+links it into the existing root `go.mod` as `drydock.local/persistence`. Driver versions and sums
+are shipped; SQLite uses `go-sqlite3` (a C compiler and CGO are required), PostgreSQL uses `lib/pq`.
+Run `go mod download` during dependency provisioning; execution requires these modules available.
+
+Call `persistence.OpenDatabase(ctx, dsn)`, then typed methods such as
+`db.Tickets.List(ctx, persistence.TicketsListInput{Status: &quot;open&quot;})`. Methods return a value and
+an error. Optional inputs use pointers; read results are generated structs. Undeclared operations
+and unsupported field types fail explicitly. Use `OpenSession(ctx, dsn)` for native database criteria;
+empty DSN selects the configured, provisioned application store. Defer its cleanup and check the
+returned error: it rolls back on success and failure, never applies schema or deletes the store.
+Pass the same Store to the feature. Other connections and external effects require committed,
+idempotent criteria with owned records and supported cleanup. Both engines retain autocommit
+outside explicit rollback scopes.
+
+The Go library and generator are verified on SQLite and PostgreSQL. Keep application SQL inside
+the library; agents write callers. The language foundation must create `go.mod` before the
+DATABASE step. Python Blueprint AC containers invoke the native Go tests through `run_test`.
+
+---
+
+## 1. Code Style and Understandability
+
+**Rule**: Code must be understandable on its own through naming, structure, small focused units, explicit types, clear interfaces, appropriate abstractions, and tests. If a reader needs a comment to follow the mechanics, improve the code instead.
+
+Rules:
+- **Formatting is not a decision** — `gofmt` output is the only accepted formatting. Never hand-format, never argue about it, never commit unformatted code.
+- **Naming** — short names for short scopes (`i`, `buf`, `err`), descriptive names for package-level identifiers. Package names are short, lowercase, single-word nouns: `parser`, not `parserutils` or `parser_helpers`. Never `util`, `common`, `base`, or `helpers`.
+- **No stutter** — the package qualifies the name. `parser.New()`, not `parser.NewParser()`; `http.Client`, not `http.HTTPClient`.
+- **Exported means committed** — capitalize an identifier only when callers outside the package need it. Everything else is unexported and free to change.
+- **Doc comments** — every exported identifier has a comment starting with its own name: `// Decode reads TOML from r and returns …`.
+- **Small focused units** — a function that needs a section comment (&quot;// now validate…&quot;) is two functions.
+- Comments state constraints the code cannot express (invariants, protocol quirks, why-not-the-obvious-way) — never restate what the next line does.
+
+**Why**: Go deliberately removed stylistic choice so that all Go code reads the same. Fighting that costs review time and buys nothing.
+
+---
+
+## 2. Module Layout and Toolchain
+
+**Rule**: One root application module plus the generated nested persistence module, with the toolchain version pinned in `go.mod` and `go.sum` committed.
+
+```
+myproject/
+  go.mod              module github.com/owner/myproject
+  go.sum              committed, never hand-edited
+  cmd/myproject/      package main — one directory per binary
+  internal/           application packages; import-blocked outside the module
+  pkg/                only if the module is a library others import
+  testdata/           fixtures; ignored by the go tool
+  bin/                launcher scripts (see stack/common.md)
+```
+
+```gomod
+module github.com/owner/myproject
+
+go 1.24
+
+require github.com/some/dep v1.4.2
+```
+
+Rules:
+- **Go 1.22 is the hard floor. Verify it first and stop if it is not met.** Before writing any code, run `go version`. On anything older than 1.22, stop and report the toolchain as a blocker — do not downgrade the code to compile on it, do not work around it, do not proceed and hope. The distribution-packaged Go on Debian and Ubuntu is frequently older than this and must be replaced with the official tarball.
+
+```sh
+go version | awk &#x27;{print $3}&#x27; | sed &#x27;s/^go//&#x27; | \
+  awk -F. &#x27;$1&lt;1 || ($1==1 &amp;&amp; $2&lt;22) { print &quot;go 1.22+ required, found &quot; $0; exit 1 }&#x27;
+```
+
+- Business logic lives in `internal/`. `cmd/&lt;name&gt;/main.go` parses flags, wires dependencies, and calls into `internal/`; it holds no behavior worth testing.
+- `pkg/` exists only when external consumers import the code. A binary-only project does not need it.
+- The `go` line in `go.mod` is the minimum toolchain, and it is a real constraint — `go 1.19` fails on anything newer than 1.19 syntax and stdlib. State the version the code actually requires.
+- `go.sum` is committed. `go mod tidy` runs before every commit that touches dependencies, and its output is part of the diff.
+- Do not vendor unless the deployment target requires it. If vendoring, `go mod vendor` output is committed whole and never edited.
+
+**Why**: Go&#x27;s tooling assumes this layout and enforces `internal/` at compile time. A project that follows it gets dependency hygiene, import boundaries, and reproducible builds without configuration. The 1.22 floor is not stylistic: 1.22 changed loop variables to be scoped per iteration, so identical source produces different behavior on 1.21 and earlier. Code written against modern semantics and compiled by an older toolchain fails silently rather than loudly.
+
+---
+
+## 3. Errors Are Values
+
+**Rule**: Return errors, do not panic. Wrap with context at each layer that adds information, and inspect with `errors.Is` / `errors.As`, never by string matching.
+
+```go
+var ErrNotFound = errors.New(&quot;not found&quot;)
+
+func LoadConfig(path string) (*Config, error) {
+    data, err := os.ReadFile(path)
+    if err != nil {
+        return nil, fmt.Errorf(&quot;load config %s: %w&quot;, path, err)
+    }
+    var cfg Config
+    if err := json.Unmarshal(data, &amp;cfg); err != nil {
+        return nil, fmt.Errorf(&quot;parse config %s: %w&quot;, path, err)
+    }
+    return &amp;cfg, nil
+}
+
+// Caller inspects by identity, not by text
+if errors.Is(err, os.ErrNotExist) { … }
+
+var perr *json.SyntaxError
+if errors.As(err, &amp;perr) { … }
+```
+
+Rules:
+- `%w` wraps exactly one error and preserves the chain. `%v` formats and discards it — use `%v` only when the chain must deliberately not leak.
+- Error strings are lowercase and carry no trailing punctuation, because they are concatenated: `&quot;parse config x: unexpected EOF&quot;`.
+- Handle an error once. Logging it and returning it is handling it twice, and the operator sees the same failure repeated at every layer.
+- `panic` is for programmer error that cannot be recovered from (an impossible switch branch, a corrupt invariant). Library code never panics on bad input; it returns an error.
+- `recover` appears only at a process or request boundary that must not die, and it logs and re-fails rather than swallowing.
+- Never ignore an error with `_`. If it is genuinely safe to discard, say why in a comment on that line.
+
+**Why**: Go has no exceptions, so an unhandled error is a silently wrong result rather than a crash. Wrapping preserves the failure path; `errors.Is` keeps callers working when the message text changes.
+
+---
+
+## 4. Types, Interfaces, and Zero Values
+
+**Rule**: Define interfaces where they are consumed, keep them small, and make the zero value of a type useful.
+
+```go
+// GOOD — the consumer declares what it needs
+package report
+
+type Store interface {
+    Get(ctx context.Context, id string) ([]byte, error)
+}
+
+func Render(ctx context.Context, s Store, id string) ([]byte, error) { … }
+```
+
+```go
+// Zero value is usable — no constructor required
+type Buffer struct {
+    buf []byte
+}
+
+func (b *Buffer) Write(p []byte) (int, error) {
+    b.buf = append(b.buf, p...)
+    return len(p), nil
+}
+
+var b Buffer   // ready to use
+```
+
+Rules:
+- Accept interfaces, return concrete types. A function that returns an interface hides fields the caller may legitimately need.
+- One or two methods per interface. `io.Reader` is the model; a ten-method interface is a struct wearing a disguise.
+- Do not define an interface until there are two implementations, or until a test genuinely needs to substitute one. Speculative interfaces are indirection with no payoff.
+- Prefer a usable zero value over a `New…` constructor. When a constructor is required, it validates and returns `(*T, error)`.
+- Pointer receivers when the method mutates or the struct is large; value receivers otherwise. Do not mix receiver kinds on one type.
+- No naked returns in any function long enough to need scrolling.
+- `context.Context` is the first parameter of any function that does I/O, blocks, or spawns work — never stored in a struct field.
+
+**Why**: Consumer-side interfaces mean a package can be tested and substituted without the producer knowing it exists. Useful zero values remove a whole category of &quot;forgot to initialize&quot; bugs.
+
+---
+
+## 5. Concurrency With Owned Lifetimes
+
+**Rule**: Every goroutine has a known owner, a known stop condition, and a way to report failure. Start none that you cannot stop.
+
+```go
+func Fetch(ctx context.Context, urls []string) ([]Result, error) {
+    g, ctx := errgroup.WithContext(ctx)
+    results := make([]Result, len(urls))
+    for i, u := range urls {
+        i, u := i, u
+        g.Go(func() error {
+            r, err := get(ctx, u)
+            if err != nil {
+                return fmt.Errorf(&quot;fetch %s: %w&quot;, u, err)
+            }
+            results[i] = r
+            return nil
+        })
+    }
+    if err := g.Wait(); err != nil {
+        return nil, err
+    }
+    return results, nil
+}
+```
+
+Rules:
+- Cancellation flows through `context.Context`. A goroutine that cannot observe `ctx.Done()` is a leak waiting for load.
+- The code that starts a goroutine is responsible for waiting on it — `sync.WaitGroup`, `errgroup`, or an explicit done channel. Fire-and-forget is prohibited outside `main`.
+- Channels carry ownership: the sender closes, the receiver never does. Do not close a channel from more than one place.
+- Use a mutex when the data is shared state and a channel when the data is being handed off. Do not build a queue out of mutexes.
+- Every build and CI run includes `go test -race`. The race detector finds what review does not.
+- Do not add concurrency for speed until a benchmark shows the serial version is the bottleneck.
+
+**Why**: Go makes starting a goroutine trivial and stopping one entirely manual. Leaks and races surface under production load, not in development.
+
+---
+
+## 6. Table-Driven Tests
+
+**Rule**: Tests use the stdlib `testing` package, are table-driven where cases share a shape, and run offline with no network and no credentials.
+
+```go
+func TestParseDuration(t *testing.T) {
+    tests := []struct {
+        name    string
+        input   string
+        want    time.Duration
+        wantErr bool
+    }{
+        {name: &quot;seconds&quot;, input: &quot;30s&quot;, want: 30 * time.Second},
+        {name: &quot;hours&quot;, input: &quot;2h&quot;, want: 2 * time.Hour},
+        {name: &quot;malformed&quot;, input: &quot;2x&quot;, wantErr: true},
+    }
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            got, err := ParseDuration(tt.input)
+            if (err != nil) != tt.wantErr {
+                t.Fatalf(&quot;ParseDuration(%q) error = %v, wantErr %v&quot;, tt.input, err, tt.wantErr)
+            }
+            if got != tt.want {
+                t.Errorf(&quot;ParseDuration(%q) = %v, want %v&quot;, tt.input, got, tt.want)
+            }
+        })
+    }
+}
+```
+
+Rules:
+- Subtests via `t.Run` so a single case can be run with `-run TestParseDuration/malformed`.
+- Failure messages state input, actual, and expected. `t.Errorf(&quot;got %v, want %v&quot;, got, want)` is the minimum; a bare `t.Fail()` is useless in CI output.
+- `t.Fatalf` when the test cannot continue, `t.Errorf` when it can and more failures are informative.
+- Fixtures live in `testdata/`. Golden files are regenerated by a `-update` flag, and the regenerated diff is reviewed, not rubber-stamped.
+- `t.TempDir()` and `t.Cleanup()` for filesystem work — never write into the package directory or `/tmp` by hand.
+- No network, no credentials, no wall-clock sleeps. Inject a clock or a fake transport instead.
+- Benchmarks (`func BenchmarkX(b *testing.B)`) accompany any claim about performance.
+
+**Why**: Table-driven tests make adding the twentieth case free, which is what keeps edge cases getting written down instead of argued about.
+
+---
+
+## 7. Build, Lint, and Verify
+
+**Rule**: The same commands gate locally and in CI, and they all pass before a commit.
+
+```bash
+gofmt -l .                       # must print nothing
+go vet ./...
+go build ./...
+go test -race -cover ./...
+```
+
+```bash
+# Static, dependency-free binary for containers and scratch images
+CGO_ENABLED=0 go build -trimpath -ldflags=&quot;-s -w&quot; -o bin/myproject ./cmd/myproject
+```
+
+Rules:
+- `gofmt -l .` printing any filename fails the build. This is not negotiable and needs no discussion.
+- `go vet ./...` is the floor. Add `staticcheck` or `golangci-lint` when the project justifies it, with the configuration committed.
+- `CGO_ENABLED=0` unless a dependency genuinely needs cgo; it is the difference between a portable static binary and one that fails on a different libc.
+- `-trimpath` keeps build paths out of the binary so builds are reproducible across machines.
+- Pin tool versions with `go run &lt;tool&gt;@&lt;version&gt;` rather than assuming what is installed. An unpinned linter changes its mind between machines.
+- Wrap the sequence in a `bin/` script (see `stack/common.md`) so there is one command to run and one place to change it.
+
+**Why**: Go&#x27;s toolchain ships almost everything needed. The remaining risk is drift between what a developer runs and what CI runs, which one scripted entry point removes.
+
+---
+
+## 8. Dependencies
+
+**Rule**: The standard library first. Add a dependency only when it removes real work, and pin it.
+
+Rules:
+- Check the stdlib before searching: `net/http` is a production server, `encoding/json` is a production codec, `database/sql` is a production database layer, `log/slog` is structured logging. Frameworks are frequently unnecessary.
+- Every dependency is an exact version in `go.mod`. Never `@latest` in committed configuration.
+- `go mod tidy` after any dependency change; the resulting `go.mod` and `go.sum` are committed together.
+- Evaluate a candidate on maintenance, transitive dependency count, and licence before importing it. A one-function dependency is usually a one-function file.
+- Deprecated or archived upstream is a defect to schedule, not a warning to silence.
+
+**Why**: Every dependency is code the project owns the consequences of but not the maintenance of. Go&#x27;s stdlib is unusually complete, which makes &quot;do I need this?&quot; a real question.
+
+---
+
+## Summary Checklist
+
+- [ ] `gofmt` clean; package and identifier names idiomatic; no stutter; exported identifiers documented
+- [ ] Root application and nested persistence modules; logic in `internal/`; thin `cmd/&lt;name&gt;/main.go`; `go.sum` committed; `go` directive states the real minimum
+- [ ] Errors returned and wrapped with `%w`; inspected with `errors.Is`/`errors.As`; handled once; no ignored errors
+- [ ] Interfaces defined at the consumer, one or two methods; concrete return types; useful zero values; `context.Context` first parameter
+- [ ] Every goroutine has an owner, a cancellation path, and a wait; `go test -race` in every run
+- [ ] Table-driven subtests with informative failures; fixtures in `testdata/`; offline and deterministic
+- [ ] `gofmt -l .`, `go vet`, `go build`, `go test -race -cover` all gate locally and in CI via one `bin/` script
+- [ ] Standard library preferred; dependencies pinned and tidied; each one justified</code></pre>
+<p>&lt;/pblock&gt;</p>
+<p>&lt;pblock filename=&quot;ARCHITECTURE.md&quot; role=&quot;implements&quot; path=&quot;/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261024.073506/workspace/targets/DupFind/blueprint/ARCHITECTURE.md&quot; guidance=&quot;Foundational Architecture Specification&quot;&gt;</p>
+<pre><code># ARCHITECTURE: DupFind
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261024 V1 |
+| Description | Defines the module structure and boundaries for the DupFind command-line application. |
+| Provides    | ./cmd/dupfind |
+
+## Overview
+
+DupFind is a read-only Go command-line application. The `./cmd/dupfind` package starts the process and delegates command behavior to internal application packages. It uses the Go standard library and the module declared in `go.mod`.
+
+## Module Boundaries
+
+| Module | Responsibility | Owns |
+|---|---|---|
+| `cmd/dupfind` | Process startup; invokes the CLI and exits with its returned status. | `main` |
+| `internal/cli` | Parses options and arguments, validates the directory, coordinates discovery and output, and routes diagnostics to stderr. | CLI behavior |
+| `internal/discovery` | Walks directories, identifies eligible regular files, hashes same-size candidates, and forms duplicate groups. | Discovery and grouping |
+| `internal/output` | Orders duplicate groups and encodes listing or summary CSV. | CSV serialization |
+
+The CLI receives arguments and the stdout/stderr writers from `main`. Discovery returns data to the CLI; output consumes those groups and writes CSV. Application packages do not read the supplied grader or write to examined directories.
+
+## Module Ownership
+
+| Boundary | Owner | Allowed low-level access |
+|---|---|---|
+| Persistence | None | DupFind has no persistent state or database. |
+| Configuration | `internal/cli` | Command-line options only; no external configuration store. |
+| File store | `internal/discovery` | Read directory entries and candidate file contents through the Go standard library. Never write, move, or delete examined files. |
+| External services | None | No external services. |
+
+## Technology Stack
+
+| Technology | Use |
+|---|---|
+| Go | Go 1.22 or newer; application and tests use the standard library. |
+| go test | Project test runner; `bin/test.sh` also runs `go vet ./...`. |
+| Shell | POSIX `sh` for `bin/test.sh` and the supplied grader. |
+
+## Guardrails
+
+- Build the executable as `./cmd/dupfind` from the Go module root.
+- Use only the Go standard library; do not add third-party modules.
+- Keep the application read-only with respect to every examined directory.
+- Do not read or depend on `sources/run.sh` from application code.
+- Read file contents only when another eligible file has the same size.
+
+## Programmatic Acceptance
+
+=== AC module-build ===
+Intent: The module exposes the declared command package and builds it successfully.
+
+import subprocess
+
+result = subprocess.run(
+    [&quot;go&quot;, &quot;build&quot;, &quot;./cmd/dupfind&quot;],
+    capture_output=True,
+    text=True,
+)
+print(result.stdout)
+print(result.stderr)
+assert result.returncode == 0
+=== END AC module-build ===
+
+=== AC internal-packages ===
+Intent: The application provides the declared internal package structure.
+
+import importlib.util
+
+for package in (&quot;cli&quot;, &quot;discovery&quot;, &quot;output&quot;):
+    assert importlib.util.find_spec(f&quot;internal.{package}&quot;) is not None
+=== END AC internal-packages ===
+
+## User Acceptance
+
+- None.
+
+## Guardrails
+
+- None.</code></pre>
+<p>&lt;/pblock&gt;</p>
+<p>&lt;pblock label=&quot;Build instructions&quot; kind=&quot;instructions&quot;&gt;</p>
+<h3>Build instructions for this block</h3>
+<h4>Establish the Go module and command scaffold. (foundation)</h4>
+<p>Create the Go 1.22 module and the ./cmd/dupfind main package. Keep application code within the module and use only the standard library.</p>
+<p>&lt;/pblock&gt;</p>
+<p>&lt;pblock label=&quot;Reusable compact request&quot; kind=&quot;section&quot;&gt;</p>
+<h2>Reusable compacts</h2>
+<p>The Blueprint sources below are consumed as context by later Manifest blocks. In this same response, extract their consumer-facing contract surface. Preserve interfaces, schemas, constraints, configuration, and cross-file obligations; drop implementation narrative and repetition. Do not write these files yourself.</p>
+<p>Before the required RESULT block, emit one optional payload per source exactly as: &lt;reusable-compact filename=&quot;SOURCE.md&quot;&gt; compact content &lt;/reusable-compact&gt;</p>
+<p>Emit no payload when a source has no useful technical surface. These payloads are advisory and do not change the required build result or file-change report.</p>
+<p>Sources eligible for reusable compaction:</p>
+<ul><li>ARCHITECTURE.md</li></ul>
+<p>&lt;/pblock&gt;</p>
+<h1>Agent Task</h1>
+<p>You are a Drydock build agent implementing exactly one build step of a larger plan. The build job block below names the target, the build working directory, and the step. Everything you need is stacked into this prompt under role headings:</p>
+<ul><li><code>compass</code> — the Target&#x27;s COMPASS.md orientation.</li><li><code>implements</code> — the Typed Specification files this step builds. These are</li></ul>
+<p>authoritative; implement them exactly.</p>
+<ul><li><code>context</code> — read-only support specifications. Do not reimplement them.</li><li><code>stack</code> — enterprise stack and technology rules. Honor them.</li><li><code>rules</code> — governance and branding rules. Honor them.</li></ul>
+<p>Operating contract:</p>
+<ol><li>Follow the write authorization and protected paths in the stacked <code>COMPASS.md</code> exactly.</li></ol>
+<p>That persisted guardrail is the sole authority for paths this build may modify.</p>
+<ol><li>Start by inspecting the build working directory. Preserve existing application</li></ol>
+<p>files unless this step&#x27;s specifications require a change. Its <code>sources/</code> subdirectory holds staged build assets — imported test corpora, conformance harnesses, and fixtures — placed there for you. They are read-only inputs: run them, import them, and write code against them, but never create, rewrite, trim, regenerate, or substitute one, even to make a check pass. A step that modifies a staged asset fails and the asset is restored. If an asset you expect is absent, report that; do not author a replacement.</p>
+<ol><li>Implement only this step. Use <code>context</code>, <code>stack</code>, and <code>rules</code> as constraints,</li></ol>
+<p>not as additional work to perform.</p>
+<ol><li>Follow the stack and rules for languages, structure, naming, and branding.</li><li>The programmatic acceptance assertions in the <code>implements</code> specifications are</li></ol>
+<p>this step&#x27;s <strong>Definition of Done</strong> — human-owned, declared before the build, and fixed. Build the story and, in this same step, write the deterministic tests that prove each declared assertion, as a TDD master would; add finer tests for coverage. Every test you write follows the same rule the acceptance assertions do: <strong>act on the system, read the state back, compare to expected.</strong> The oracle is a return value, parsed JSON, a status code, a stored row, file contents read back, or an exit status — never a substring of captured stdout or stderr, a test-runner tally, or a log line. Write tests in the project&#x27;s own language using that language&#x27;s libraries; an in-language HTTP client yields a status code and a parsed body, where <code>curl</code> yields text to scrape. Round-trip anything that stores state: act, then read back through the public interface. Assert declared failure signals on negative paths, never message wording. You may add tests but must never remove, soften, or weaken a declared acceptance assertion. A <code>Suite: full</code> conformance check gates on the entire imported test suite: the step is done only when it passes in full, never on a representative subset — reproduce the standard exactly rather than wrapping a third-party library that approximates it. For a suite, the runner&#x27;s exit status is the verdict and the whole verdict: print its captured output for diagnosis, never assert on the text of its summary. When an assertion is a static or filesystem scan (import boundary, &quot;X never appears outside Y,&quot; grep/AST gate), honor the scope the specification states and never widen it: scan production source only, exclude <code>.venv/</code>, <code>site-packages</code>, and vendored or generated code, and do not flag test doubles or fixtures that use the guarded dependency. Run every declared acceptance assertion before returning. For a conformance suite, use its section or example filters to diagnose coherent root-cause clusters, but rerun the full declared scope before reporting the result. Treat failing examples as a work queue for fixing general behavior; never add example-specific exceptions.</p>
+<ol><li>Grow the project&#x27;s own test suite as you write the code, and treat it as the project&#x27;s</li></ol>
+<p>real coverage. The acceptance assertions in <code>implements</code> are gates: few, fixed, and written before any code existed, so every expectation in them is a prediction. The tests you write are written <em>beside</em> the finished code, so their expected values are observed rather than predicted — which is why exhaustive coverage belongs here and not there. Extend the suite in the project&#x27;s established location and runner, keep it runnable by the project&#x27;s declared test command, and leave it green when you return. Cover, at minimum: every public entry point and every verb it declares, including declared error paths; the boundaries — empty, exactly one, many, absent optional fields, declared maxima; declared idempotence, applied twice; one behavior per test, named for the behavior; and isolation — database criteria use the provisioned application store and the shipped rollback fixture, passing its connection into the feature. Other connections and durability tests use criterion-owned records, idempotent setup and checked cleanup through supported interfaces. Never replace the configured store, reapply schema, or delete unrelated business records. Where a staged authoritative suite already covers a surface, that suite is the coverage: run it, and do not restate its cases. Run it <strong>only through the invocation this step&#x27;s acceptance criteria declare</strong>. A criterion marked <code>Suite: scoped</code> names the whole of this step&#x27;s obligation to that suite; running the suite&#x27;s unscoped entry point instead is not extra rigor, it is a different step&#x27;s gate executed early. A partial capability fails most of an authoritative corpus by construction and its unimplemented cases exhaust the runner&#x27;s per-case timeout rather than returning, so the unscoped run costs the most where it teaches the least, and interrupting it forfeits the step. If no criterion in this step invokes the staged suite, do not invoke it. Report the pass/fail counts of the invocations you did run in your <code>SUMMARY</code> so a reader can see coverage moving across steps.</p>
+<ol><li>Treat <code>User Acceptance</code> entries as review evidence requirements. Implement</li></ol>
+<p>the supporting behavior, but do not claim to have performed human judgment.</p>
+<ol><li>The <code>implements</code> section is authoritative and intentionally stacked late in</li></ol>
+<p>the prompt as the recency anchor. Build that WHAT exactly; do not substitute generic framework defaults.</p>
+<ol><li>Before adding or installing Python dependencies, verify each package name</li></ol>
+<p>against the declared registry. Do not invent package names. If a needed package cannot be verified or appears newly published, fail explicitly instead of installing it.</p>
+<ol><li>Use the stack&#x27;s required package manager workflow for dependency changes.</li></ol>
+<p>When the stack requires <code>uv</code>, update manifests through <code>uv</code> conventions rather than bare <code>pip install</code>.</p>
+<ol><li>Do not claim success unless you actually created or modified project files in</li></ol>
+<p>the build working directory. If you cannot write files or cannot complete the step, report failure explicitly.</p>
+<ol><li>Do not run <code>git add</code>, <code>git commit</code>, create branches, create tags, rewrite</li></ol>
+<p>history, or otherwise mutate Git history. Drydock checkpoints application changes and Target evidence after each execution and completed step. File lineage comes from Git and the Manifest&#x27;s <code>implements:</code> entries; no additional attribution response is required.</p>
+<ol><li>End your response with this exact closing structure:</li></ol>
+<pre><code>RESULT: SUCCESS | FAILED
+
+FILES CHANGED:
+- relative/path
+
+SUMMARY:
+&lt;brief reviewable summary&gt;
+
+BLOCKERS:
+- &lt;only if any&gt;</code></pre>
+<p>Before <code>RESULT</code>, you may emit one optional JSON payload when implementation required a bounded choice not already settled by the owning specification. This records what you did; it does not ask permission, create a questionnaire, or excuse incomplete work:</p>
+<pre><code>&lt;blueprint-decisions&gt;
+[{&quot;spec&quot;:&quot;FEATURE-Example.md&quot;,&quot;severity&quot;:&quot;Material&quot;,&quot;subject&quot;:&quot;Chosen behavior&quot;,&quot;decision&quot;:&quot;Options A and B were available. I implemented B because ... Is that acceptable, or should this change on replan?&quot;}]
+&lt;/blueprint-decisions&gt;</code></pre>
+<p>Name only a specification implemented by this build block. Use <code>Low</code> or <code>Material</code>; Build never emits a Blocking decision. Omit the payload when no implementation decision was necessary.</p>
+<ol><li><code>FILES CHANGED</code> must list only files actually written in the build working</li></ol>
+<p>directory. If no files were written, use <code>RESULT: FAILED</code>.</p>
+<ol><li>On <code>RESULT: FAILED</code>, append two additional lines so the failure is actionable</li></ol>
+<p>without opening logs. <code>FAILURE_SUMMARY</code> is one line naming the cause; <code>FAILURE_DETAIL</code> states what happened, why, and what to change before a rerun. Name concrete conditions when they apply: token or context limit exceeded, could not execute commands in this environment, a required input was missing, or a specific tool or command failed.</p>
+<pre><code>FAILURE_SUMMARY: &lt;one line naming the cause&gt;
+FAILURE_DETAIL: &lt;what happened, why, and what to change before rerunning&gt;</code></pre>
+<ol><li>When a declared acceptance criterion cannot pass no matter how the code is written,</li></ol>
+<p>say so with this exact token. You may not edit the criterion — it is staged and restored before grading:</p>
+<pre><code>AC_BROKEN: &lt;check-id&gt;[, &lt;check-id&gt;]</code></pre>
+<p>This is a report, not a verdict, and it stops nothing. A criterion reaches you only when its expected value is one its author could not have invented — a status code, a staged suite&#x27;s exit status, a value the criterion itself supplied as input — so your claim that the criterion rather than the code is at fault is the less likely explanation, and the budget is spent as it would be for any other failure. A criterion whose expectation <em>was</em> hand-typed already settles <code>DISPUTED</code> on its own, without you naming it. Emit the token only after running the criterion and confirming the underlying command succeeded while the assertion still failed. Name the affected check ids, emit it alongside your normal <code>RESULT</code> line, state the reasoning in <code>FAILURE_DETAIL</code>, and emit it even when <code>RESULT: SUCCESS</code>. Do not use it for a criterion you merely failed to satisfy.</p></article>
+</main>
+</body>
+</html>

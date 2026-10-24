@@ -1,0 +1,32 @@
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/mnt/c/Users/barlo/projects/drydock/src/drydock/__main__.py", line 5, in <module>
+    main()
+  File "/mnt/c/Users/barlo/projects/drydock/src/drydock/cli.py", line 5685, in main
+    exit_code = _dispatch(args, parser)
+                ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/c/Users/barlo/projects/drydock/src/drydock/cli.py", line 4557, in _dispatch
+    rc = cmd_plan(args)
+         ^^^^^^^^^^^^^^
+  File "/mnt/c/Users/barlo/projects/drydock/src/drydock/cli.py", line 1297, in cmd_plan
+    return cmd_plan_repair(args, target)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/c/Users/barlo/projects/drydock/src/drydock/cli.py", line 1254, in cmd_plan_repair
+    verified = verify(target, target_dir)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/c/Users/barlo/projects/drydock/src/drydock/plan_verify.py", line 477, in verify
+    if reasons := staged_regex_defects(check.code, blueprint_dir):
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/c/Users/barlo/projects/drydock/src/drydock/acceptance.py", line 1908, in staged_regex_defects
+    source = _staged_python_argument(command, source_root)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/c/Users/barlo/projects/drydock/src/drydock/acceptance.py", line 1993, in _staged_python_argument
+    root = source_root.resolve()
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/barlo/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/pathlib.py", line 1240, in resolve
+    s = self._flavour.realpath(self, strict=strict)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen posixpath>", line 424, in realpath
+  File "<frozen posixpath>", line 468, in _joinrealpath
+KeyboardInterrupt

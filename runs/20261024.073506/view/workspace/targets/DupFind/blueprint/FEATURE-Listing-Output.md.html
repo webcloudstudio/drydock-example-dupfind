@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>workspace/targets/DupFind/blueprint/FEATURE-Listing-Output.md</title>
+<link rel="stylesheet" href="../../../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>workspace/targets/DupFind/blueprint/FEATURE-Listing-Output.md</h1><div class="filenav"><a href="../../../../../index.html">&larr; Report</a><a href="../../../../../workspace/targets/DupFind/blueprint/FEATURE-Listing-Output.md">Raw file</a></div></header>
+<article class="doc"><h1>FEATURE: Listing Output</h1>
+<div class="scroll"><table><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Version</td><td>20261024 V1</td></tr><tr><td>Description</td><td>Emits duplicate groups as deterministic CSV.</td></tr><tr><td>Depends On</td><td>FEATURE-Duplicate-Discovery.md</td></tr><tr><td>Provides</td><td>CSV duplicate listing</td></tr><tr><td>Consumes</td><td>duplicate groups</td></tr></tbody></table></div>
+<h2>Purpose</h2>
+<p>The default command output lists each file in every duplicate group. The discovery capability supplies groups with file sizes, SHA-256 digests, and paths relative to the selected directory.</p>
+<h2>Workflow</h2>
+<ol><li>Receive the discovered duplicate groups after the directory has been validated and scanned.</li><li>Order groups by reclaimable bytes descending, then by digest ascending.</li><li>Number groups from 1 in that order.</li><li>Order paths within each group by byte value ascending.</li><li>Write the header and one row per file as CSV to standard output, with newline line endings.</li></ol>
+<p>The listing header is <code>group,size,sha256,path</code>. Each row contains the group number, file size in bytes, lowercase hexadecimal SHA-256 digest, and relative path using <code>/</code> separators without a leading <code>./</code>. A path containing a comma, double quote, or newline is quoted according to RFC 4180. If there are no duplicate groups, write only the header.</p>
+<h2>Programmatic Acceptance</h2>
+<p>=== AC listing-empty ===<br>Intent: The default listing succeeds and writes only its header when the selected directory has no duplicate files.</p>
+<p>import subprocess import tempfile from pathlib import Path</p>
+<p>with tempfile.TemporaryDirectory() as temp: root = Path(temp) unique = root / &quot;unique&quot; unique.mkdir() (unique / &quot;single.txt&quot;).write_bytes(b&quot;only one&quot;) result = subprocess.run( [&quot;./cmd/dupfind&quot;, str(unique)], capture_output=True ) print(result.stdout.decode(errors=&quot;replace&quot;)) print(result.stderr.decode(errors=&quot;replace&quot;)) assert result.returncode == 0 === END AC listing-empty ===</p>
+<p>=== AC listing-relative-paths ===<br>Intent: Listing uses relative slash-separated paths for files supplied in a nested directory.</p>
+<p>import subprocess import tempfile from pathlib import Path</p>
+<p>with tempfile.TemporaryDirectory() as temp: root = Path(temp) data = b&quot;shared bytes&quot; first = root / &quot;scan&quot; / &quot;a&quot; / &quot;copy.bin&quot; second = root / &quot;scan&quot; / &quot;b&quot; / &quot;copy.bin&quot; first.parent.mkdir(parents=True) second.parent.mkdir(parents=True) first.write_bytes(data) second.write_bytes(data) result = subprocess.run( [&quot;./cmd/dupfind&quot;, str(root / &quot;scan&quot;)], capture_output=True ) print(result.stdout.decode(errors=&quot;replace&quot;)) print(result.stderr.decode(errors=&quot;replace&quot;)) assert result.returncode == 0 === END AC listing-relative-paths ===</p>
+<p>=== AC listing-csv-path ===<br>Intent: Listing succeeds when a duplicate path contains a comma and is encoded through the CSV writer.</p>
+<p>import subprocess import tempfile from pathlib import Path</p>
+<p>with tempfile.TemporaryDirectory() as temp: root = Path(temp) data = b&quot;same&quot; (root / &quot;a,copy&quot;).write_bytes(data) (root / &quot;b&quot;).write_bytes(data) result = subprocess.run( [&quot;./cmd/dupfind&quot;, str(root)], capture_output=True ) print(result.stdout.decode(errors=&quot;replace&quot;)) print(result.stderr.decode(errors=&quot;replace&quot;)) assert result.returncode == 0 === END AC listing-csv-path ===</p>
+<h2>User Acceptance</h2>
+<ul><li>None.</li></ul>
+<h2>Guardrails</h2>
+<ul><li>Never modify files under the directory being scanned.</li><li>Keep deterministic group and path ordering.</li></ul></article>
+</main>
+</body>
+</html>

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>workspace/targets/DupFind/blueprint/FEATURE-Duplicate-Discovery.md</title>
+<link rel="stylesheet" href="../../../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>workspace/targets/DupFind/blueprint/FEATURE-Duplicate-Discovery.md</h1><div class="filenav"><a href="../../../../../index.html">&larr; Report</a><a href="../../../../../workspace/targets/DupFind/blueprint/FEATURE-Duplicate-Discovery.md">Raw file</a></div></header>
+<article class="doc"><h1>FEATURE: Duplicate Discovery</h1>
+<div class="scroll"><table><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Version</td><td>20261024 V1</td></tr><tr><td>Description</td><td>Defines recursive, read-only discovery and grouping of duplicate regular files.</td></tr><tr><td>Depends On</td><td>FEATURE-Command-Interface.md</td></tr><tr><td>Provides</td><td>duplicate groups</td></tr><tr><td>Consumes</td><td>dupfind command interface</td></tr></tbody></table></div>
+<h2>Purpose</h2>
+<p>Discover duplicate file groups beneath the selected directory. Two files are duplicates only when their byte contents match; size grouping followed by SHA-256 digest grouping implements this rule while avoiding reads for files with no same-size candidate.</p>
+<h2>Discovery Rules</h2>
+<ul><li>Walk recursively, including hidden files and directories.</li><li>Consider regular files only. Do not follow or report symbolic links.</li><li>Ignore zero-byte files and files below the selected minimum size.</li><li>Group candidates by size before opening file contents. Read contents only for sizes shared by multiple candidates.</li><li>Hash candidate contents with SHA-256 and group files by digest within each size.</li><li>A duplicate group contains at least two files with the same size and digest.</li><li>If a file cannot be read, skip it and emit one warning line on stderr; this does not change the successful exit status.</li><li>Discovery is read-only: it never deletes, moves, or modifies examined files.</li></ul>
+<h2>Programmatic Acceptance</h2>
+<p>=== AC recursively-finds-identical-files ===<br>Intent: Identical non-empty regular files in nested directories are recognized as duplicates.</p>
+<p>from drydock_go import cli_runner import tempfile from pathlib import Path</p>
+<p>with tempfile.TemporaryDirectory() as tmp: root = Path(tmp) payload = b&quot;identical bytes&quot; left = root / &quot;left&quot; right = root / &quot;.hidden&quot; / &quot;right&quot; right.parent.mkdir() left.write_bytes(payload) right.write_bytes(payload) code, out, err = cli_runner(str(root)) print(out) print(err) assert code == 0 assert len(out.splitlines()) == 3 === END AC recursively-finds-identical-files ===</p>
+<p>=== AC ignores-links-and-empty-files ===<br>Intent: Empty files and symbolic links do not contribute duplicate entries.</p>
+<p>from drydock_go import cli_runner import tempfile from pathlib import Path</p>
+<p>with tempfile.TemporaryDirectory() as tmp: root = Path(tmp) payload = b&quot;target&quot; target = root / &quot;target&quot; target.write_bytes(payload) (root / &quot;link-a&quot;).symlink_to(target) (root / &quot;link-b&quot;).symlink_to(target) empty_a = root / &quot;empty-a&quot; empty_b = root / &quot;empty-b&quot; empty_a.touch() empty_b.touch() code, out, err = cli_runner(str(root)) print(out) print(err) assert code == 0 assert len(out.splitlines()) == 1 === END AC ignores-links-and-empty-files===</p>
+<p>=== AC unreadable-file-is-skipped ===<br>Intent: An unreadable candidate is skipped without changing the command&#x27;s successful status.</p>
+<p>from drydock_go import cli_runner import tempfile import os from pathlib import Path</p>
+<p>with tempfile.TemporaryDirectory() as tmp: root = Path(tmp) payload = b&quot;shared&quot; (root / &quot;readable&quot;).write_bytes(payload) unreadable = root / &quot;unreadable&quot; unreadable.write_bytes(payload) unreadable.chmod(0) code, out, err = cli_runner(str(root)) print(out) print(err) assert code == 0 unreadable.chmod(0o600) === END AC unreadable-file-is-skipped===</p>
+<p>=== AC read-only-preserves-files ===<br>Intent: Discovery leaves examined file contents unchanged.</p>
+<p>from drydock_go import cli_runner import tempfile from pathlib import Path</p>
+<p>with tempfile.TemporaryDirectory() as tmp: root = Path(tmp) payload = b&quot;preserve&quot; path = root / &quot;one&quot; path.write_bytes(payload) before = path.read_bytes() code, out, err = cli_runner(str(root)) print(out) print(err) assert code == 0 assert path.read_bytes() == before === END AC read-only-preserves-files===</p>
+<h2>User Acceptance</h2>
+<ul><li>None.</li></ul>
+<h2>Guardrails</h2>
+<ul><li>Do not hash or read a file unless at least one other eligible file has the same size.</li><li>Never follow or report symbolic links.</li><li>Never modify, move, or delete files under the examined directory.</li></ul></article>
+</main>
+</body>
+</html>

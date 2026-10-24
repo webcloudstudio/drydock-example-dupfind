@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>workspace/targets/DupFind/blueprint/ARCHITECTURE.md</title>
+<link rel="stylesheet" href="../../../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>workspace/targets/DupFind/blueprint/ARCHITECTURE.md</h1><div class="filenav"><a href="../../../../../index.html">&larr; Report</a><a href="../../../../../workspace/targets/DupFind/blueprint/ARCHITECTURE.md">Raw file</a></div></header>
+<article class="doc"><h1>ARCHITECTURE: DupFind</h1>
+<div class="scroll"><table><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Version</td><td>20261024 V1</td></tr><tr><td>Description</td><td>Defines the module structure and boundaries for the DupFind command-line application.</td></tr><tr><td>Provides</td><td>./cmd/dupfind</td></tr></tbody></table></div>
+<h2>Overview</h2>
+<p>DupFind is a read-only Go command-line application. The <code>./cmd/dupfind</code> package starts the process and delegates command behavior to internal application packages. It uses the Go standard library and the module declared in <code>go.mod</code>.</p>
+<h2>Module Boundaries</h2>
+<div class="scroll"><table><thead><tr><th>Module</th><th>Responsibility</th><th>Owns</th></tr></thead><tbody><tr><td><code>cmd/dupfind</code></td><td>Process startup; invokes the CLI and exits with its returned status.</td><td><code>main</code></td></tr><tr><td><code>internal/cli</code></td><td>Parses options and arguments, validates the directory, coordinates discovery and output, and routes diagnostics to stderr.</td><td>CLI behavior</td></tr><tr><td><code>internal/discovery</code></td><td>Walks directories, identifies eligible regular files, hashes same-size candidates, and forms duplicate groups.</td><td>Discovery and grouping</td></tr><tr><td><code>internal/output</code></td><td>Orders duplicate groups and encodes listing or summary CSV.</td><td>CSV serialization</td></tr></tbody></table></div>
+<p>The CLI receives arguments and the stdout/stderr writers from <code>main</code>. Discovery returns data to the CLI; output consumes those groups and writes CSV. Application packages do not read the supplied grader or write to examined directories.</p>
+<h2>Module Ownership</h2>
+<div class="scroll"><table><thead><tr><th>Boundary</th><th>Owner</th><th>Allowed low-level access</th></tr></thead><tbody><tr><td>Persistence</td><td>None</td><td>DupFind has no persistent state or database.</td></tr><tr><td>Configuration</td><td><code>internal/cli</code></td><td>Command-line options only; no external configuration store.</td></tr><tr><td>File store</td><td><code>internal/discovery</code></td><td>Read directory entries and candidate file contents through the Go standard library. Never write, move, or delete examined files.</td></tr><tr><td>External services</td><td>None</td><td>No external services.</td></tr></tbody></table></div>
+<h2>Technology Stack</h2>
+<div class="scroll"><table><thead><tr><th>Technology</th><th>Use</th></tr></thead><tbody><tr><td>Go</td><td>Go 1.22 or newer; application and tests use the standard library.</td></tr><tr><td>go test</td><td>Project test runner; <code>bin/test.sh</code> also runs <code>go vet ./...</code>.</td></tr><tr><td>Shell</td><td>POSIX <code>sh</code> for <code>bin/test.sh</code> and the supplied grader.</td></tr></tbody></table></div>
+<h2>Guardrails</h2>
+<ul><li>Build the executable as <code>./cmd/dupfind</code> from the Go module root.</li><li>Use only the Go standard library; do not add third-party modules.</li><li>Keep the application read-only with respect to every examined directory.</li><li>Do not read or depend on <code>sources/run.sh</code> from application code.</li><li>Read file contents only when another eligible file has the same size.</li></ul>
+<h2>Programmatic Acceptance</h2>
+<p>=== AC module-build ===<br>Intent: The module exposes the declared command package and builds it successfully.</p>
+<p>import subprocess</p>
+<p>result = subprocess.run( [&quot;go&quot;, &quot;build&quot;, &quot;./cmd/dupfind&quot;], capture_output=True, text=True, ) print(result.stdout) print(result.stderr) assert result.returncode == 0 === END AC module-build ===</p>
+<p>=== AC internal-packages ===<br>Intent: The application provides the declared internal package structure.</p>
+<p>import importlib.util</p>
+<p>for package in (&quot;cli&quot;, &quot;discovery&quot;, &quot;output&quot;): assert importlib.util.find_spec(f&quot;internal.{package}&quot;) is not None === END AC internal-packages ===</p>
+<h2>User Acceptance</h2>
+<ul><li>None.</li></ul>
+<h2>Guardrails</h2>
+<ul><li>None.</li></ul></article>
+</main>
+</body>
+</html>

@@ -1,0 +1,7 @@
+{"label": "INITIALIZED", "result": "pass", "at": "2026-10-24T07:35:09.417+00:00", "detail": "", "command": "drydock init DupFind", "attempts": 1}
+{"label": "IMPORTED", "result": "pass", "at": "2026-10-24T07:35:16.119+00:00", "detail": "", "command": "drydock import DupFind", "attempts": 1}
+{"label": "ANALYZED", "result": "pass", "at": "2026-10-24T07:35:42.550+00:00", "detail": "", "command": "drydock analyze DupFind", "attempts": 1}
+{"label": "PLAN CREATED", "result": "pass", "at": "2026-10-24T07:38:03.872+00:00", "detail": "", "command": "drydock plan DupFind", "attempts": 1}
+{"label": "BUILDING", "result": "pass", "at": "2026-10-24T07:38:32.752+00:00", "detail": "", "command": "drydock build DupFind", "attempts": 1}
+{"label": "BUILT", "result": "fail", "at": "2026-10-24T07:45:06.908+00:00", "detail": "5 step(s) failed", "command": "drydock build DupFind", "attempts": 1}
+{"state": "BUILT", "result": "fail", "at": "2026-10-24T07:45:06.908+00:00", "attempts": 1}

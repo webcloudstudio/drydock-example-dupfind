@@ -1,0 +1,16 @@
+Drydock 0.8.0  Copyright (c) 2026 Web Cloud Studio. All rights reserved.
+Drydock status — workspace
+
+Target: DupFind
+   Phase:     Implement
+   State:     Failed: programmatic acceptance failed: summary-no-duplicates, summary-filtered, listing-empty, listing-relative-paths, listing-csv-path
+   Detail:    2 imported · 6 authored · metadata building
+   Analysis:  Ready · 6 stories · 0 questions · 0 blockers
+   Plan:      1 closed/implemented · 5 closed/failed
+   Next Step: drydock run quarterdeck DupFind
+   10-24:     ✅  drydock build status DupFind
+   10-24:     ❌  drydock build DupFind --override --repair-attempts 6
+   10-24:     ✅  drydock build status DupFind
+   10-24:     ✅  drydock plan verify DupFind
+   10-24:     ✅  drydock plan DupFind --override
+

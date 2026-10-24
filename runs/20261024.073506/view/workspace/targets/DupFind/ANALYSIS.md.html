@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>workspace/targets/DupFind/ANALYSIS.md</title>
+<link rel="stylesheet" href="../../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>workspace/targets/DupFind/ANALYSIS.md</h1><div class="filenav"><a href="../../../../index.html">&larr; Report</a><a href="../../../../workspace/targets/DupFind/ANALYSIS.md">Raw file</a></div></header>
+<article class="doc"><h1>Blueprint Analysis: DupFind</h1>
+<h2>Commander Expectations</h2>
+<ul><li>assert the product finds and reports duplicate files under a directory.</li><li>assert the product reports reclaimable space without modifying files.</li><li>assert the supplied grader passes.</li></ul>
+<h2>Crew</h2>
+<div class="scroll"><table><thead><tr><th>Crew</th><th>Charge</th></tr></thead><tbody><tr><td>Commander</td><td>Defines intent and decides what done means.</td></tr><tr><td>Team Lead</td><td>Confirms epic completeness and stakeholder expectations.</td></tr><tr><td>Planning Crew</td><td>Authors atomic specifications and the ordered Manifest.</td></tr><tr><td>Shipyard Crew</td><td>Builds the tickets without synchronous Commander access.</td></tr></tbody></table></div>
+<h2>Story List</h2>
+<h3>Feature: Command Interface</h3>
+<div class="scroll"><table><thead><tr><th>ID</th><th>Story</th><th>High-level AC</th></tr></thead><tbody><tr><td>COMMAND-001</td><td>Parse command options and validate arguments</td><td>Accept the documented options before exactly one directory; reject malformed or unknown arguments with the documented usage exit code.</td></tr><tr><td>COMMAND-002</td><td>Report directory and usage errors</td><td>Missing or non-directory paths produce the documented operational exit code; failures write no standard output and one diagnostic line to standard error.</td></tr></tbody></table></div>
+<h3>Feature: Duplicate Discovery and Reporting</h3>
+<div class="scroll"><table><thead><tr><th>ID</th><th>Story</th><th>High-level AC</th></tr></thead><tbody><tr><td>DISCOVERY-001</td><td>Find duplicate regular files recursively</td><td>Group non-empty eligible regular files by size and SHA-256 digest; include hidden paths, skip unreadable files with a warning, and neither follow nor report symbolic links.</td></tr><tr><td>DISCOVERY-002</td><td>List duplicate groups as CSV</td><td>Emit the documented header and rows, with groups ordered by reclaimable bytes descending then digest ascending, and paths ordered by byte value ascending.</td></tr><tr><td>DISCOVERY-003</td><td>Summarize duplicate groups</td><td>With <code>--summary</code>, emit group count, duplicate file count, and reclaimable bytes for the selected files.</td></tr></tbody></table></div>
+<h3>Feature: Build and Verification</h3>
+<div class="scroll"><table><thead><tr><th>ID</th><th>Story</th><th>High-level AC</th></tr></thead><tbody><tr><td>VERIFY-001</td><td>Provide the project test command</td><td>Provide POSIX-compatible <code>bin/test.sh</code> that runs <code>go vet ./...</code> and <code>go test ./...</code>, returning success only when both pass.</td></tr></tbody></table></div>
+<h2>Story Guidance</h2>
+<p>Named stories planning must produce. Authoritative record: <code>STORY_GUIDANCE.json</code>.</p>
+<p>None.</p>
+<h2>Surfaced Acceptance Criteria</h2>
+<p>None.</p>
+<h2>Source Inventory</h2>
+<div class="scroll"><table><thead><tr><th>Path</th><th>Content kind</th><th>Disposition</th><th>Reason</th></tr></thead><tbody><tr><td><code>sources/INSTRUCTIONS.md</code></td><td>markdown</td><td>analyzed</td><td>readable UTF-8</td></tr><tr><td><code>sources/run.sh</code></td><td>code</td><td>analyzed</td><td>readable UTF-8</td></tr></tbody></table></div>
+<h2>Relationship Model</h2>
+<div class="scroll"><table><thead><tr><th>Source or group</th><th>Relationship type</th><th>Related source or group</th><th>Evidence</th><th>Delivery implication</th></tr></thead><tbody><tr><td><code>sources/INSTRUCTIONS.md</code></td><td>instruction-to-test</td><td><code>sources/run.sh</code></td><td>Instructions identify the harness as the scoring entry point; the harness builds <code>./cmd/dupfind</code> and checks command output and exit codes.</td><td>Implement the documented CLI behavior and keep the supplied harness available for final verification.</td></tr><tr><td><code>sources/INSTRUCTIONS.md</code></td><td>dependency</td><td><code>sources/run.sh</code></td><td>Instructions require the Go module root and executable at <code>./cmd/dupfind</code>; harness invokes <code>go build</code> there.</td><td>Build and command implementation precede harness verification.</td></tr><tr><td><code>sources/INSTRUCTIONS.md</code></td><td>dependency</td><td><code>bin/test.sh</code></td><td>Instructions require the test command to run <code>go vet ./...</code> and <code>go test ./...</code>.</td><td>Provide the test command after the Go module and application exist.</td></tr></tbody></table></div>
+<h2>Source Roles</h2>
+<div class="scroll"><table><thead><tr><th>Path</th><th>Role</th><th>Plan disposition</th><th>Build disposition</th></tr></thead><tbody><tr><td><code>sources/INSTRUCTIONS.md</code></td><td>author intent</td><td>prompt-only</td><td>none</td></tr><tr><td><code>sources/run.sh</code></td><td>conformance harness</td><td>context</td><td>stage</td></tr></tbody></table></div>
+<h2>Planning Instructions</h2>
+<h3>Delivery Shape</h3>
+<p>A Go command-line application accepts options and a directory, recursively examines eligible files, groups duplicates by size and SHA-256 digest, and writes either a CSV listing or CSV summary. The flow is argument validation, directory validation, file discovery and hashing, grouping and ordering, then output. The supplied shell harness builds the command and verifies its observable behavior.</p>
+<h3>Story Realization Map</h3>
+<div class="scroll"><table><thead><tr><th>Story ID</th><th>Durable Blueprint scope</th><th>Evidence</th><th>Related files</th><th>Requires</th></tr></thead><tbody><tr><td>COMMAND-001</td><td>CLI option and argument parsing</td><td><code>sources/INSTRUCTIONS.md</code> — Command and Exit codes</td><td><code>cmd/dupfind</code></td><td>capability</td></tr><tr><td>COMMAND-002</td><td>Operational and usage error behavior</td><td><code>sources/INSTRUCTIONS.md</code> — Exit codes and failing command behavior</td><td><code>cmd/dupfind</code></td><td>capability</td></tr><tr><td>DISCOVERY-001</td><td>Recursive file scanning and duplicate grouping</td><td><code>sources/INSTRUCTIONS.md</code> — Rules 1–3 and 6</td><td><code>cmd/dupfind</code></td><td>capability</td></tr><tr><td>DISCOVERY-002</td><td>Default CSV listing and deterministic ordering</td><td><code>sources/INSTRUCTIONS.md</code> — Rules 4–5 and Output</td><td><code>cmd/dupfind</code></td><td>capability</td></tr><tr><td>DISCOVERY-003</td><td>Summary CSV output</td><td><code>sources/INSTRUCTIONS.md</code> — Summary</td><td><code>cmd/dupfind</code></td><td>capability</td></tr><tr><td>VERIFY-001</td><td>Project test command and terminal verification</td><td><code>sources/INSTRUCTIONS.md</code> — Tests; <code>sources/run.sh</code></td><td><code>bin/test.sh</code>, <code>sources/run.sh</code></td><td>test harness, acceptance contract</td></tr></tbody></table></div>
+<h3>Test and Acceptance Strategy</h3>
+<p>Keep focused tests within each story&#x27;s behavior. The terminal verification story runs the complete supplied grader with <code>sh sources/run.sh</code>; the grader builds the executable and checks the specified command cases. The project test command runs <code>go vet ./...</code> and <code>go test ./...</code>.</p>
+<h3>Sequencing and Dependencies</h3>
+<p>The module and command entry point must exist before either verification command can run. Argument parsing and directory validation precede scanning. Scanning and grouping precede listing and summary output. The complete supplied grader is terminal verification after implementation.</p>
+<h3>Source Conflicts and Gaps</h3>
+<p>None.</p>
+<h2>Analysis Notes</h2>
+<p>generated: 2026-10-24 blueprint: /mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261024.073506/workspace/targets/DupFind/blueprint</p>
+<p>Quality: Ready blockers: 0 questions: 0 features: 3 stories: 6 stack: Go 1.22 or newer; standard library display_name: not proposed short_description: not proposed</p>
+<p>None.</p></article>
+</main>
+</body>
+</html>

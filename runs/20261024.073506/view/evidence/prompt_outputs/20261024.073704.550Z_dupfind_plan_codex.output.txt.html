@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>evidence/prompt_outputs/20261024.073704.550Z_dupfind_plan_codex.output.txt</title>
+<link rel="stylesheet" href="../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>evidence/prompt_outputs/20261024.073704.550Z_dupfind_plan_codex.output.txt</h1><div class="filenav"><a href="../../../index.html">&larr; Report</a><a href="../../../evidence/prompt_outputs/20261024.073704.550Z_dupfind_plan_codex.output.txt">Raw file</a></div></header>
+<article class="doc"><pre>=== BEGIN ARTIFACT FEATURE-Command-Interface.md ===
+# FEATURE: Command Interface
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261024 V1 |
+| Description | Defines DupFind&#x27;s command options, argument validation, and operational error behavior. |
+| Depends On  | ARCHITECTURE.md |
+| Provides    | dupfind command interface |
+| Consumes    | ./cmd/dupfind |
+
+## Questions
+
+- None.
+
+## Purpose
+
+The command is `dupfind [--summary] [--min-size &lt;bytes&gt;] &lt;directory&gt;`. Options precede exactly one directory argument. `--summary` selects summary CSV output. `--min-size` takes a positive integer; files smaller than it are ignored, and the default is 1 byte.
+
+## Behavior
+
+- Accept options before the directory and reject unknown options, missing values, non-positive or non-integer minimum sizes, a missing directory argument, and extra arguments with usage exit code 2.
+- A nonexistent path or a path that is not a directory exits with code 1.
+- On success, return exit code 0 whether or not duplicates exist.
+- On failure, write nothing to stdout and one diagnostic line to stderr.
+- The process entry point is `./cmd/dupfind`; only `main` calls `os.Exit`. CLI behavior is exposed through `Run(args []string, stdout, stderr io.Writer) int`.
+
+## Guardrails
+
+- Do not print output to stdout for malformed arguments or invalid directory paths.
+- Do not write diagnostic text to stdout.
+- Do not change files in the directory being examined.
+
+## Programmatic Acceptance
+
+=== AC command-options ===
+Intent: The command accepts the summary option and a positive minimum size before its directory argument.
+
+from drydock_go import cli_runner
+import tempfile
+from pathlib import Path
+
+with tempfile.TemporaryDirectory() as tmp:
+    root = Path(tmp)
+    a = root / &quot;a&quot;
+    b = root / &quot;b&quot;
+    a.write_bytes(b&quot;sample&quot;)
+    b.write_bytes(b&quot;sample&quot;)
+    code, out, err = cli_runner(&quot;--summary&quot;, &quot;--min-size&quot;, &quot;2&quot;, str(root))
+    print(out)
+    print(err)
+    assert code == 0
+=== END AC command-options ===
+
+=== AC usage-exit ===
+Intent: Malformed and incomplete invocations return the usage exit status.
+
+from drydock_go import cli_runner
+
+cases = [
+    [],
+    [&quot;one&quot;, &quot;two&quot;],
+    [&quot;--min-size&quot;, &quot;0&quot;, &quot;dir&quot;],
+    [&quot;--frobnicate&quot;, &quot;dir&quot;],
+]
+
+for args in cases:
+    code, out, err = cli_runner(*args)
+    print(out)
+    print(err)
+    assert code == 2
+=== END AC usage-exit ===
+
+=== AC directory-errors ===
+Intent: Missing and non-directory paths return the operational failure status.
+
+from drydock_go import cli_runner
+import tempfile
+from pathlib import Path
+
+with tempfile.TemporaryDirectory() as tmp:
+    root = Path(tmp)
+    file_path = root / &quot;file&quot;
+    file_path.write_bytes(b&quot;x&quot;)
+    missing = root / &quot;missing&quot;
+    for path in (missing, file_path):
+        code, out, err = cli_runner(str(path))
+        print(out)
+        print(err)
+        assert code == 1
+        assert out == &quot;&quot;
+=== END AC directory-errors ===
+
+=== AC minimum-size-validation ===
+Intent: A non-integer minimum size is rejected with the usage exit status.
+
+from drydock_go import cli_runner
+
+code, out, err = cli_runner(&quot;--min-size&quot;, &quot;abc&quot;, &quot;dir&quot;)
+print(out)
+print(err)
+assert code == 2
+=== END AC minimum-size-validation ===
+
+## User Acceptance
+
+- None.
+
+## Guardrails
+
+- None.
+=== END ARTIFACT===
+=== BEGIN ARTIFACT FEATURE-Duplicate-Discovery.md ===
+# FEATURE: Duplicate Discovery
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261024 V1 |
+| Description | Defines recursive, read-only discovery and grouping of duplicate regular files. |
+| Depends On  | FEATURE-Command-Interface.md |
+| Provides    | duplicate groups |
+| Consumes    | dupfind command interface |
+
+## Questions
+
+- None.
+
+## Purpose
+
+Discover duplicate file groups beneath the selected directory. Two files are duplicates only when their byte contents match; size grouping followed by SHA-256 digest grouping implements this rule while avoiding reads for files with no same-size candidate.
+
+## Discovery Rules
+
+- Walk recursively, including hidden files and directories.
+- Consider regular files only. Do not follow or report symbolic links.
+- Ignore zero-byte files and files below the selected minimum size.
+- Group candidates by size before opening file contents. Read contents only for sizes shared by multiple candidates.
+- Hash candidate contents with SHA-256 and group files by digest within each size.
+- A duplicate group contains at least two files with the same size and digest.
+- If a file cannot be read, skip it and emit one warning line on stderr; this does not change the successful exit status.
+- Discovery is read-only: it never deletes, moves, or modifies examined files.
+
+## Programmatic Acceptance
+
+=== AC recursively-finds-identical-files ===
+Intent: Identical non-empty regular files in nested directories are recognized as duplicates.
+
+from drydock_go import cli_runner
+import tempfile
+from pathlib import Path
+
+with tempfile.TemporaryDirectory() as tmp:
+    root = Path(tmp)
+    payload = b&quot;identical bytes&quot;
+    left = root / &quot;left&quot;
+    right = root / &quot;.hidden&quot; / &quot;right&quot;
+    right.parent.mkdir()
+    left.write_bytes(payload)
+    right.write_bytes(payload)
+    code, out, err = cli_runner(str(root))
+    print(out)
+    print(err)
+    assert code == 0
+    assert len(out.splitlines()) == 3
+=== END AC recursively-finds-identical-files ===
+
+=== AC ignores-links-and-empty-files ===
+Intent: Empty files and symbolic links do not contribute duplicate entries.
+
+from drydock_go import cli_runner
+import tempfile
+from pathlib import Path
+
+with tempfile.TemporaryDirectory() as tmp:
+    root = Path(tmp)
+    payload = b&quot;target&quot;
+    target = root / &quot;target&quot;
+    target.write_bytes(payload)
+    (root / &quot;link-a&quot;).symlink_to(target)
+    (root / &quot;link-b&quot;).symlink_to(target)
+    empty_a = root / &quot;empty-a&quot;
+    empty_b = root / &quot;empty-b&quot;
+    empty_a.touch()
+    empty_b.touch()
+    code, out, err = cli_runner(str(root))
+    print(out)
+    print(err)
+    assert code == 0
+    assert len(out.splitlines()) == 1
+=== END AC ignores-links-and-empty-files===
+
+=== AC unreadable-file-is-skipped ===
+Intent: An unreadable candidate is skipped without changing the command&#x27;s successful status.
+
+from drydock_go import cli_runner
+import tempfile
+import os
+from pathlib import Path
+
+with tempfile.TemporaryDirectory() as tmp:
+    root = Path(tmp)
+    payload = b&quot;shared&quot;
+    (root / &quot;readable&quot;).write_bytes(payload)
+    unreadable = root / &quot;unreadable&quot;
+    unreadable.write_bytes(payload)
+    unreadable.chmod(0)
+    code, out, err = cli_runner(str(root))
+    print(out)
+    print(err)
+    assert code == 0
+    unreadable.chmod(0o600)
+=== END AC unreadable-file-is-skipped===
+
+=== AC read-only-preserves-files ===
+Intent: Discovery leaves examined file contents unchanged.
+
+from drydock_go import cli_runner
+import tempfile
+from pathlib import Path
+
+with tempfile.TemporaryDirectory() as tmp:
+    root = Path(tmp)
+    payload = b&quot;preserve&quot;
+    path = root / &quot;one&quot;
+    path.write_bytes(payload)
+    before = path.read_bytes()
+    code, out, err = cli_runner(str(root))
+    print(out)
+    print(err)
+    assert code == 0
+    assert path.read_bytes() == before
+=== END AC read-only-preserves-files===
+
+## User Acceptance
+
+- None.
+
+## Guardrails
+
+- Do not hash or read a file unless at least one other eligible file has the same size.
+- Never follow or report symbolic links.
+- Never modify, move, or delete files under the examined directory.
+=== END ARTIFACT</pre></article>
+</main>
+</body>
+</html>

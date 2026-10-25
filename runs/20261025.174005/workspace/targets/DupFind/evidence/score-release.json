@@ -1,0 +1,146 @@
+{
+  "schema_version": 5,
+  "recorded_at": "2026-10-25T18:00:44+00:00",
+  "target": "DupFind",
+  "verdict": "PASSED",
+  "verdict_line": "DupFind: PASSED \u2014 8 of 8",
+  "statement": "DupFind: PASSED \u2014 8 of 8\n\n  st-001  MET       [\"sh\", \"sources/run.sh\"] exited 0; governed gate 'full' PASS, return_code 0, stdout 'DupFind: 15 passed, 0 failed (of 15)'; sources/run.sh:exit status 0 on every check\n  st-002  MET       bin/test.sh:1-24 uses #!/bin/sh, set -eu, no bashisms, and runs `go vet ./... && go test ./...`; ran `sh bin/test.sh`: go vet clean, all four test packages ok, 'completed: exit 0'\n  st-003  MET       go.mod:1 'module dupfind'; cmd/dupfind/main.go:1-12 package main calling cli.Run; `go list -deps ./cmd/dupfind` shows only stdlib packages and dupfind/internal/* packages; go build -o .drydock-probe/bin/dupfind ./cmd/dupfind succeeded\n  st-004  MET       sources/run.sh A1/A2 expected listing matches output: groups ordered 1(1000B) 2(128B) 3(17B) 4(9B) 5(6B), paths sorted within group; internal/dupes/dupes.go Order(): sort.Strings on Paths; ri>rj then Digest<; internal/dupes/dupes.go GroupByDigest(): SHA-256 via digestFile, only groups of 2+ files kept\n  st-005  MET       internal/walk/walk.go: `info.Size() == 0` skipped; `!d.Type().IsRegular()` skips symlinks; filepath.WalkDir does not descend symlinked directories; probe: tree with linkdir -> other/ and linkfile.txt -> real/f1.txt printed only real/f1.txt and other/f2.txt, rc=0; grader C/D/E cases with empty files and report-link.txt pass\n  st-006  MET       internal/report/report.go WriteSummary: files += len(Paths)-1, reclaimable += Reclaimable(), groups = len(groups); grader B1 '5,6,1177', C2 '2,2,1128', D2 '0,0,0' all PASS\n  st-007  MET       probe: `dupfind <missing>` rc=1 stdout_bytes=0, stderr 'stat ...: no such file or directory'; probe: `dupfind <regular file>` rc=1 stdout_bytes=0, stderr 'is not a directory'; grader U1-U5 compare stdout against empty expected output with rc 2, all PASS; internal/cli/cli.go Run(): usage errors return 2 and write only to stderr\n  st-008  MET       internal/dupes/dupes.go digestFile: os.Open (read-only) with io.Copy into the hash; internal/walk/walk.go: filepath.WalkDir and d.Info() only, no writes; probe: stat of every path in a tree before and after running dupfind was identical",
+  "complete": true,
+  "governed_gate": {
+    "name": "full",
+    "outcome": "PASS",
+    "argv": [
+      "sh",
+      "sources/run.sh"
+    ],
+    "return_code": 0,
+    "duration_ms": 2560,
+    "detail": "",
+    "timed_out": false,
+    "build_identity": "d3b0392169343fd9",
+    "stdout": "PASS A1: dupfind tree\nPASS A2: dupfind /tmp/tmp.MyxFspdbTc/tree\nPASS B1: dupfind --summary tree\nPASS C1: dupfind --min-size 20 tree\nPASS C2: dupfind --summary --min-size 20 tree\nPASS C3: dupfind --min-size 200 tree\nPASS D1: dupfind tree/unique\nPASS D2: dupfind --summary tree/empty\nPASS E1: dupfind tree/no-such-directory\nPASS E2: dupfind tree/env.bak\nPASS U1: dupfind \nPASS U2: dupfind tree tree/a\nPASS U3: dupfind --min-size abc tree\nPASS U4: dupfind --min-size 0 tree\nPASS U5: dupfind --frobnicate tree\nDupFind: 15 passed, 0 failed (of 15)\n",
+    "stderr": ""
+  },
+  "criteria": [
+    {
+      "criterion_id": "st-001",
+      "verdict": "MET",
+      "rationale": "Ran `sh sources/run.sh` against this tree: it built ./cmd/dupfind, passed all 15 checks, and exited 0.",
+      "evidence": [
+        "[\"sh\", \"sources/run.sh\"] exited 0",
+        "governed gate 'full' PASS, return_code 0, stdout 'DupFind: 15 passed, 0 failed (of 15)'",
+        "sources/run.sh:exit status 0 on every check"
+      ]
+    },
+    {
+      "criterion_id": "st-002",
+      "verdict": "MET",
+      "rationale": "bin/test.sh is a POSIX sh script that runs go vet and go test ./... and exits 0; I ran it and it exited 0.",
+      "evidence": [
+        "bin/test.sh:1-24 uses #!/bin/sh, set -eu, no bashisms, and runs `go vet ./... && go test ./...`",
+        "ran `sh bin/test.sh`: go vet clean, all four test packages ok, 'completed: exit 0'"
+      ]
+    },
+    {
+      "criterion_id": "st-003",
+      "verdict": "MET",
+      "rationale": "go.mod at the root declares module dupfind, and `go build ./cmd/dupfind` produced a binary; every dependency is in the standard library.",
+      "evidence": [
+        "go.mod:1 'module dupfind'",
+        "cmd/dupfind/main.go:1-12 package main calling cli.Run",
+        "`go list -deps ./cmd/dupfind` shows only stdlib packages and dupfind/internal/* packages",
+        "go build -o .drydock-probe/bin/dupfind ./cmd/dupfind succeeded"
+      ]
+    },
+    {
+      "criterion_id": "st-004",
+      "verdict": "MET",
+      "rationale": "Grader check A1/A2 confirms the exact groups and their ordering, and the source sorts paths by byte value, then reclaimable bytes descending, then digest ascending.",
+      "evidence": [
+        "sources/run.sh A1/A2 expected listing matches output: groups ordered 1(1000B) 2(128B) 3(17B) 4(9B) 5(6B), paths sorted within group",
+        "internal/dupes/dupes.go Order(): sort.Strings on Paths; ri>rj then Digest<",
+        "internal/dupes/dupes.go GroupByDigest(): SHA-256 via digestFile, only groups of 2+ files kept"
+      ]
+    },
+    {
+      "criterion_id": "st-005",
+      "verdict": "MET",
+      "rationale": "Zero-byte files are skipped and symlinks are neither reported nor followed inside the walked tree; a probe with a file symlink and a directory symlink listed only the real files.",
+      "evidence": [
+        "internal/walk/walk.go: `info.Size() == 0` skipped; `!d.Type().IsRegular()` skips symlinks; filepath.WalkDir does not descend symlinked directories",
+        "probe: tree with linkdir -> other/ and linkfile.txt -> real/f1.txt printed only real/f1.txt and other/f2.txt, rc=0",
+        "grader C/D/E cases with empty files and report-link.txt pass"
+      ]
+    },
+    {
+      "criterion_id": "st-006",
+      "verdict": "MET",
+      "rationale": "WriteSummary totals the same groups that WriteListing prints, and the grader's summary checks B1, C2 and D2 pass with exact expected values.",
+      "evidence": [
+        "internal/report/report.go WriteSummary: files += len(Paths)-1, reclaimable += Reclaimable(), groups = len(groups)",
+        "grader B1 '5,6,1177', C2 '2,2,1128', D2 '0,0,0' all PASS"
+      ]
+    },
+    {
+      "criterion_id": "st-007",
+      "verdict": "MET",
+      "rationale": "A missing directory and a regular file given as the directory both exited 1 with zero stdout bytes, and malformed arguments exit 2 with empty stdout per grader cases U1-U5.",
+      "evidence": [
+        "probe: `dupfind <missing>` rc=1 stdout_bytes=0, stderr 'stat ...: no such file or directory'",
+        "probe: `dupfind <regular file>` rc=1 stdout_bytes=0, stderr 'is not a directory'",
+        "grader U1-U5 compare stdout against empty expected output with rc 2, all PASS",
+        "internal/cli/cli.go Run(): usage errors return 2 and write only to stderr"
+      ]
+    },
+    {
+      "criterion_id": "st-008",
+      "verdict": "MET",
+      "rationale": "No code path in the application creates, writes, renames or removes a file; the only file operation is a read-only os.Open, and a before/after stat of the probe tree was unchanged.",
+      "evidence": [
+        "internal/dupes/dupes.go digestFile: os.Open (read-only) with io.Copy into the hash",
+        "internal/walk/walk.go: filepath.WalkDir and d.Info() only, no writes",
+        "probe: stat of every path in a tree before and after running dupfind was identical"
+      ]
+    }
+  ],
+  "guardrail_ids": [],
+  "observations": [
+    {
+      "criterion_id": "st-001",
+      "kind": "command",
+      "source": "[\"sh\", \"sources/run.sh\"]",
+      "return_code": 0,
+      "pinned": "MET",
+      "detail": "[\"sh\", \"sources/run.sh\"] exited 0",
+      "output": "PASS A1: dupfind tree\nPASS A2: dupfind /tmp/tmp.6rmFDMGtiQ/tree\nPASS B1: dupfind --summary tree\nPASS C1: dupfind --min-size 20 tree\nPASS C2: dupfind --summary --min-size 20 tree\nPASS C3: dupfind --min-size 200 tree\nPASS D1: dupfind tree/unique\nPASS D2: dupfind --summary tree/empty\nPASS E1: dupfind tree/no-such-directory\nPASS E2: dupfind tree/env.bak\nPASS U1: dupfind \nPASS U2: dupfind tree tree/a\nPASS U3: dupfind --min-size abc tree\nPASS U4: dupfind --min-size 0 tree\nPASS U5: dupfind --frobnicate tree\nDupFind: 15 passed, 0 failed (of 15)"
+    }
+  ],
+  "blockers": [],
+  "attestations": [],
+  "kit_faults": [],
+  "warnings": [],
+  "improvements": [
+    "st-008 is judged by reading the code; add a grader check that snapshots the tree's paths, sizes and mtimes before and after a run and fails on any change, so it becomes a proof rather than an LLM judgement.",
+    "st-005 says symlinks are never followed, but cli.validateDirectory resolves a symlinked root argument with filepath.EvalSymlinks. The behaviour is sensible, but the criterion should say whether a symlinked root argument is in scope so the grader can pin it.",
+    "st-002 names 'every automated test' but the POSIX requirement is only checked by reading the script; a `dash bin/test.sh` run in the grader would make the shell requirement observable."
+  ],
+  "identities": {
+    "code": "591161c373d7037afcb82f4ce117a458e310a197",
+    "sea_trials": "4f35b7ec8182f582dbadcc5a547e02f8f4fc916845bcdbef78754be73c69c3f8",
+    "blueprint": {
+      "ARCHITECTURE.md": "08109b711fcdc50a0973bc1ea1ec716067e63f13e3ec8640a0d28e527aa4617b",
+      "FEATURE-ArgParsing.md": "1287bc6702f199267145a49cbf3bdfec639f942620fb06ea1eda87721ab4ea1d",
+      "FEATURE-DigestGrouping.md": "f9f1967c6b58c2d855d9bd565ed963f0bb25d4f5e7486631dd9d4d9da696ea06",
+      "FEATURE-DirectoryValidation.md": "f0b618ddb077eb6eff0967afb82d6e7564872457ceb695d1757720b98fa583db",
+      "FEATURE-GroupOrdering.md": "d3e44700191eb2cdd2fb17a7af6a1ef888846eecee995504f4180e55949363d2",
+      "FEATURE-Listing.md": "d836e942346be7f52b8393f9d733cd18ff6c94b1d504b411bd3e18600f6da79f",
+      "FEATURE-ModuleBuild.md": "5df0b0c22ea6fc3ba5447c1d86dad20891fdf5d8c1e2102b6d5faa6a93e01027",
+      "FEATURE-SizeGrouping.md": "7b05d752ec997083b83a89aee7a6084342bf8ccea3c22317490519814102b397",
+      "FEATURE-Summary.md": "48b34e18f55c4f242fdf2c695fd5721dbf9c09dca5369b709fe6150466083f65",
+      "FEATURE-TestGate.md": "abde1e383926f4299dbffb9294a54c6c9ed330ca64a1760dd9e8d0767aa72a5b",
+      "FEATURE-Walk.md": "802bb8da2686a42bfb81938d57111dd30e80839d8439832fb8fdb7edb078cda1",
+      "VERIFICATION.md": "daf5a6f1e4c99d434659cb378e1713643337ba132a5104775719d09061d54e68"
+    }
+  },
+  "execution_id": "20261025.175956.567Z-1428d309"
+}

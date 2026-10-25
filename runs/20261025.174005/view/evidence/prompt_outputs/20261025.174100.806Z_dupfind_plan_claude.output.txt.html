@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>evidence/prompt_outputs/20261025.174100.806Z_dupfind_plan_claude.output.txt</title>
+<link rel="stylesheet" href="../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>evidence/prompt_outputs/20261025.174100.806Z_dupfind_plan_claude.output.txt</h1><div class="filenav"><a href="../../../index.html">&larr; Report</a><a href="../../../evidence/prompt_outputs/20261025.174100.806Z_dupfind_plan_claude.output.txt">Raw file</a></div></header>
+<article class="doc"><pre>=== BEGIN ARTIFACT TOPOLOGY.md ===
+## Declarations
+
+## story foundation
+summary:      Stand up the Go module, package tree, and test launcher that every other story builds into.
+type:         foundational
+kind:         capability
+phase:        1
+implements:   ARCHITECTURE.md
+stack:        common.md, go.md
+provides:     go.mod, internal/, cmd/dupfind, bin/
+acceptance:   yes
+instructions: |
+  Initialize the root go.mod (Go 1.22 or newer, standard library only, no third-party modules).
+  Create the package tree: cmd/dupfind (package main), internal/cli, internal/walk,
+  internal/dupes, internal/report, and bin/.
+
+  Document in ARCHITECTURE the pipeline: parse arguments, validate directory, walk, group by
+  size, hash same-size groups, order and number groups, emit CSV. Expose
+  Run(args []string, stdout, stderr io.Writer) int in internal/cli; only main calls os.Exit.
+
+  Add a minimal compiling placeholder in each internal package so go vet ./... and go test ./...
+  succeed before feature stories land. Do not read sources/run.sh from application code.
+state:        pending
+
+## story arg-parsing
+summary:      Parse --summary, --min-size, and exactly one directory argument; reject malformed usage with exit 2.
+type:         service
+kind:         capability
+phase:        1
+implements:   FEATURE-ArgParsing.md
+covers:       CLI-001, CLI-002
+accepts:      st-007
+stack:        go.md
+provides:     cli.Run, cli.Config
+consumes:
+depends:      foundation
+acceptance:   yes
+instructions: |
+  Implement Run in internal/cli using a local flag.FlagSet with flag.ContinueOnError and its
+  output discarded. Options precede the directory; exactly one directory argument is required.
+
+  Missing or extra arguments, an unknown option, a help flag, or a --min-size value that is not a
+  positive decimal integer (no sign, no zero, no non-decimal forms) return 2 with empty stdout
+  and one diagnostic line on stderr. The default min-size is 1.
+
+  Produce a parsed configuration (summary flag, min size, directory) for later stories.
+state:        pending
+
+## story module-build
+summary:      Provide the cmd/dupfind main package that builds with go build and delegates to cli.Run.
+type:         service
+kind:         capability
+phase:        1
+implements:   FEATURE-ModuleBuild.md
+covers:       MODBUILD-001
+accepts:      st-003
+stack:        go.md
+provides:     cmd/dupfind
+consumes:     cli.Run
+depends:      arg-parsing
+acceptance:   yes
+instructions: |
+  Write cmd/dupfind/main.go so main calls cli.Run(os.Args[1:], os.Stdout, os.Stderr) and passes
+  the result to os.Exit. go build ./cmd/dupfind must succeed using only the standard library.
+state:        pending
+
+## story directory-validation
+summary:      Exit 1 with empty stdout when the directory is missing or is not a directory.
+type:         service
+kind:         capability
+phase:        1
+implements:   FEATURE-DirectoryValidation.md
+covers:       CLI-003
+accepts:      st-007
+stack:        go.md
+provides:     cli.validateDirectory
+consumes:     cli.Config
+depends:      arg-parsing
+acceptance:   yes
+instructions: |
+  After successful argument parsing, stat the directory. A nonexistent path or a path that is not
+  a directory returns exit 1 with nothing on stdout and one diagnostic line on stderr.
+  Validation happens before any walking or output.
+state:        pending
+
+## story walk
+summary:      Walk the directory recursively and yield eligible regular files at or above the minimum size.
+type:         service
+kind:         capability
+phase:        1
+implements:   FEATURE-Walk.md
+covers:       WALK-001, WALK-002, WALK-003
+accepts:      st-005
+stack:        go.md
+provides:     walk.Files
+consumes:     cli.Config
+depends:      directory-validation
+acceptance:   yes
+instructions: |
+  Implement walk.Files in internal/walk, returning each eligible file&#x27;s relative path (slash
+  separated, no leading ./) and size.
+
+  Traverse hidden files and directories. Consider regular files only: symbolic links are neither
+  followed nor reported, and directories reached only through a symbolic link are not traversed.
+  Ignore files smaller than min-size; zero-byte files are never returned. Use lstat semantics
+  (os.Lstat or DirEntry type) and never open file contents here.
+
+  A subdirectory that cannot be read yields one stderr warning and the walk continues.
+state:        pending
+
+## story size-grouping
+summary:      Group candidate files by exact size and keep only sizes shared by two or more files.
+type:         service
+kind:         capability
+phase:        1
+implements:   FEATURE-SizeGrouping.md
+covers:       DUP-001
+stack:        go.md
+provides:     dupes.GroupBySize
+consumes:     walk.Files
+depends:      walk
+acceptance:   yes
+instructions: |
+  Implement dupes.GroupBySize, returning only size buckets with at least two files. A file whose
+  size is unique is never opened for hashing. The size is taken from the walk result, not from
+  reading contents.
+state:        pending
+
+## story digest-grouping
+summary:      Hash same-size files with SHA-256 and form duplicate groups, skipping unreadable files with a warning.
+type:         service
+kind:         capability
+phase:        1
+implements:   FEATURE-DigestGrouping.md
+covers:       DUP-002, DUP-006
+accepts:      st-008
+stack:        go.md
+provides:     dupes.GroupByDigest
+consumes:     dupes.GroupBySize
+depends:      size-grouping
+acceptance:   yes
+instructions: |
+  For each same-size bucket, open each file read-only and stream it through crypto/sha256. The
+  digest is lowercase hexadecimal of the full contents. Files with identical size and digest
+  form one group of two or more files.
+
+  A file that cannot be opened or read yields exactly one warning line on stderr, is excluded from
+  grouping, and does not change the exit code. Never delete, move, or write any file under the
+  examined directory.
+state:        pending
+
+## story group-ordering
+summary:      Compute reclaimable bytes, order groups, number them from 1, and order paths within each group.
+type:         service
+kind:         capability
+phase:        1
+implements:   FEATURE-GroupOrdering.md
+covers:       DUP-003, DUP-004, DUP-005
+accepts:      st-004
+stack:        go.md
+provides:     dupes.Order
+consumes:     dupes.GroupByDigest
+depends:      digest-grouping
+acceptance:   yes
+instructions: |
+  Reclaimable bytes per group equal size x (files - 1). Order groups by reclaimable bytes
+  descending, then digest ascending, and number them from 1. Within a group order paths by byte
+  value ascending (plain string comparison, not locale aware). Paths are relative to the
+  directory with / separators and no leading ./.
+state:        pending
+
+## story listing
+summary:      Write the CSV duplicate listing with header group,size,sha256,path using encoding/csv.
+type:         service
+kind:         capability
+phase:        1
+implements:   FEATURE-Listing.md
+covers:       LIST-001, LIST-002
+stack:        go.md
+provides:     report.WriteListing
+consumes:     dupes.Order
+depends:      group-ordering, module-build
+acceptance:   yes
+instructions: |
+  Implement report.WriteListing with encoding/csv: header group,size,sha256,path, then one row
+  per file in every ordered group. With no duplicates write only the header. Line endings are \n
+  (Writer.UseCRLF false). Fields containing a comma, double quote, or newline are quoted by the
+  csv writer.
+
+  Wire the default (non-summary) mode of cli.Run through walk, grouping, ordering, and this
+  writer, exit 0.
+state:        pending
+
+## story summary
+summary:      Write the one-row summary of groups, duplicate files, and reclaimable bytes with --summary.
+type:         service
+kind:         capability
+phase:        1
+implements:   FEATURE-Summary.md
+covers:       SUM-001
+accepts:      st-006
+stack:        go.md
+provides:     report.WriteSummary
+consumes:     dupes.Order
+depends:      listing
+acceptance:   yes
+instructions: |
+  Implement report.WriteSummary with encoding/csv: header groups,duplicate_files,reclaimable_bytes
+  then one row. duplicate_files is the sum of (files - 1) over groups; reclaimable_bytes is the
+  sum of every group&#x27;s reclaimable bytes. With no duplicates the row is 0,0,0.
+
+  Wire --summary mode of cli.Run to this writer using the same walk and grouping as the listing
+  with the same --min-size, exit 0.
+state:        pending
+
+## story test-gate
+summary:      Provide POSIX bin/test.sh and a Go test suite covering every rule, output form, and exit code.
+type:         service
+kind:         test harness
+phase:        1
+implements:   FEATURE-TestGate.md
+covers:       MODBUILD-002
+accepts:      st-002
+stack:        common.md, go.md
+provides:     bin/test.sh
+consumes:     cli.Run
+depends:      module-build, directory-validation, summary, listing
+acceptance:   yes
+instructions: |
+  Write bin/test.sh as POSIX sh: cd to the application root, run go vet ./... then go test
+  ./..., and exit non-zero if either fails.
+
+  Ensure the Go test suite, using real temporary directories and Run with bytes.Buffer, covers
+  each rule (hidden files, symlinks, zero-byte, min-size, size-then-digest, ordering, path
+  form, unreadable skip), each output form (listing, summary, empty cases), and each exit code
+  (0, 1, 2). Expectations in tests are written against observed real output.
+state:        pending
+
+## story verification
+summary:      Assemble the finished tool and confirm the supplied grader passes end to end.
+type:         feature
+kind:         test harness
+phase:        1
+implements:   VERIFICATION.md
+accepts:      st-001
+stack:        common.md
+provides:
+consumes:     bin/test.sh, cmd/dupfind
+depends:      test-gate
+acceptance:   yes
+instructions: |
+  Terminal assembly story. Confirm that sh bin/test.sh exits 0 and that sh sources/run.sh exits 0
+  with every check passing. Do not modify, regenerate, or substitute sources/run.sh, and do not
+  read it from application code. Fix any defect in the owning package, not in the grader.
+state:        pending
+=== END ARTIFACT ===
+=== BEGIN ARTIFACT DECISIONS.json ===
+[
+  {
+    &quot;id&quot;: &quot;Q-001&quot;,
+    &quot;type&quot;: &quot;choice&quot;,
+    &quot;severity&quot;: &quot;low&quot;,
+    &quot;blueprint&quot;: &quot;FEATURE-ArgParsing.md&quot;,
+    &quot;story&quot;: &quot;arg-parsing&quot;,
+    &quot;title&quot;: &quot;Help flag and flag-after-directory handling&quot;,
+    &quot;description&quot;: &quot;The source defines exit 2 for unknown options but is silent on -h/--help and on options placed after the directory. Options after the directory would be extra arguments.&quot;,
+    &quot;options&quot;: [
+      { &quot;value&quot;: &quot;usage-error&quot;, &quot;label&quot;: &quot;Treat -h/--help as an unknown option and options after the directory as extra arguments: exit 2&quot; },
+      { &quot;value&quot;: &quot;help-exit-0&quot;, &quot;label&quot;: &quot;Print usage to stdout and exit 0 for help&quot; }
+    ],
+    &quot;system_choice&quot;: &quot;usage-error&quot;
+  },
+  {
+    &quot;id&quot;: &quot;Q-002&quot;,
+    &quot;type&quot;: &quot;choice&quot;,
+    &quot;severity&quot;: &quot;low&quot;,
+    &quot;blueprint&quot;: &quot;FEATURE-Walk.md&quot;,
+    &quot;story&quot;: &quot;walk&quot;,
+    &quot;title&quot;: &quot;Unreadable subdirectory during walk&quot;,
+    &quot;description&quot;: &quot;Rule 6 covers unreadable files only. A subdirectory that cannot be listed could abort or be skipped.&quot;,
+    &quot;options&quot;: [
+      { &quot;value&quot;: &quot;warn-and-continue&quot;, &quot;label&quot;: &quot;Emit one stderr warning, skip it, keep exit code unchanged&quot; },
+      { &quot;value&quot;: &quot;fail&quot;, &quot;label&quot;: &quot;Abort with exit 1&quot; }
+    ],
+    &quot;system_choice&quot;: &quot;warn-and-continue&quot;
+  },
+  {
+    &quot;id&quot;: &quot;Q-003&quot;,
+    &quot;type&quot;: &quot;choice&quot;,
+    &quot;severity&quot;: &quot;low&quot;,
+    &quot;blueprint&quot;: &quot;FEATURE-ArgParsing.md&quot;,
+    &quot;story&quot;: &quot;arg-parsing&quot;,
+    &quot;title&quot;: &quot;Strictness of --min-size parsing&quot;,
+    &quot;description&quot;: &quot;Positive integer is required. Forms such as +5, 0x10, 1e3, or values overflowing int64 are ambiguous.&quot;,
+    &quot;options&quot;: [
+      { &quot;value&quot;: &quot;decimal-digits-only&quot;, &quot;label&quot;: &quot;Accept only ASCII decimal digits, value &gt;= 1 and fitting int64; all else exit 2&quot; },
+      { &quot;value&quot;: &quot;lenient&quot;, &quot;label&quot;: &quot;Accept anything strconv.ParseInt accepts that is positive&quot; }
+    ],
+    &quot;system_choice&quot;: &quot;decimal-digits-only&quot;
+  }
+]
+=== END ARTIFACT ===</pre></article>
+</main>
+</body>
+</html>

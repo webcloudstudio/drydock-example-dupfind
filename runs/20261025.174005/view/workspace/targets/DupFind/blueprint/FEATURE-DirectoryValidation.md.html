@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>workspace/targets/DupFind/blueprint/FEATURE-DirectoryValidation.md</title>
+<link rel="stylesheet" href="../../../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>workspace/targets/DupFind/blueprint/FEATURE-DirectoryValidation.md</h1><div class="filenav"><a href="../../../../../index.html">&larr; Report</a><a href="../../../../../workspace/targets/DupFind/blueprint/FEATURE-DirectoryValidation.md">Raw file</a></div></header>
+<article class="doc"><h1>FEATURE: Directory Validation</h1>
+<div class="scroll"><table><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Version</td><td>20261025 V1</td></tr><tr><td>Description</td><td>Exit 1 with empty standard output when the directory argument is missing or is not a directory.</td></tr><tr><td>Depends On</td><td>ARCHITECTURE.md, FEATURE-ArgParsing.md</td></tr><tr><td>Provides</td><td>cli.validateDirectory</td></tr><tr><td>Consumes</td><td>cli.Config</td></tr></tbody></table></div>
+<h2>Purpose</h2>
+<p>After successful argument parsing, <code>cli.Run</code> checks that <code>Config.Dir</code> names an existing directory before any walking or output.</p>
+<h2>Behavior</h2>
+<ul><li>A nonexistent path, or a path that exists but is not a directory (for example a regular file), returns exit code 1.</li><li>A failure writes nothing to stdout and exactly one diagnostic line to stderr.</li><li>Validation runs after argument parsing and before the walk, so a usage error (exit 2) takes precedence over an operational failure (exit 1).</li><li>An existing directory, empty or not, proceeds and the run succeeds with exit 0.</li><li>The check uses <code>os.Stat</code>, so a symbolic link given as the directory argument that resolves to a directory is accepted.</li></ul>
+<h2>Reads</h2>
+<p>File metadata of the directory argument.</p>
+<h2>Writes</h2>
+<p>Standard error only, on failure.</p>
+<h2>Programmatic Acceptance</h2>
+<p>=== AC dirval-missing-directory ===<br>Intent: A nonexistent directory exits 1 with empty standard output and one stderr line.</p>
+<p>import os import tempfile from drydock_go import cli_runner</p>
+<p>with tempfile.TemporaryDirectory() as d: missing = os.path.join(d, &quot;no-such-directory&quot;) for args in ([missing], [&quot;--summary&quot;, missing], [&quot;--min-size&quot;, &quot;3&quot;, missing]): code, out, err = cli_runner(*args) print(args, code, repr(out), repr(err)) assert code == 1, args assert out == &quot;&quot;, args assert len(err.splitlines()) == 1, args === END AC dirval-missing-directory ===</p>
+<p>=== AC dirval-not-a-directory ===<br>Intent: A regular file given as the directory exits 1 with empty standard output.</p>
+<p>import os import tempfile from drydock_go import cli_runner</p>
+<p>with tempfile.TemporaryDirectory() as d: path = os.path.join(d, &quot;plain.txt&quot;) with open(path, &quot;w&quot;) as fh: fh.write(&quot;content&quot;) for args in ([path], [&quot;--summary&quot;, path]): code, out, err = cli_runner(*args) print(args, code, repr(out), repr(err)) assert code == 1, args assert out == &quot;&quot;, args === END AC dirval-not-a-directory ===</p>
+<p>=== AC dirval-usage-precedes-validation ===<br>Intent: A usage error on a nonexistent directory still exits 2, not 1.</p>
+<p>import os import tempfile from drydock_go import cli_runner</p>
+<p>with tempfile.TemporaryDirectory() as d: missing = os.path.join(d, &quot;no-such-directory&quot;) code, out, err = cli_runner(&quot;--min-size&quot;, &quot;0&quot;, missing) print(code, repr(out), repr(err)) assert code == 2 assert out == &quot;&quot; === END AC dirval-usage-precedes-validation ===</p>
+<p>=== AC dirval-existing-directory-succeeds ===<br>Intent: An existing empty directory is accepted and the run exits 0.</p>
+<p>import tempfile from drydock_go import cli_runner</p>
+<p>with tempfile.TemporaryDirectory() as d: code, out, err = cli_runner(d) print(code, repr(out), repr(err)) assert code == 0 === END AC dirval-existing-directory-succeeds ===</p>
+<h2>User Acceptance</h2>
+<ul><li>None.</li></ul>
+<h2>Guardrails</h2>
+<ul><li>A failing command writes nothing to standard output.</li><li>Validation never creates, modifies, or removes anything on disk.</li></ul></article>
+</main>
+</body>
+</html>

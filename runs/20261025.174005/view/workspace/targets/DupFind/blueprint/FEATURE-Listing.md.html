@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>workspace/targets/DupFind/blueprint/FEATURE-Listing.md</title>
+<link rel="stylesheet" href="../../../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>workspace/targets/DupFind/blueprint/FEATURE-Listing.md</h1><div class="filenav"><a href="../../../../../index.html">&larr; Report</a><a href="../../../../../workspace/targets/DupFind/blueprint/FEATURE-Listing.md">Raw file</a></div></header>
+<article class="doc"><h1>FEATURE: Listing</h1>
+<div class="scroll"><table><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Version</td><td>20261025 V1</td></tr><tr><td>Description</td><td>Write the CSV duplicate listing with header group,size,sha256,path using encoding/csv and wire the default mode of cli.Run.</td></tr><tr><td>Depends On</td><td>FEATURE-GroupOrdering.md, FEATURE-ModuleBuild.md, ARCHITECTURE.md</td></tr><tr><td>Provides</td><td>report.WriteListing</td></tr><tr><td>Consumes</td><td>dupes.Order</td></tr></tbody></table></div>
+<h2>Purpose</h2>
+<p>The default output of <code>dupfind &lt;directory&gt;</code> is a CSV listing of every file in every duplicate group.</p>
+<h2>Interface</h2>
+<p><code>report.WriteListing</code> writes to standard output through <code>encoding/csv</code> with <code>\n</code> line endings (<code>UseCRLF</code> false). The header row is <code>group,size,sha256,path</code>. One row follows per file of every ordered group: group number, size in bytes, lowercase hexadecimal SHA-256, relative path. With no duplicates only the header is written. Fields containing a comma, a double quote, or a newline are quoted as RFC 4180 specifies, by the csv writer.</p>
+<p>The default (non-summary) mode of <code>cli.Run</code> runs the walk, size grouping, digest grouping, and ordering with the configured <code>--min-size</code>, then this writer, and returns 0. <code>--min-size</code> excludes files smaller than the given number of bytes.</p>
+<h2>Reads and Writes</h2>
+<ul><li>Reads: ordered groups.</li><li>Writes: CSV to standard output only.</li></ul>
+<h2>Programmatic Acceptance</h2>
+<p>=== AC listing-full-output ===<br>Intent: The entire standard output equals the CSV the standard csv writer produces from the fixture-derived rows.</p>
+<p>import csv import hashlib import io import os import tempfile from drydock_go import cli_runner</p>
+<p>def write(root, rel, data): p = os.path.join(root, rel) os.makedirs(os.path.dirname(p), exist_ok=True) with open(p, &quot;wb&quot;) as f: f.write(data)</p>
+<p>fixtures = { b&quot;alpha alpha\n&quot;: [&quot;a/one.txt&quot;, &quot;b/two.txt&quot;, &quot;c/deep/three.txt&quot;], b&quot;beta\n&quot;: [&quot;.hidden/.env&quot;, &quot;env.bak&quot;], } header = [&quot;group&quot;, &quot;size&quot;, &quot;sha256&quot;, &quot;path&quot;] groups = [] for content, paths in fixtures.items(): groups.append((len(content) * (len(paths) - 1), hashlib.sha256(content).hexdigest(), len(content), sorted(paths))) groups.sort(key=lambda g: (-g[0], g[1])) buf = io.StringIO() w = csv.writer(buf, lineterminator=&quot;\n&quot;) w.writerow(header) for n, g in enumerate(groups, start=1): for p in g[3]: w.writerow([n, g[2], g[1], p]) expected = buf.getvalue()</p>
+<p>with tempfile.TemporaryDirectory() as root: for content, paths in fixtures.items(): for p in paths: write(root, p, content) code, out, err = cli_runner(root) print(out) print(err) assert code == 0 assert out == expected assert &quot;\r&quot; not in out === END AC listing-full-output ===</p>
+<p>=== AC listing-csv-quoting ===<br>Intent: Paths containing a comma or a double quote survive a CSV round trip unchanged.</p>
+<p>import csv import os import tempfile from drydock_go import cli_runner</p>
+<p>def write(root, rel, data): p = os.path.join(root, rel) os.makedirs(os.path.dirname(p), exist_ok=True) with open(p, &quot;wb&quot;) as f: f.write(data)</p>
+<p>content = b&quot;quote me\n&quot; paths = [&quot;song,live.mp3&quot;, &#x27;say &quot;hi&quot;.txt&#x27;, &quot;plain.txt&quot;] with tempfile.TemporaryDirectory() as root: for p in paths: write(root, p, content) code, out, err = cli_runner(root) print(out) print(err) assert code == 0 rows = list(csv.reader(out.splitlines())) assert all(len(r) == 4 for r in rows) assert sorted(r[3] for r in rows[1:]) == sorted(paths) === END AC listing-csv-quoting ===</p>
+<p>=== AC listing-header-only-when-no-duplicates ===<br>Intent: A directory without duplicates (or with only zero-byte files) yields the header row only, with exit 0.</p>
+<p>import csv import os import tempfile from drydock_go import cli_runner</p>
+<p>def write(root, rel, data): p = os.path.join(root, rel) os.makedirs(os.path.dirname(p), exist_ok=True) with open(p, &quot;wb&quot;) as f: f.write(data)</p>
+<p>with tempfile.TemporaryDirectory() as root: write(root, &quot;solo.txt&quot;, b&quot;only one of me\n&quot;) write(root, &quot;empty/one&quot;, b&quot;&quot;) write(root, &quot;empty/two&quot;, b&quot;&quot;) code, out, err = cli_runner(root) print(out) print(err) assert code == 0 assert out.splitlines() == [&quot;group,size,sha256,path&quot;] assert out.endswith(&quot;\n&quot;) === END AC listing-header-only-when-no-duplicates ===</p>
+<p>=== AC listing-min-size ===<br>Intent: Files smaller than --min-size are excluded from the listing while larger duplicates remain.</p>
+<p>import csv import os import tempfile from drydock_go import cli_runner</p>
+<p>def write(root, rel, data): p = os.path.join(root, rel) os.makedirs(os.path.dirname(p), exist_ok=True) with open(p, &quot;wb&quot;) as f: f.write(data)</p>
+<p>small = b&quot;tiny&quot; large = b&quot;L&quot; * 50 threshold = len(small) + 1 with tempfile.TemporaryDirectory() as root: write(root, &quot;s1&quot;, small) write(root, &quot;s2&quot;, small) write(root, &quot;l1&quot;, large) write(root, &quot;l2&quot;, large) code, out, err = cli_runner(&quot;--min-size&quot;, str(threshold), root) print(out) print(err) assert code == 0 rows = list(csv.reader(out.splitlines()))[1:] assert sorted(r[3] for r in rows) == [&quot;l1&quot;, &quot;l2&quot;] code, out, err = cli_runner(root) assert code == 0 rows = list(csv.reader(out.splitlines()))[1:] assert len(rows) == 4 === END AC listing-min-size ===</p>
+<p>=== AC listing-symlinks-and-hidden ===<br>Intent: Hidden files are listed while symbolic links are neither followed nor reported.</p>
+<p>import csv import os import tempfile from drydock_go import cli_runner</p>
+<p>def write(root, rel, data): p = os.path.join(root, rel) os.makedirs(os.path.dirname(p), exist_ok=True) with open(p, &quot;wb&quot;) as f: f.write(data)</p>
+<p>content = b&quot;KEY=1\n&quot; with tempfile.TemporaryDirectory() as root: write(root, &quot;.hidden/.env&quot;, content) write(root, &quot;env.bak&quot;, content) os.symlink(os.path.join(root, &quot;env.bak&quot;), os.path.join(root, &quot;link.bak&quot;)) os.symlink(os.path.join(root, &quot;.hidden&quot;), os.path.join(root, &quot;linkdir&quot;)) code, out, err = cli_runner(root) print(out) print(err) assert code == 0 rows = list(csv.reader(out.splitlines()))[1:] assert sorted(r[3] for r in rows) == [&quot;.hidden/.env&quot;, &quot;env.bak&quot;] === END AC listing-symlinks-and-hidden ===</p>
+<h2>User Acceptance</h2>
+<ul><li>None.</li></ul>
+<h2>Guardrails</h2>
+<ul><li>Output is produced with <code>encoding/csv</code>; fields are never concatenated by hand.</li><li>A failing command writes nothing to standard output.</li><li>No file under the examined directory is modified, moved, or deleted.</li></ul></article>
+</main>
+</body>
+</html>

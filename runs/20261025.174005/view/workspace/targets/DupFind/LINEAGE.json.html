@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>workspace/targets/DupFind/LINEAGE.json</title>
+<link rel="stylesheet" href="../../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>workspace/targets/DupFind/LINEAGE.json</h1><div class="filenav"><a href="../../../../index.html">&larr; Report</a><a href="../../../../workspace/targets/DupFind/LINEAGE.json">Raw file</a></div></header>
+<article class="doc"><pre>{
+  &quot;version&quot;: 1,
+  &quot;import&quot;: {
+    &quot;root&quot;: &quot;/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261025.174005/sources&quot;,
+    &quot;format&quot;: &quot;markdown&quot;
+  },
+  &quot;sources&quot;: {
+    &quot;INSTRUCTIONS.md&quot;: {
+      &quot;state&quot;: &quot;current&quot;,
+      &quot;versions&quot;: [
+        {
+          &quot;commit&quot;: &quot;d0454ac&quot;,
+          &quot;date&quot;: &quot;2026-10-25&quot;,
+          &quot;hash&quot;: &quot;189cd54671b6072a66ab49cb47f2b4475c0beb5e75131b43b5d258fb289ec1ed&quot;,
+          &quot;release&quot;: &quot;&quot;,
+          &quot;state&quot;: &quot;consumed&quot;,
+          &quot;via&quot;: &quot;plan&quot;,
+          &quot;ticket&quot;: null,
+          &quot;requirements&quot;: [
+            {
+              &quot;name&quot;: &quot;duplicate-definition&quot;,
+              &quot;text&quot;: &quot;Two files are duplicates\nwhen their contents are byte-for-byte identical.&quot;,
+              &quot;stories&quot;: [
+                &quot;size-grouping&quot;,
+                &quot;digest-grouping&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;report-groups-and-space&quot;,
+              &quot;text&quot;: &quot;The tool reports each group of duplicates and the\ndisk space that deleting all but one copy of each would recover.&quot;,
+              &quot;stories&quot;: [
+                &quot;listing&quot;,
+                &quot;summary&quot;,
+                &quot;group-ordering&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;read-only-operation&quot;,
+              &quot;text&quot;: &quot;It never deletes, moves, or\nmodifies a file.&quot;,
+              &quot;stories&quot;: [
+                &quot;walk&quot;,
+                &quot;digest-grouping&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;go-stdlib-module&quot;,
+              &quot;text&quot;: &quot;Implement in Go 1.22 or newer using only the standard library. The application root is a Go\nmodule, and its executable is the main package at `./cmd/dupfind`. Tests run under `go test`.&quot;,
+              &quot;stories&quot;: [
+                &quot;foundation&quot;,
+                &quot;module-build&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;run-harness&quot;,
+              &quot;text&quot;: &quot;`sources/run.sh` is the scoring entry point. It is supplied, not authored, and is staged verbatim\ninto the application root.&quot;,
+              &quot;stories&quot;: [
+                &quot;verification&quot;,
+                &quot;module-build&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;command-line-options&quot;,
+              &quot;text&quot;: &quot;dupfind [--summary] [--min-size &lt;bytes&gt;] &lt;directory&gt;&quot;,
+              &quot;stories&quot;: [
+                &quot;arg-parsing&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;option-semantics&quot;,
+              &quot;text&quot;: &quot;Options precede the directory. Exactly one directory is required.&quot;,
+              &quot;stories&quot;: [
+                &quot;arg-parsing&quot;,
+                &quot;summary&quot;,
+                &quot;walk&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;scope-rule&quot;,
+              &quot;text&quot;: &quot;**Scope.** The tool walks `&lt;directory&gt;` recursively, including hidden files and directories\n(names beginning `.`). It considers regular files only. It neither follows nor reports\nsymbolic links.&quot;,
+              &quot;stories&quot;: [
+                &quot;walk&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;ignore-empty-files&quot;,
+              &quot;text&quot;: &quot;**Empty files are never duplicates.** A file of zero bytes is always ignored, which the\ndefault `--min-size 1` guarantees.&quot;,
+              &quot;stories&quot;: [
+                &quot;walk&quot;,
+                &quot;arg-parsing&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;duplicate-test&quot;,
+              &quot;text&quot;: &quot;**Duplicate test.** Files are grouped by size first. Only files that share a size are read.\nWithin a size, files are grouped by the SHA-256 digest of their contents. A group of two or\nmore files with the same size and digest is a duplicate group.&quot;,
+              &quot;stories&quot;: [
+                &quot;size-grouping&quot;,
+                &quot;digest-grouping&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;relative-paths&quot;,
+              &quot;text&quot;: &quot;**Paths** are written relative to `&lt;directory&gt;`, with `/` as the separator and no leading\n`./`.&quot;,
+              &quot;stories&quot;: [
+                &quot;listing&quot;,
+                &quot;walk&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;group-order&quot;,
+              &quot;text&quot;: &quot;**Order.** Groups are ordered by reclaimable bytes descending, then by digest ascending.\nA group&#x27;s reclaimable bytes are `size \u00d7 (files \u2212 1)`. Groups are numbered from 1 in that order.\nWithin a group, paths are ordered by byte value ascending.&quot;,
+              &quot;stories&quot;: [
+                &quot;group-ordering&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;unreadable-files&quot;,
+              &quot;text&quot;: &quot;**Unreadable files.** A file that cannot be read is skipped with one warning line on standard\nerror. It does not change the exit code.&quot;,
+              &quot;stories&quot;: [
+                &quot;digest-grouping&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;csv-output&quot;,
+              &quot;text&quot;: &quot;Output is CSV on standard output: a header row, then data rows, with `\\n` line endings. A field\nthat contains a comma, a double quote, or a newline is quoted as RFC 4180 specifies. Go&#x27;s\n`encoding/csv` writer produces this format.&quot;,
+              &quot;stories&quot;: [
+                &quot;listing&quot;,
+                &quot;summary&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;listing-output&quot;,
+              &quot;text&quot;: &quot;**Listing** (default): header `group,size,sha256,path`, then one row per file in every duplicate\ngroup. `sha256` is the lowercase hexadecimal digest. With no duplicates, only the header is\nwritten.&quot;,
+              &quot;stories&quot;: [
+                &quot;listing&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;summary-output&quot;,
+              &quot;text&quot;: &quot;**Summary** (`--summary`): header `groups,duplicate_files,reclaimable_bytes`, then one row.\n`duplicate_files` is the sum of `files \u2212 1` over all groups. `reclaimable_bytes` is the sum of\nevery group&#x27;s reclaimable bytes. With no duplicates the row is `0,0,0`.&quot;,
+              &quot;stories&quot;: [
+                &quot;summary&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;failure-output&quot;,
+              &quot;text&quot;: &quot;A failing command writes nothing to standard output and one diagnostic line to standard error.&quot;,
+              &quot;stories&quot;: [
+                &quot;directory-validation&quot;,
+                &quot;arg-parsing&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;exit-code-success&quot;,
+              &quot;text&quot;: &quot;`0` | Success, whether or not duplicates were found.&quot;,
+              &quot;stories&quot;: [
+                &quot;listing&quot;,
+                &quot;summary&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;exit-code-operational&quot;,
+              &quot;text&quot;: &quot;`1` | Operational failure: `&lt;directory&gt;` does not exist or is not a directory.&quot;,
+              &quot;stories&quot;: [
+                &quot;directory-validation&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;exit-code-usage&quot;,
+              &quot;text&quot;: &quot;`2` | Usage error: missing or extra arguments, unknown option, `--min-size` not a positive integer.&quot;,
+              &quot;stories&quot;: [
+                &quot;arg-parsing&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;test-script&quot;,
+              &quot;text&quot;: &quot;The completed application provides a POSIX-compatible `bin/test.sh` that runs `go vet ./...` and\n`go test ./...` from the application root and exits zero only when both pass. The suite covers\neach rule, each output form, and each exit code against real temporary directories.&quot;,
+              &quot;stories&quot;: [
+                &quot;test-gate&quot;,
+                &quot;foundation&quot;
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    &quot;run.sh&quot;: {
+      &quot;state&quot;: &quot;current&quot;,
+      &quot;versions&quot;: [
+        {
+          &quot;commit&quot;: &quot;d0454ac&quot;,
+          &quot;date&quot;: &quot;2026-10-25&quot;,
+          &quot;hash&quot;: &quot;dc265eae016629662090b0465362c0642ea7deb57afd77c5725652d0969f880d&quot;,
+          &quot;release&quot;: &quot;&quot;,
+          &quot;state&quot;: &quot;consumed&quot;,
+          &quot;via&quot;: &quot;plan&quot;,
+          &quot;ticket&quot;: null,
+          &quot;requirements&quot;: [
+            {
+              &quot;name&quot;: &quot;build-with-go&quot;,
+              &quot;text&quot;: &quot;Builds ./cmd/dupfind with `go build`&quot;,
+              &quot;stories&quot;: [
+                &quot;module-build&quot;,
+                &quot;foundation&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;full-listing&quot;,
+              &quot;text&quot;: &quot;check A1 0 tree &lt;&lt;&#x27;EOF&#x27;\ngroup,size,sha256,path&quot;,
+              &quot;stories&quot;: [
+                &quot;walk&quot;,
+                &quot;size-grouping&quot;,
+                &quot;digest-grouping&quot;,
+                &quot;group-ordering&quot;,
+                &quot;listing&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;summary-output&quot;,
+              &quot;text&quot;: &quot;check B1 0 --summary tree &lt;&lt;&#x27;EOF&#x27;\ngroups,duplicate_files,reclaimable_bytes\n5,6,1177&quot;,
+              &quot;stories&quot;: [
+                &quot;summary&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;min-size-filter&quot;,
+              &quot;text&quot;: &quot;check C1 0 --min-size 20 tree &lt;&lt;&#x27;EOF&#x27;&quot;,
+              &quot;stories&quot;: [
+                &quot;arg-parsing&quot;,
+                &quot;walk&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;no-duplicates-output&quot;,
+              &quot;text&quot;: &quot;check D1 0 tree/unique &lt;&lt;&#x27;EOF&#x27;\ngroup,size,sha256,path\nEOF\ncheck D2 0 --summary tree/empty &lt;&lt;&#x27;EOF&#x27;\ngroups,duplicate_files,reclaimable_bytes\n0,0,0&quot;,
+              &quot;stories&quot;: [
+                &quot;listing&quot;,
+                &quot;summary&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;operational-failures&quot;,
+              &quot;text&quot;: &quot;check E1 1 tree/no-such-directory &lt; /dev/null\ncheck E2 1 tree/env.bak &lt; /dev/null&quot;,
+              &quot;stories&quot;: [
+                &quot;directory-validation&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;usage-errors&quot;,
+              &quot;text&quot;: &quot;check U1 2 &lt; /dev/null\ncheck U2 2 tree tree/a &lt; /dev/null\ncheck U3 2 --min-size abc tree &lt; /dev/null\ncheck U4 2 --min-size 0 tree &lt; /dev/null\ncheck U5 2 --frobnicate tree &lt; /dev/null&quot;,
+              &quot;stories&quot;: [
+                &quot;arg-parsing&quot;
+              ]
+            },
+            {
+              &quot;name&quot;: &quot;grader-passes&quot;,
+              &quot;text&quot;: &quot;Exit 0 only when the build succeeds and every check passes.&quot;,
+              &quot;stories&quot;: [
+                &quot;verification&quot;,
+                &quot;test-gate&quot;
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
+</pre></article>
+</main>
+</body>
+</html>

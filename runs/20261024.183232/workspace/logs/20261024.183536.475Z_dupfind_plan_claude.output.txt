@@ -1,0 +1,407 @@
+=== BEGIN ARTIFACT FEATURE-TargetValidation.md ===
+# FEATURE: Target Validation
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261024 V1 |
+| Description | Reject a missing or non-directory target with exit 1 and no standard output. |
+| Depends On  | FEATURE-CommandLine.md |
+| Provides    | cli.ValidateTarget |
+| Consumes    | cli.Run |
+
+## Questions
+
+- None.
+
+## Purpose
+
+After argument parsing succeeds, the directory argument is validated. A nonexistent path or a regular file exits 1 with exactly one stderr line and empty stdout. Validation runs after usage validation, so usage errors keep exit 2.
+
+## Behavior
+
+- `cli.ValidateTarget` accepts a directory and returns a rejection for a nonexistent path or a regular file.
+- A rejected target produces exit 1, one stderr line, and no stdout.
+- Usage errors detected by `cli.Run` are reported before target validation runs.
+
+## Programmatic Acceptance
+
+=== AC cli-targets-missing-path ===
+Intent: A nonexistent target path is rejected by ValidateTarget with exit 1, one stderr line, and no stdout.
+Requires: executable=go; scope=test
+
+from drydock_go import run_test
+
+result = run_test("./internal/cli", "TestValidateTargetMissingPath")
+print(result.status, result.stdout, result.stderr)
+assert result.passed, (result.status, result.stdout, result.stderr)
+=== END AC cli-targets-missing-path ===
+
+=== AC cli-targets-regular-file ===
+Intent: A regular file given as the target is rejected by ValidateTarget with exit 1 and no stdout.
+Requires: executable=go; scope=test
+
+from drydock_go import run_test
+
+result = run_test("./internal/cli", "TestValidateTargetRegularFile")
+print(result.status, result.stdout, result.stderr)
+assert result.passed, (result.status, result.stdout, result.stderr)
+=== END AC cli-targets-regular-file ===
+
+=== AC cli-targets-directory-accepted ===
+Intent: An existing directory given as the target passes ValidateTarget without a rejection.
+Requires: executable=go; scope=test
+
+from drydock_go import run_test
+
+result = run_test("./internal/cli", "TestValidateTargetDirectoryAccepted")
+print(result.status, result.stdout, result.stderr)
+assert result.passed, (result.status, result.stdout, result.stderr)
+=== END AC cli-targets-directory-accepted ===
+
+=== AC cli-targets-usage-first ===
+Intent: A usage error takes precedence over a missing target, so Run exits 2 rather than 1.
+Requires: executable=go; scope=test
+
+from drydock_go import run_test
+
+result = run_test("./internal/cli", "TestValidateTargetUsageErrorFirst")
+print(result.status, result.stdout, result.stderr)
+assert result.passed, (result.status, result.stdout, result.stderr)
+=== END AC cli-targets-usage-first ===
+
+## User Acceptance
+
+- None.
+
+## Guardrails
+
+- Validation never creates, modifies, or removes the target path.
+- Validation reads only the target's file type and existence.
+- Validation writes nothing to standard output.
+=== END ARTIFACT ===
+=== BEGIN ARTIFACT FEATURE-Pipeline.md ===
+# FEATURE: Pipeline
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261024 V1 |
+| Description | Wire the cmd/dupfind main package to argument parsing, validation, scanning, grouping, ordering, and CSV rendering as the built executable. |
+| Depends On  | FEATURE-CommandLine.md, FEATURE-TargetValidation.md, FEATURE-Walker.md, FEATURE-SizeFilter.md, FEATURE-Grouping.md, FEATURE-UnreadableFiles.md, FEATURE-ListingCSV.md, FEATURE-ListingOrder.md, FEATURE-ListingEmpty.md, FEATURE-Summary.md |
+| Provides    | cmd/dupfind executable |
+| Consumes    | cli.Run, cli.ValidateTarget, scan.Walk, scan.FilterSize, scan.Group, output.WriteListing, output.WriteSummary |
+
+## Questions
+
+- None.
+
+## Purpose
+
+This is the assembly story. `cmd/dupfind/main.go` calls `cli.Run` with an execute function. The execute function runs walk, size filter, group, order, and render in sequence, choosing listing or summary output. Only `main` calls `os.Exit`.
+
+## Behavior
+
+- Standard output carries only CSV: the listing by default, or the summary with `--summary`.
+- Diagnostics go to standard error.
+- Exit codes are 0 on success, 1 for an invalid target, and 2 for a usage error.
+
+## Programmatic Acceptance
+
+=== AC pipeline-listing-rows ===
+Intent: The built executable lists each file of a duplicate group with the exact header, group number, size, digest, and relative path.
+Requires: executable=go; scope=test
+
+import csv
+import hashlib
+import io
+import os
+import tempfile
+
+from drydock_go import cli_runner
+
+HEADER = ["group", "size", "sha256", "path"]
+content = b"quarterly report"
+digest = hashlib.sha256(content).hexdigest()
+
+with tempfile.TemporaryDirectory() as tmp:
+    for name in ("a", "b"):
+        os.makedirs(os.path.join(tmp, name))
+        with open(os.path.join(tmp, name, "report.txt"), "wb") as f:
+            f.write(content)
+    code, out, err = cli_runner(tmp)
+    print(code, out, err)
+    assert code == 0, (code, out, err)
+    rows = list(csv.reader(io.StringIO(out)))
+    assert rows[0] == HEADER, rows
+    assert [(int(r[0]), int(r[1]), r[2], r[3]) for r in rows[1:]] == [
+        (1, len(content), digest, "a/report.txt"),
+        (1, len(content), digest, "b/report.txt"),
+    ], rows
+=== END AC pipeline-listing-rows ===
+
+=== AC pipeline-summary-totals ===
+Intent: The built executable with --summary writes the header and one totals row equal to the listing's group and reclaimable sums.
+Requires: executable=go; scope=test
+
+import csv
+import io
+import os
+import tempfile
+
+from drydock_go import cli_runner
+
+HEADER = ["groups", "duplicate_files", "reclaimable_bytes"]
+content = b"0123456789"
+copies = ("a", "b", "c")
+
+with tempfile.TemporaryDirectory() as tmp:
+    for name in copies:
+        os.makedirs(os.path.join(tmp, name))
+        with open(os.path.join(tmp, name, "x.bin"), "wb") as f:
+            f.write(content)
+    code, out, err = cli_runner("--summary", tmp)
+    print(code, out, err)
+    assert code == 0, (code, out, err)
+    rows = list(csv.reader(io.StringIO(out)))
+    assert rows[0] == HEADER, rows
+    assert len(rows) == 2, rows
+    totals = [int(v) for v in rows[1]]
+    assert totals == [1, len(copies) - 1, len(content) * (len(copies) - 1)], rows
+=== END AC pipeline-summary-totals ===
+
+=== AC pipeline-empty-listing ===
+Intent: The built executable writes only the header, as one line, when no duplicate group exists.
+Requires: executable=go; scope=test
+
+import csv
+import io
+import os
+import tempfile
+
+from drydock_go import cli_runner
+
+HEADER = ["group", "size", "sha256", "path"]
+
+with tempfile.TemporaryDirectory() as tmp:
+    with open(os.path.join(tmp, "solo.txt"), "wb") as f:
+        f.write(b"only one of me")
+    code, out, err = cli_runner(tmp)
+    print(code, out, err)
+    assert code == 0, (code, out, err)
+    assert len(out.splitlines()) == 1, out
+    assert list(csv.reader(io.StringIO(out))) == [HEADER], out
+=== END AC pipeline-empty-listing ===
+
+=== AC pipeline-min-size ===
+Intent: The built executable with --min-size excludes groups whose files are smaller than the bound and keeps those at or above it.
+Requires: executable=go; scope=test
+
+import csv
+import hashlib
+import io
+import os
+import tempfile
+
+from drydock_go import cli_runner
+
+small = b"ab"
+big = b"abcde"
+digest = hashlib.sha256(big).hexdigest()
+
+with tempfile.TemporaryDirectory() as tmp:
+    for name, data in (("a/x.bin", small), ("b/x.bin", small), ("c/y.bin", big), ("d/y.bin", big)):
+        path = os.path.join(tmp, name)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "wb") as f:
+            f.write(data)
+    code, out, err = cli_runner("--min-size", str(len(big)), tmp)
+    print(code, out, err)
+    assert code == 0, (code, out, err)
+    rows = list(csv.reader(io.StringIO(out)))
+    assert [(int(r[0]), int(r[1]), r[2], r[3]) for r in rows[1:]] == [
+        (1, len(big), digest, "c/y.bin"),
+        (1, len(big), digest, "d/y.bin"),
+    ], rows
+=== END AC pipeline-min-size ===
+
+=== AC pipeline-hidden-and-symlink ===
+Intent: The built executable includes hidden regular files and excludes a symbolic link that points at a duplicate.
+Requires: executable=go; scope=test
+
+import csv
+import io
+import os
+import tempfile
+
+from drydock_go import cli_runner
+
+content = b"KEY=1"
+
+with tempfile.TemporaryDirectory() as tmp:
+    os.makedirs(os.path.join(tmp, ".hidden"))
+    with open(os.path.join(tmp, ".hidden", ".env"), "wb") as f:
+        f.write(content)
+    with open(os.path.join(tmp, "env.bak"), "wb") as f:
+        f.write(content)
+    os.symlink(os.path.join(tmp, "env.bak"), os.path.join(tmp, "env-link"))
+    code, out, err = cli_runner(tmp)
+    print(code, out, err)
+    assert code == 0, (code, out, err)
+    rows = list(csv.reader(io.StringIO(out)))
+    paths = sorted(r[3] for r in rows[1:])
+    assert paths == sorted([".hidden/.env", "env.bak"]), rows
+=== END AC pipeline-hidden-and-symlink ===
+
+=== AC pipeline-read-only ===
+Intent: The built executable leaves every file under the examined directory byte-identical after a run.
+Requires: executable=go; scope=test
+
+import os
+import tempfile
+
+from drydock_go import cli_runner
+
+
+def snapshot(root):
+    state = {}
+    for dirpath, _, filenames in os.walk(root):
+        for name in filenames:
+            path = os.path.join(dirpath, name)
+            with open(path, "rb") as f:
+                state[os.path.relpath(path, root)] = f.read()
+    return state
+
+
+with tempfile.TemporaryDirectory() as tmp:
+    for name in ("a", "b"):
+        os.makedirs(os.path.join(tmp, name))
+        with open(os.path.join(tmp, name, "same.bin"), "wb") as f:
+            f.write(b"unchanged bytes")
+    before = snapshot(tmp)
+    code, out, err = cli_runner(tmp)
+    print(code, out, err)
+    assert code == 0, (code, out, err)
+    after = snapshot(tmp)
+    assert after == before, (before, after)
+=== END AC pipeline-read-only ===
+
+=== AC pipeline-missing-target ===
+Intent: The built executable exits 1 with one stderr line and no stdout when the target does not exist.
+Requires: executable=go; scope=test
+
+import os
+import tempfile
+
+from drydock_go import cli_runner
+
+with tempfile.TemporaryDirectory() as tmp:
+    code, out, err = cli_runner(os.path.join(tmp, "absent"))
+    print(code, out, err)
+    assert code == 1, (code, out, err)
+    assert out == "", out
+    assert len(err.splitlines()) == 1, err
+=== END AC pipeline-missing-target ===
+
+=== AC pipeline-usage-error ===
+Intent: The built executable exits 2 with one stderr line and no stdout when --min-size is not a positive integer.
+Requires: executable=go; scope=test
+
+import tempfile
+
+from drydock_go import cli_runner
+
+with tempfile.TemporaryDirectory() as tmp:
+    code, out, err = cli_runner("--min-size", "abc", tmp)
+    print(code, out, err)
+    assert code == 2, (code, out, err)
+    assert out == "", out
+    assert len(err.splitlines()) == 1, err
+=== END AC pipeline-usage-error ===
+
+## User Acceptance
+
+- None.
+
+## Guardrails
+
+- Never delete, move, or write a file under the directory examined.
+- Never hardcode a digest, path, or total; every value is computed from the directory examined.
+- Standard output carries only CSV; diagnostics go to standard error.
+=== END ARTIFACT ===
+=== BEGIN ARTIFACT FEATURE-TestHarness.md ===
+# FEATURE: Test Harness
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261024 V1 |
+| Description | Ship the POSIX bin/test.sh launcher and gate the finished application on the supplied grader as the terminal story. |
+| Depends On  | FEATURE-Walker.md, FEATURE-SizeFilter.md, FEATURE-Grouping.md, FEATURE-UnreadableFiles.md, FEATURE-ListingCSV.md, FEATURE-ListingOrder.md, FEATURE-ListingEmpty.md, FEATURE-Summary.md, FEATURE-CommandLine.md, FEATURE-TargetValidation.md, FEATURE-Pipeline.md |
+| Provides    | bin/test.sh |
+| Consumes    | cmd/dupfind executable |
+
+## Questions
+
+- None.
+
+## Purpose
+
+This is the terminal story. It depends on every implementation story. `bin/test.sh` is a POSIX sh launcher that runs `go vet ./...` and `go test ./...` from the application root and exits zero only when both pass. The supplied `sources/run.sh` is the full-suite acceptance gate.
+
+## Behavior
+
+- `bin/test.sh` is POSIX-compatible sh and runs from the application root.
+- `bin/test.sh` exits zero only when `go vet ./...` and `go test ./...` both pass.
+- The terminal acceptance runs `sh sources/run.sh` as the full suite and requires exit zero.
+
+## Programmatic Acceptance
+
+=== AC test-harness-script-syntax ===
+Intent: bin/test.sh parses as POSIX sh, so the launcher is runnable under any sh.
+Requires: executable=sh; scope=test
+
+import subprocess
+
+result = subprocess.run(["sh", "-n", "bin/test.sh"], capture_output=True, text=True)
+print(result.stdout)
+print(result.stderr)
+assert result.returncode == 0, (result.returncode, result.stdout, result.stderr)
+=== END AC test-harness-script-syntax ===
+
+=== AC test-harness-suite-script ===
+Intent: bin/test.sh runs go vet and go test over the application and exits zero when both pass.
+Requires: executable=sh; scope=test
+Requires: executable=go; scope=test
+
+import subprocess
+
+result = subprocess.run(["sh", "bin/test.sh"], capture_output=True, text=True)
+print(result.stdout)
+print(result.stderr)
+assert result.returncode == 0, (result.returncode, result.stdout, result.stderr)
+=== END AC test-harness-suite-script ===
+
+=== AC test-harness-grader ===
+Intent: The supplied grader sh sources/run.sh exits zero against the completed application, covering the full suite.
+Suite: full
+Requires: executable=sh; scope=test
+Requires: executable=go; scope=test
+
+import subprocess
+
+result = subprocess.run(["sh", "sources/run.sh"], capture_output=True, text=True)
+print(result.stdout)
+print(result.stderr)
+assert result.returncode == 0, (result.returncode, result.stdout, result.stderr)
+=== END AC test-harness-grader ===
+
+## User Acceptance
+
+- None.
+
+## Guardrails
+
+- Do not modify, rewrite, regenerate, or substitute `sources/run.sh`.
+- `bin/test.sh` must not read `sources/run.sh`.
+- `bin/test.sh` runs only the Go toolchain; it writes no file under the examined directory.
+=== END ARTIFACT ===
+=== BEGIN ARTIFACT FEATURE-TargetValidation.md ===
+=== END ARTIFACT ===

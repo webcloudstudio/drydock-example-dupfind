@@ -1,0 +1,267 @@
+{
+  "version": 1,
+  "import": {
+    "root": "/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261025.174005/sources",
+    "format": "markdown"
+  },
+  "sources": {
+    "INSTRUCTIONS.md": {
+      "state": "current",
+      "versions": [
+        {
+          "commit": "d0454ac",
+          "date": "2026-10-25",
+          "hash": "189cd54671b6072a66ab49cb47f2b4475c0beb5e75131b43b5d258fb289ec1ed",
+          "release": "",
+          "state": "consumed",
+          "via": "plan",
+          "ticket": null,
+          "requirements": [
+            {
+              "name": "duplicate-definition",
+              "text": "Two files are duplicates\nwhen their contents are byte-for-byte identical.",
+              "stories": [
+                "size-grouping",
+                "digest-grouping"
+              ]
+            },
+            {
+              "name": "report-groups-and-space",
+              "text": "The tool reports each group of duplicates and the\ndisk space that deleting all but one copy of each would recover.",
+              "stories": [
+                "listing",
+                "summary",
+                "group-ordering"
+              ]
+            },
+            {
+              "name": "read-only-operation",
+              "text": "It never deletes, moves, or\nmodifies a file.",
+              "stories": [
+                "walk",
+                "digest-grouping"
+              ]
+            },
+            {
+              "name": "go-stdlib-module",
+              "text": "Implement in Go 1.22 or newer using only the standard library. The application root is a Go\nmodule, and its executable is the main package at `./cmd/dupfind`. Tests run under `go test`.",
+              "stories": [
+                "foundation",
+                "module-build"
+              ]
+            },
+            {
+              "name": "run-harness",
+              "text": "`sources/run.sh` is the scoring entry point. It is supplied, not authored, and is staged verbatim\ninto the application root.",
+              "stories": [
+                "verification",
+                "module-build"
+              ]
+            },
+            {
+              "name": "command-line-options",
+              "text": "dupfind [--summary] [--min-size <bytes>] <directory>",
+              "stories": [
+                "arg-parsing"
+              ]
+            },
+            {
+              "name": "option-semantics",
+              "text": "Options precede the directory. Exactly one directory is required.",
+              "stories": [
+                "arg-parsing",
+                "summary",
+                "walk"
+              ]
+            },
+            {
+              "name": "scope-rule",
+              "text": "**Scope.** The tool walks `<directory>` recursively, including hidden files and directories\n(names beginning `.`). It considers regular files only. It neither follows nor reports\nsymbolic links.",
+              "stories": [
+                "walk"
+              ]
+            },
+            {
+              "name": "ignore-empty-files",
+              "text": "**Empty files are never duplicates.** A file of zero bytes is always ignored, which the\ndefault `--min-size 1` guarantees.",
+              "stories": [
+                "walk",
+                "arg-parsing"
+              ]
+            },
+            {
+              "name": "duplicate-test",
+              "text": "**Duplicate test.** Files are grouped by size first. Only files that share a size are read.\nWithin a size, files are grouped by the SHA-256 digest of their contents. A group of two or\nmore files with the same size and digest is a duplicate group.",
+              "stories": [
+                "size-grouping",
+                "digest-grouping"
+              ]
+            },
+            {
+              "name": "relative-paths",
+              "text": "**Paths** are written relative to `<directory>`, with `/` as the separator and no leading\n`./`.",
+              "stories": [
+                "listing",
+                "walk"
+              ]
+            },
+            {
+              "name": "group-order",
+              "text": "**Order.** Groups are ordered by reclaimable bytes descending, then by digest ascending.\nA group's reclaimable bytes are `size \u00d7 (files \u2212 1)`. Groups are numbered from 1 in that order.\nWithin a group, paths are ordered by byte value ascending.",
+              "stories": [
+                "group-ordering"
+              ]
+            },
+            {
+              "name": "unreadable-files",
+              "text": "**Unreadable files.** A file that cannot be read is skipped with one warning line on standard\nerror. It does not change the exit code.",
+              "stories": [
+                "digest-grouping"
+              ]
+            },
+            {
+              "name": "csv-output",
+              "text": "Output is CSV on standard output: a header row, then data rows, with `\\n` line endings. A field\nthat contains a comma, a double quote, or a newline is quoted as RFC 4180 specifies. Go's\n`encoding/csv` writer produces this format.",
+              "stories": [
+                "listing",
+                "summary"
+              ]
+            },
+            {
+              "name": "listing-output",
+              "text": "**Listing** (default): header `group,size,sha256,path`, then one row per file in every duplicate\ngroup. `sha256` is the lowercase hexadecimal digest. With no duplicates, only the header is\nwritten.",
+              "stories": [
+                "listing"
+              ]
+            },
+            {
+              "name": "summary-output",
+              "text": "**Summary** (`--summary`): header `groups,duplicate_files,reclaimable_bytes`, then one row.\n`duplicate_files` is the sum of `files \u2212 1` over all groups. `reclaimable_bytes` is the sum of\nevery group's reclaimable bytes. With no duplicates the row is `0,0,0`.",
+              "stories": [
+                "summary"
+              ]
+            },
+            {
+              "name": "failure-output",
+              "text": "A failing command writes nothing to standard output and one diagnostic line to standard error.",
+              "stories": [
+                "directory-validation",
+                "arg-parsing"
+              ]
+            },
+            {
+              "name": "exit-code-success",
+              "text": "`0` | Success, whether or not duplicates were found.",
+              "stories": [
+                "listing",
+                "summary"
+              ]
+            },
+            {
+              "name": "exit-code-operational",
+              "text": "`1` | Operational failure: `<directory>` does not exist or is not a directory.",
+              "stories": [
+                "directory-validation"
+              ]
+            },
+            {
+              "name": "exit-code-usage",
+              "text": "`2` | Usage error: missing or extra arguments, unknown option, `--min-size` not a positive integer.",
+              "stories": [
+                "arg-parsing"
+              ]
+            },
+            {
+              "name": "test-script",
+              "text": "The completed application provides a POSIX-compatible `bin/test.sh` that runs `go vet ./...` and\n`go test ./...` from the application root and exits zero only when both pass. The suite covers\neach rule, each output form, and each exit code against real temporary directories.",
+              "stories": [
+                "test-gate",
+                "foundation"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "run.sh": {
+      "state": "current",
+      "versions": [
+        {
+          "commit": "d0454ac",
+          "date": "2026-10-25",
+          "hash": "dc265eae016629662090b0465362c0642ea7deb57afd77c5725652d0969f880d",
+          "release": "",
+          "state": "consumed",
+          "via": "plan",
+          "ticket": null,
+          "requirements": [
+            {
+              "name": "build-with-go",
+              "text": "Builds ./cmd/dupfind with `go build`",
+              "stories": [
+                "module-build",
+                "foundation"
+              ]
+            },
+            {
+              "name": "full-listing",
+              "text": "check A1 0 tree <<'EOF'\ngroup,size,sha256,path",
+              "stories": [
+                "walk",
+                "size-grouping",
+                "digest-grouping",
+                "group-ordering",
+                "listing"
+              ]
+            },
+            {
+              "name": "summary-output",
+              "text": "check B1 0 --summary tree <<'EOF'\ngroups,duplicate_files,reclaimable_bytes\n5,6,1177",
+              "stories": [
+                "summary"
+              ]
+            },
+            {
+              "name": "min-size-filter",
+              "text": "check C1 0 --min-size 20 tree <<'EOF'",
+              "stories": [
+                "arg-parsing",
+                "walk"
+              ]
+            },
+            {
+              "name": "no-duplicates-output",
+              "text": "check D1 0 tree/unique <<'EOF'\ngroup,size,sha256,path\nEOF\ncheck D2 0 --summary tree/empty <<'EOF'\ngroups,duplicate_files,reclaimable_bytes\n0,0,0",
+              "stories": [
+                "listing",
+                "summary"
+              ]
+            },
+            {
+              "name": "operational-failures",
+              "text": "check E1 1 tree/no-such-directory < /dev/null\ncheck E2 1 tree/env.bak < /dev/null",
+              "stories": [
+                "directory-validation"
+              ]
+            },
+            {
+              "name": "usage-errors",
+              "text": "check U1 2 < /dev/null\ncheck U2 2 tree tree/a < /dev/null\ncheck U3 2 --min-size abc tree < /dev/null\ncheck U4 2 --min-size 0 tree < /dev/null\ncheck U5 2 --frobnicate tree < /dev/null",
+              "stories": [
+                "arg-parsing"
+              ]
+            },
+            {
+              "name": "grader-passes",
+              "text": "Exit 0 only when the build succeeds and every check passes.",
+              "stories": [
+                "verification",
+                "test-gate"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

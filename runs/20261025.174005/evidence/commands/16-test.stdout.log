@@ -1,0 +1,16 @@
+PASS A1: dupfind tree
+PASS A2: dupfind /tmp/tmp.oTOKLTtlHf/tree
+PASS B1: dupfind --summary tree
+PASS C1: dupfind --min-size 20 tree
+PASS C2: dupfind --summary --min-size 20 tree
+PASS C3: dupfind --min-size 200 tree
+PASS D1: dupfind tree/unique
+PASS D2: dupfind --summary tree/empty
+PASS E1: dupfind tree/no-such-directory
+PASS E2: dupfind tree/env.bak
+PASS U1: dupfind 
+PASS U2: dupfind tree tree/a
+PASS U3: dupfind --min-size abc tree
+PASS U4: dupfind --min-size 0 tree
+PASS U5: dupfind --frobnicate tree
+DupFind: 15 passed, 0 failed (of 15)

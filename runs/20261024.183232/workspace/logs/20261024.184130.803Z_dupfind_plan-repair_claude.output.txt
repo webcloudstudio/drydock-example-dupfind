@@ -1,0 +1,17 @@
+<pblock file="FEATURE-SizeFilter.md" check_id="feature-sizefilter-1" kind="unchecked-call">
+Error: calls `cli_runner` at line(s) 11, 22 without asserting its exit status; bind it as `code, out, err = cli_runner(...)` and assert `code` before the next call
+
+```python
+
+```
+</pblock>
+REPAIR_IMPOSSIBLE: FEATURE-SizeFilter.md :: feature-sizefilter-1 — The block contains no Intent or Python, so the `cli_runner` calls at lines 11 and 22 cannot be bound or asserted; the criterion's full source must be supplied.
+
+<pblock file="FEATURE-UnreadableFiles.md" check_id="feature-unreadablefiles-1" kind="unchecked-call">
+Error: calls `cli_runner` at line(s) 18, 38 without asserting its exit status; bind it as `code, out, err = cli_runner(...)` and assert `code` before the next call
+
+```python
+
+```
+</pblock>
+REPAIR_IMPOSSIBLE: FEATURE-UnreadableFiles.md :: feature-unreadablefiles-1 — The block contains no Intent or Python, so the `cli_runner` calls at lines 18 and 38 cannot be bound or asserted; the criterion's full source must be supplied.

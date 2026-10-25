@@ -1,0 +1,85 @@
+<requirement name="duplicate-definition" stories="size-grouping,digest-grouping">
+Two files are duplicates
+when their contents are byte-for-byte identical.
+</requirement>
+<requirement name="report-groups-and-space" stories="listing,summary,group-ordering">
+The tool reports each group of duplicates and the
+disk space that deleting all but one copy of each would recover.
+</requirement>
+<requirement name="read-only-operation" stories="walk,digest-grouping">
+It never deletes, moves, or
+modifies a file.
+</requirement>
+<requirement name="go-stdlib-module" stories="foundation,module-build">
+Implement in Go 1.22 or newer using only the standard library. The application root is a Go
+module, and its executable is the main package at `./cmd/dupfind`. Tests run under `go test`.
+</requirement>
+<requirement name="run-harness" stories="verification,module-build">
+`sources/run.sh` is the scoring entry point. It is supplied, not authored, and is staged verbatim
+into the application root.
+</requirement>
+<requirement name="command-line-options" stories="arg-parsing">
+dupfind [--summary] [--min-size <bytes>] <directory>
+</requirement>
+<requirement name="option-semantics" stories="arg-parsing,summary,walk">
+Options precede the directory. Exactly one directory is required.
+</requirement>
+<requirement name="scope-rule" stories="walk">
+**Scope.** The tool walks `<directory>` recursively, including hidden files and directories
+(names beginning `.`). It considers regular files only. It neither follows nor reports
+symbolic links.
+</requirement>
+<requirement name="ignore-empty-files" stories="walk,arg-parsing">
+**Empty files are never duplicates.** A file of zero bytes is always ignored, which the
+default `--min-size 1` guarantees.
+</requirement>
+<requirement name="duplicate-test" stories="size-grouping,digest-grouping">
+**Duplicate test.** Files are grouped by size first. Only files that share a size are read.
+Within a size, files are grouped by the SHA-256 digest of their contents. A group of two or
+more files with the same size and digest is a duplicate group.
+</requirement>
+<requirement name="relative-paths" stories="listing,walk">
+**Paths** are written relative to `<directory>`, with `/` as the separator and no leading
+`./`.
+</requirement>
+<requirement name="group-order" stories="group-ordering">
+**Order.** Groups are ordered by reclaimable bytes descending, then by digest ascending.
+A group's reclaimable bytes are `size × (files − 1)`. Groups are numbered from 1 in that order.
+Within a group, paths are ordered by byte value ascending.
+</requirement>
+<requirement name="unreadable-files" stories="digest-grouping">
+**Unreadable files.** A file that cannot be read is skipped with one warning line on standard
+error. It does not change the exit code.
+</requirement>
+<requirement name="csv-output" stories="listing,summary">
+Output is CSV on standard output: a header row, then data rows, with `\n` line endings. A field
+that contains a comma, a double quote, or a newline is quoted as RFC 4180 specifies. Go's
+`encoding/csv` writer produces this format.
+</requirement>
+<requirement name="listing-output" stories="listing">
+**Listing** (default): header `group,size,sha256,path`, then one row per file in every duplicate
+group. `sha256` is the lowercase hexadecimal digest. With no duplicates, only the header is
+written.
+</requirement>
+<requirement name="summary-output" stories="summary">
+**Summary** (`--summary`): header `groups,duplicate_files,reclaimable_bytes`, then one row.
+`duplicate_files` is the sum of `files − 1` over all groups. `reclaimable_bytes` is the sum of
+every group's reclaimable bytes. With no duplicates the row is `0,0,0`.
+</requirement>
+<requirement name="failure-output" stories="directory-validation,arg-parsing">
+A failing command writes nothing to standard output and one diagnostic line to standard error.
+</requirement>
+<requirement name="exit-code-success" stories="listing,summary">
+`0` | Success, whether or not duplicates were found.
+</requirement>
+<requirement name="exit-code-operational" stories="directory-validation">
+`1` | Operational failure: `<directory>` does not exist or is not a directory.
+</requirement>
+<requirement name="exit-code-usage" stories="arg-parsing">
+`2` | Usage error: missing or extra arguments, unknown option, `--min-size` not a positive integer.
+</requirement>
+<requirement name="test-script" stories="test-gate,foundation">
+The completed application provides a POSIX-compatible `bin/test.sh` that runs `go vet ./...` and
+`go test ./...` from the application root and exits zero only when both pass. The suite covers
+each rule, each output form, and each exit code against real temporary directories.
+</requirement>

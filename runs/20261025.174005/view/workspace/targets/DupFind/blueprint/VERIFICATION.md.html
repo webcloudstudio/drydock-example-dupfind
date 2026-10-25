@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>workspace/targets/DupFind/blueprint/VERIFICATION.md</title>
+<link rel="stylesheet" href="../../../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>workspace/targets/DupFind/blueprint/VERIFICATION.md</h1><div class="filenav"><a href="../../../../../index.html">&larr; Report</a><a href="../../../../../workspace/targets/DupFind/blueprint/VERIFICATION.md">Raw file</a></div></header>
+<article class="doc"><h1>FEATURE: Verification</h1>
+<div class="scroll"><table><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Version</td><td>20261025 V1</td></tr><tr><td>Description</td><td>Terminal release verification that the finished dupfind passes its own test gate and the supplied grader end to end.</td></tr><tr><td>Depends On</td><td>FEATURE-TestGate.md, FEATURE-ModuleBuild.md</td></tr><tr><td>Provides</td><td>None</td></tr><tr><td>Consumes</td><td>bin/test.sh, cmd/dupfind</td></tr></tbody></table></div>
+<h2>Purpose</h2>
+<p>This assembly story proves that the stories fit together. The supplied grader <code>sources/run.sh</code> builds <code>./cmd/dupfind</code>, creates a fixed directory tree, and makes 15 checks of exit code and standard output. The grader is the exam: it is never modified, regenerated, substituted, or read by application code. A defect it exposes is fixed in the package that owns the behavior.</p>
+<h2>Assembly</h2>
+<p>All implementation stories are complete before this story runs: argument parsing, directory validation, walk, size grouping, digest grouping, group ordering, listing, summary, module build, and the test gate. This story adds no code of its own.</p>
+<h2>Reads</h2>
+<ul><li><code>sources/run.sh</code>, executed as a script only, from the application root.</li><li><code>bin/test.sh</code>.</li></ul>
+<h2>Writes</h2>
+<ul><li>Nothing. The grader works in its own temporary directory.</li></ul>
+<h2>Programmatic Acceptance</h2>
+<p>=== AC verification-test-gate-passes ===<br>Intent: The project&#x27;s own gate, bin/test.sh, exits zero on the assembled application.<br>Requires: executable=sh; scope=test<br>Requires: executable=go; scope=test</p>
+<p>import subprocess import sys</p>
+<p>result = subprocess.run([&quot;sh&quot;, &quot;bin/test.sh&quot;], capture_output=True, text=True) print(result.stdout) print(result.stderr, file=sys.stderr) assert result.returncode == 0, result.returncode === END AC verification-test-gate-passes ===</p>
+<p>=== AC verification-no-grader-coupling ===<br>Intent: Application code, tests excluded, never refers to the supplied grader script.<br>Requires: executable=go; scope=test</p>
+<p>import os</p>
+<p>needle = &quot;run&quot; + &quot;.sh&quot; offenders = [] for base in (&quot;cmd&quot;, &quot;internal&quot;): for folder, _dirs, files in os.walk(base): for name in files: if name.endswith(&quot;.go&quot;) and not name.endswith(&quot;_test.go&quot;): path = os.path.join(folder, name) with open(path, encoding=&quot;utf-8&quot;) as handle: if needle in handle.read(): offenders.append(path) print(offenders) assert offenders == [], offenders === END AC verification-no-grader-coupling ===</p>
+<p>=== AC verification-grader-passes ===<br>Intent: The supplied grader sources/run.sh builds ./cmd/dupfind and exits zero with every check passing.<br>Suite: full<br>Requires: executable=sh; scope=test<br>Requires: executable=go; scope=test</p>
+<p>import subprocess import sys</p>
+<p>result = subprocess.run([&quot;sh&quot;, &quot;sources/run.sh&quot;], capture_output=True, text=True) print(result.stdout) print(result.stderr, file=sys.stderr) assert result.returncode == 0, result.returncode === END AC verification-grader-passes ===</p>
+<h2>User Acceptance</h2>
+<ul><li>None.</li></ul>
+<h2>Guardrails</h2>
+<ul><li>Do not modify, rewrite, regenerate, or substitute <code>sources/run.sh</code>.</li><li>Application code never reads <code>sources/run.sh</code> and never hardcodes a digest, a path, or a total; every value is computed from the directory examined.</li><li>Never delete, move, or write a file under the directory examined.</li></ul></article>
+</main>
+</body>
+</html>

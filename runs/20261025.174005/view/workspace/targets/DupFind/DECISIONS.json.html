@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>workspace/targets/DupFind/DECISIONS.json</title>
+<link rel="stylesheet" href="../../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>workspace/targets/DupFind/DECISIONS.json</h1><div class="filenav"><a href="../../../../index.html">&larr; Report</a><a href="../../../../workspace/targets/DupFind/DECISIONS.json">Raw file</a></div></header>
+<article class="doc"><pre>[
+  {
+    &quot;id&quot;: &quot;Q-001&quot;,
+    &quot;type&quot;: &quot;choice&quot;,
+    &quot;severity&quot;: &quot;low&quot;,
+    &quot;origin&quot;: &quot;plan&quot;,
+    &quot;blueprint&quot;: &quot;FEATURE-ArgParsing.md&quot;,
+    &quot;story&quot;: &quot;arg-parsing&quot;,
+    &quot;status&quot;: &quot;recommended&quot;,
+    &quot;archived&quot;: false,
+    &quot;title&quot;: &quot;Help flag and flag-after-directory handling&quot;,
+    &quot;description&quot;: &quot;The source defines exit 2 for unknown options but is silent on -h/--help and on options placed after the directory. Options after the directory would be extra arguments.&quot;,
+    &quot;options&quot;: [
+      {
+        &quot;value&quot;: &quot;usage-error&quot;,
+        &quot;label&quot;: &quot;Treat -h/--help as an unknown option and options after the directory as extra arguments: exit 2&quot;
+      },
+      {
+        &quot;value&quot;: &quot;help-exit-0&quot;,
+        &quot;label&quot;: &quot;Print usage to stdout and exit 0 for help&quot;
+      }
+    ],
+    &quot;system_choice&quot;: &quot;usage-error&quot;
+  },
+  {
+    &quot;id&quot;: &quot;Q-002&quot;,
+    &quot;type&quot;: &quot;choice&quot;,
+    &quot;severity&quot;: &quot;low&quot;,
+    &quot;origin&quot;: &quot;plan&quot;,
+    &quot;blueprint&quot;: &quot;FEATURE-Walk.md&quot;,
+    &quot;story&quot;: &quot;walk&quot;,
+    &quot;status&quot;: &quot;recommended&quot;,
+    &quot;archived&quot;: false,
+    &quot;title&quot;: &quot;Unreadable subdirectory during walk&quot;,
+    &quot;description&quot;: &quot;Rule 6 covers unreadable files only. A subdirectory that cannot be listed could abort or be skipped.&quot;,
+    &quot;options&quot;: [
+      {
+        &quot;value&quot;: &quot;warn-and-continue&quot;,
+        &quot;label&quot;: &quot;Emit one stderr warning, skip it, keep exit code unchanged&quot;
+      },
+      {
+        &quot;value&quot;: &quot;fail&quot;,
+        &quot;label&quot;: &quot;Abort with exit 1&quot;
+      }
+    ],
+    &quot;system_choice&quot;: &quot;warn-and-continue&quot;
+  },
+  {
+    &quot;id&quot;: &quot;Q-003&quot;,
+    &quot;type&quot;: &quot;choice&quot;,
+    &quot;severity&quot;: &quot;low&quot;,
+    &quot;origin&quot;: &quot;plan&quot;,
+    &quot;blueprint&quot;: &quot;FEATURE-ArgParsing.md&quot;,
+    &quot;story&quot;: &quot;arg-parsing&quot;,
+    &quot;status&quot;: &quot;recommended&quot;,
+    &quot;archived&quot;: false,
+    &quot;title&quot;: &quot;Strictness of --min-size parsing&quot;,
+    &quot;description&quot;: &quot;Positive integer is required. Forms such as +5, 0x10, 1e3, or values overflowing int64 are ambiguous.&quot;,
+    &quot;options&quot;: [
+      {
+        &quot;value&quot;: &quot;decimal-digits-only&quot;,
+        &quot;label&quot;: &quot;Accept only ASCII decimal digits, value &gt;= 1 and fitting int64; all else exit 2&quot;
+      },
+      {
+        &quot;value&quot;: &quot;lenient&quot;,
+        &quot;label&quot;: &quot;Accept anything strconv.ParseInt accepts that is positive&quot;
+      }
+    ],
+    &quot;system_choice&quot;: &quot;decimal-digits-only&quot;
+  },
+  {
+    &quot;id&quot;: &quot;build-feature-directoryvalidation.md-symlinked-directory-argument&quot;,
+    &quot;type&quot;: &quot;text&quot;,
+    &quot;severity&quot;: &quot;low&quot;,
+    &quot;origin&quot;: &quot;build&quot;,
+    &quot;blueprint&quot;: &quot;FEATURE-DirectoryValidation.md&quot;,
+    &quot;story&quot;: null,
+    &quot;status&quot;: &quot;recommended&quot;,
+    &quot;archived&quot;: false,
+    &quot;title&quot;: &quot;Symlinked directory argument&quot;,
+    &quot;description&quot;: &quot;cli resolves the directory with filepath.EvalSymlinks before walking so a symlink to a directory is walked; validation still uses os.Stat as specified.&quot;,
+    &quot;options&quot;: [],
+    &quot;system_choice&quot;: &quot;cli resolves the directory with filepath.EvalSymlinks before walking so a symlink to a directory is walked; validation still uses os.Stat as specified.&quot;
+  },
+  {
+    &quot;id&quot;: &quot;build-feature-testgate.md-bin/test.sh-logging&quot;,
+    &quot;type&quot;: &quot;text&quot;,
+    &quot;severity&quot;: &quot;low&quot;,
+    &quot;origin&quot;: &quot;build&quot;,
+    &quot;blueprint&quot;: &quot;FEATURE-TestGate.md&quot;,
+    &quot;story&quot;: null,
+    &quot;status&quot;: &quot;recommended&quot;,
+    &quot;archived&quot;: false,
+    &quot;title&quot;: &quot;bin/test.sh logging&quot;,
+    &quot;description&quot;: &quot;Output goes to data/logs/test_&lt;stamp&gt;.log and is printed after completion rather than streamed, because pipefail/tee exit-status handling is not POSIX. Acceptable?&quot;,
+    &quot;options&quot;: [],
+    &quot;system_choice&quot;: &quot;Output goes to data/logs/test_&lt;stamp&gt;.log and is printed after completion rather than streamed, because pipefail/tee exit-status handling is not POSIX. Acceptable?&quot;
+  },
+  {
+    &quot;id&quot;: &quot;build-feature-walk.md-unreadable-subdirectory-warning&quot;,
+    &quot;type&quot;: &quot;text&quot;,
+    &quot;severity&quot;: &quot;low&quot;,
+    &quot;origin&quot;: &quot;build&quot;,
+    &quot;blueprint&quot;: &quot;FEATURE-Walk.md&quot;,
+    &quot;story&quot;: null,
+    &quot;status&quot;: &quot;recommended&quot;,
+    &quot;archived&quot;: false,
+    &quot;title&quot;: &quot;Unreadable subdirectory warning&quot;,
+    &quot;description&quot;: &quot;walk.Files emits one warning line per unreadable subdirectory and returns nil for it, so the walk continues. A failure to read the root itself is returned as an error (exit 1). Acceptable?&quot;,
+    &quot;options&quot;: [],
+    &quot;system_choice&quot;: &quot;walk.Files emits one warning line per unreadable subdirectory and returns nil for it, so the walk continues. A failure to read the root itself is returned as an error (exit 1). Acceptable?&quot;
+  }
+]
+</pre></article>
+</main>
+</body>
+</html>

@@ -1,0 +1,113 @@
+[
+  {
+    "id": "Q-001",
+    "type": "choice",
+    "severity": "low",
+    "origin": "plan",
+    "blueprint": "FEATURE-ArgParsing.md",
+    "story": "arg-parsing",
+    "status": "recommended",
+    "archived": false,
+    "title": "Help flag and flag-after-directory handling",
+    "description": "The source defines exit 2 for unknown options but is silent on -h/--help and on options placed after the directory. Options after the directory would be extra arguments.",
+    "options": [
+      {
+        "value": "usage-error",
+        "label": "Treat -h/--help as an unknown option and options after the directory as extra arguments: exit 2"
+      },
+      {
+        "value": "help-exit-0",
+        "label": "Print usage to stdout and exit 0 for help"
+      }
+    ],
+    "system_choice": "usage-error"
+  },
+  {
+    "id": "Q-002",
+    "type": "choice",
+    "severity": "low",
+    "origin": "plan",
+    "blueprint": "FEATURE-Walk.md",
+    "story": "walk",
+    "status": "recommended",
+    "archived": false,
+    "title": "Unreadable subdirectory during walk",
+    "description": "Rule 6 covers unreadable files only. A subdirectory that cannot be listed could abort or be skipped.",
+    "options": [
+      {
+        "value": "warn-and-continue",
+        "label": "Emit one stderr warning, skip it, keep exit code unchanged"
+      },
+      {
+        "value": "fail",
+        "label": "Abort with exit 1"
+      }
+    ],
+    "system_choice": "warn-and-continue"
+  },
+  {
+    "id": "Q-003",
+    "type": "choice",
+    "severity": "low",
+    "origin": "plan",
+    "blueprint": "FEATURE-ArgParsing.md",
+    "story": "arg-parsing",
+    "status": "recommended",
+    "archived": false,
+    "title": "Strictness of --min-size parsing",
+    "description": "Positive integer is required. Forms such as +5, 0x10, 1e3, or values overflowing int64 are ambiguous.",
+    "options": [
+      {
+        "value": "decimal-digits-only",
+        "label": "Accept only ASCII decimal digits, value >= 1 and fitting int64; all else exit 2"
+      },
+      {
+        "value": "lenient",
+        "label": "Accept anything strconv.ParseInt accepts that is positive"
+      }
+    ],
+    "system_choice": "decimal-digits-only"
+  },
+  {
+    "id": "build-feature-directoryvalidation.md-symlinked-directory-argument",
+    "type": "text",
+    "severity": "low",
+    "origin": "build",
+    "blueprint": "FEATURE-DirectoryValidation.md",
+    "story": null,
+    "status": "recommended",
+    "archived": false,
+    "title": "Symlinked directory argument",
+    "description": "cli resolves the directory with filepath.EvalSymlinks before walking so a symlink to a directory is walked; validation still uses os.Stat as specified.",
+    "options": [],
+    "system_choice": "cli resolves the directory with filepath.EvalSymlinks before walking so a symlink to a directory is walked; validation still uses os.Stat as specified."
+  },
+  {
+    "id": "build-feature-testgate.md-bin/test.sh-logging",
+    "type": "text",
+    "severity": "low",
+    "origin": "build",
+    "blueprint": "FEATURE-TestGate.md",
+    "story": null,
+    "status": "recommended",
+    "archived": false,
+    "title": "bin/test.sh logging",
+    "description": "Output goes to data/logs/test_<stamp>.log and is printed after completion rather than streamed, because pipefail/tee exit-status handling is not POSIX. Acceptable?",
+    "options": [],
+    "system_choice": "Output goes to data/logs/test_<stamp>.log and is printed after completion rather than streamed, because pipefail/tee exit-status handling is not POSIX. Acceptable?"
+  },
+  {
+    "id": "build-feature-walk.md-unreadable-subdirectory-warning",
+    "type": "text",
+    "severity": "low",
+    "origin": "build",
+    "blueprint": "FEATURE-Walk.md",
+    "story": null,
+    "status": "recommended",
+    "archived": false,
+    "title": "Unreadable subdirectory warning",
+    "description": "walk.Files emits one warning line per unreadable subdirectory and returns nil for it, so the walk continues. A failure to read the root itself is returned as an error (exit 1). Acceptable?",
+    "options": [],
+    "system_choice": "walk.Files emits one warning line per unreadable subdirectory and returns nil for it, so the walk continues. A failure to read the root itself is returned as an error (exit 1). Acceptable?"
+  }
+]

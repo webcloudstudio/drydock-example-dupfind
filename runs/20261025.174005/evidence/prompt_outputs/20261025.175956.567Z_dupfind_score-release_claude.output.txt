@@ -1,0 +1,59 @@
+I'll start by reading the tree and the existing test and gate scripts.The grader passed and the code reads clean so far. Next I'll run the test gate, build with the standard library only, and probe the symlink and read-only behaviour that the grader doesn't cover.The test gate and the stdlib-only build both pass. Now the behavioural probes for symlinks, the error-path stdout, and the read-only guarantee.```json
+{
+  "criteria": [
+    {
+      "id": "st-001",
+      "verdict": "MET",
+      "rationale": "Ran `sh sources/run.sh` against this tree: it built ./cmd/dupfind, passed all 15 checks, and exited 0.",
+      "evidence": ["governed gate 'full' PASS, return_code 0, stdout 'DupFind: 15 passed, 0 failed (of 15)'", "sources/run.sh:exit status 0 on every check"]
+    },
+    {
+      "id": "st-002",
+      "verdict": "MET",
+      "rationale": "bin/test.sh is a POSIX sh script that runs go vet and go test ./... and exits 0; I ran it and it exited 0.",
+      "evidence": ["bin/test.sh:1-24 uses #!/bin/sh, set -eu, no bashisms, and runs `go vet ./... && go test ./...`", "ran `sh bin/test.sh`: go vet clean, all four test packages ok, 'completed: exit 0'"]
+    },
+    {
+      "id": "st-003",
+      "verdict": "MET",
+      "rationale": "go.mod at the root declares module dupfind, and `go build ./cmd/dupfind` produced a binary; every dependency is in the standard library.",
+      "evidence": ["go.mod:1 'module dupfind'", "cmd/dupfind/main.go:1-12 package main calling cli.Run", "`go list -deps ./cmd/dupfind` shows only stdlib packages and dupfind/internal/* packages", "go build -o .drydock-probe/bin/dupfind ./cmd/dupfind succeeded"]
+    },
+    {
+      "id": "st-004",
+      "verdict": "MET",
+      "rationale": "Grader check A1/A2 confirms the exact groups and their ordering, and the source sorts paths by byte value, then reclaimable bytes descending, then digest ascending.",
+      "evidence": ["sources/run.sh A1/A2 expected listing matches output: groups ordered 1(1000B) 2(128B) 3(17B) 4(9B) 5(6B), paths sorted within group", "internal/dupes/dupes.go Order(): sort.Strings on Paths; ri>rj then Digest<", "internal/dupes/dupes.go GroupByDigest(): SHA-256 via digestFile, only groups of 2+ files kept"]
+    },
+    {
+      "id": "st-005",
+      "verdict": "MET",
+      "rationale": "Zero-byte files are skipped and symlinks are neither reported nor followed inside the walked tree; a probe with a file symlink and a directory symlink listed only the real files.",
+      "evidence": ["internal/walk/walk.go: `info.Size() == 0` skipped; `!d.Type().IsRegular()` skips symlinks; filepath.WalkDir does not descend symlinked directories", "probe: tree with linkdir -> other/ and linkfile.txt -> real/f1.txt printed only real/f1.txt and other/f2.txt, rc=0", "grader C/D/E cases with empty files and report-link.txt pass"]
+    },
+    {
+      "id": "st-006",
+      "verdict": "MET",
+      "rationale": "WriteSummary totals the same groups that WriteListing prints, and the grader's summary checks B1, C2 and D2 pass with exact expected values.",
+      "evidence": ["internal/report/report.go WriteSummary: files += len(Paths)-1, reclaimable += Reclaimable(), groups = len(groups)", "grader B1 '5,6,1177', C2 '2,2,1128', D2 '0,0,0' all PASS"]
+    },
+    {
+      "id": "st-007",
+      "verdict": "MET",
+      "rationale": "A missing directory and a regular file given as the directory both exited 1 with zero stdout bytes, and malformed arguments exit 2 with empty stdout per grader cases U1-U5.",
+      "evidence": ["probe: `dupfind <missing>` rc=1 stdout_bytes=0, stderr 'stat ...: no such file or directory'", "probe: `dupfind <regular file>` rc=1 stdout_bytes=0, stderr 'is not a directory'", "grader U1-U5 compare stdout against empty expected output with rc 2, all PASS", "internal/cli/cli.go Run(): usage errors return 2 and write only to stderr"]
+    },
+    {
+      "id": "st-008",
+      "verdict": "MET",
+      "rationale": "No code path in the application creates, writes, renames or removes a file; the only file operation is a read-only os.Open, and a before/after stat of the probe tree was unchanged.",
+      "evidence": ["internal/dupes/dupes.go digestFile: os.Open (read-only) with io.Copy into the hash", "internal/walk/walk.go: filepath.WalkDir and d.Info() only, no writes", "probe: stat of every path in a tree before and after running dupfind was identical"]
+    }
+  ],
+  "improvements": [
+    "st-008 is judged by reading the code; add a grader check that snapshots the tree's paths, sizes and mtimes before and after a run and fails on any change, so it becomes a proof rather than an LLM judgement.",
+    "st-005 says symlinks are never followed, but cli.validateDirectory resolves a symlinked root argument with filepath.EvalSymlinks. The behaviour is sensible, but the criterion should say whether a symlinked root argument is in scope so the grader can pin it.",
+    "st-002 names 'every automated test' but the POSIX requirement is only checked by reading the script; a `dash bin/test.sh` run in the grader would make the shell requirement observable."
+  ]
+}
+```

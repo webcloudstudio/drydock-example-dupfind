@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>workspace/targets/DupFind/blueprint/FEATURE-SizeGrouping.md</title>
+<link rel="stylesheet" href="../../../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>workspace/targets/DupFind/blueprint/FEATURE-SizeGrouping.md</h1><div class="filenav"><a href="../../../../../index.html">&larr; Report</a><a href="../../../../../workspace/targets/DupFind/blueprint/FEATURE-SizeGrouping.md">Raw file</a></div></header>
+<article class="doc"><h1>FEATURE: Size Grouping</h1>
+<div class="scroll"><table><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Version</td><td>20261025 V1</td></tr><tr><td>Description</td><td>Group candidate files by exact size and keep only sizes shared by two or more files, so unique-size files are never read.</td></tr><tr><td>Depends On</td><td>FEATURE-Walk.md, ARCHITECTURE.md</td></tr><tr><td>Provides</td><td>dupes.GroupBySize</td></tr><tr><td>Consumes</td><td>walk.Files</td></tr></tbody></table></div>
+<h2>Purpose</h2>
+<p>Rule 3 of the build instructions says files are grouped by size first and only files that share a size are read. This feature implements that first stage in <code>internal/dupes</code>.</p>
+<h2>Interface</h2>
+<p><code>dupes.GroupBySize</code> takes the eligible files produced by <code>walk.Files</code> (relative path and size) and returns size buckets. Only buckets with two or more files are returned. The size is taken from the walk result; file contents are never opened in this stage. A file whose size is unique appears in no bucket and is therefore never opened for hashing.</p>
+<h2>Reads and Writes</h2>
+<ul><li>Reads: the in-memory walk result only.</li><li>Writes: nothing.</li></ul>
+<h2>Required Project Tests</h2>
+<p>The project test suite in <code>internal/dupes</code> contains <code>TestGroupBySizeOmitsUniqueSizes</code> (a unique size produces no bucket) and <code>TestGroupBySizeKeepsSharedSizes</code> (two or more files with one size produce one bucket holding all of them).</p>
+<h2>Programmatic Acceptance</h2>
+<p>=== AC size-unique-and-shared ===<br>Intent: Files with a unique size are never reported and a shared size with identical contents is reported.</p>
+<p>import csv import os import tempfile from drydock_go import cli_runner</p>
+<p>def write(root, rel, data): p = os.path.join(root, rel) os.makedirs(os.path.dirname(p), exist_ok=True) with open(p, &quot;wb&quot;) as f: f.write(data)</p>
+<p>shared = b&quot;dddddd&quot; unique = b&quot;cc&quot; with tempfile.TemporaryDirectory() as root: write(root, &quot;d1.bin&quot;, shared) write(root, &quot;sub/d2.bin&quot;, shared) write(root, &quot;c.bin&quot;, unique) code, out, err = cli_runner(root) print(out) print(err) assert code == 0 rows = list(csv.reader(out.splitlines()))[1:] paths = sorted(r[3] for r in rows) assert paths == [&quot;d1.bin&quot;, &quot;sub/d2.bin&quot;] === END AC size-unique-and-shared ===</p>
+<p>=== AC size-same-size-different-content ===<br>Intent: Files that share a size but differ in content are not reported as duplicates.</p>
+<p>import csv import os import tempfile from drydock_go import cli_runner</p>
+<p>def write(root, rel, data): p = os.path.join(root, rel) os.makedirs(os.path.dirname(p), exist_ok=True) with open(p, &quot;wb&quot;) as f: f.write(data)</p>
+<p>with tempfile.TemporaryDirectory() as root: write(root, &quot;a.bin&quot;, b&quot;aaaa&quot;) write(root, &quot;b.bin&quot;, b&quot;bbbb&quot;) code, out, err = cli_runner(root) print(out) print(err) assert code == 0 rows = list(csv.reader(out.splitlines())) assert len(rows) == 1 === END AC size-same-size-different-content ===</p>
+<p>=== AC size-unit-tests ===<br>Intent: The project&#x27;s own tests for the size bucketing pass and actually execute.</p>
+<p>from drydock_go import run_test</p>
+<p>result = run_test(&quot;./internal/dupes&quot;, &quot;TestGroupBySizeOmitsUniqueSizes&quot;) assert result.passed, (result.status, result.stdout, result.stderr) result = run_test(&quot;./internal/dupes&quot;, &quot;TestGroupBySizeKeepsSharedSizes&quot;) assert result.passed, (result.status, result.stdout, result.stderr) === END AC size-unit-tests ===</p>
+<h2>User Acceptance</h2>
+<ul><li>None.</li></ul>
+<h2>Guardrails</h2>
+<ul><li>Contents of a file whose size is unique are never opened.</li><li>No file under the examined directory is modified, moved, or deleted.</li><li>Only the standard library is used.</li></ul></article>
+</main>
+</body>
+</html>

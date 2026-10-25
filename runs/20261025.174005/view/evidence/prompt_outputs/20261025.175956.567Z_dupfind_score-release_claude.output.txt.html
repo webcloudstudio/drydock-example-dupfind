@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>evidence/prompt_outputs/20261025.175956.567Z_dupfind_score-release_claude.output.txt</title>
+<link rel="stylesheet" href="../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>evidence/prompt_outputs/20261025.175956.567Z_dupfind_score-release_claude.output.txt</h1><div class="filenav"><a href="../../../index.html">&larr; Report</a><a href="../../../evidence/prompt_outputs/20261025.175956.567Z_dupfind_score-release_claude.output.txt">Raw file</a></div></header>
+<article class="doc"><pre>I&#x27;ll start by reading the tree and the existing test and gate scripts.The grader passed and the code reads clean so far. Next I&#x27;ll run the test gate, build with the standard library only, and probe the symlink and read-only behaviour that the grader doesn&#x27;t cover.The test gate and the stdlib-only build both pass. Now the behavioural probes for symlinks, the error-path stdout, and the read-only guarantee.```json
+{
+  &quot;criteria&quot;: [
+    {
+      &quot;id&quot;: &quot;st-001&quot;,
+      &quot;verdict&quot;: &quot;MET&quot;,
+      &quot;rationale&quot;: &quot;Ran `sh sources/run.sh` against this tree: it built ./cmd/dupfind, passed all 15 checks, and exited 0.&quot;,
+      &quot;evidence&quot;: [&quot;governed gate &#x27;full&#x27; PASS, return_code 0, stdout &#x27;DupFind: 15 passed, 0 failed (of 15)&#x27;&quot;, &quot;sources/run.sh:exit status 0 on every check&quot;]
+    },
+    {
+      &quot;id&quot;: &quot;st-002&quot;,
+      &quot;verdict&quot;: &quot;MET&quot;,
+      &quot;rationale&quot;: &quot;bin/test.sh is a POSIX sh script that runs go vet and go test ./... and exits 0; I ran it and it exited 0.&quot;,
+      &quot;evidence&quot;: [&quot;bin/test.sh:1-24 uses #!/bin/sh, set -eu, no bashisms, and runs `go vet ./... &amp;&amp; go test ./...`&quot;, &quot;ran `sh bin/test.sh`: go vet clean, all four test packages ok, &#x27;completed: exit 0&#x27;&quot;]
+    },
+    {
+      &quot;id&quot;: &quot;st-003&quot;,
+      &quot;verdict&quot;: &quot;MET&quot;,
+      &quot;rationale&quot;: &quot;go.mod at the root declares module dupfind, and `go build ./cmd/dupfind` produced a binary; every dependency is in the standard library.&quot;,
+      &quot;evidence&quot;: [&quot;go.mod:1 &#x27;module dupfind&#x27;&quot;, &quot;cmd/dupfind/main.go:1-12 package main calling cli.Run&quot;, &quot;`go list -deps ./cmd/dupfind` shows only stdlib packages and dupfind/internal/* packages&quot;, &quot;go build -o .drydock-probe/bin/dupfind ./cmd/dupfind succeeded&quot;]
+    },
+    {
+      &quot;id&quot;: &quot;st-004&quot;,
+      &quot;verdict&quot;: &quot;MET&quot;,
+      &quot;rationale&quot;: &quot;Grader check A1/A2 confirms the exact groups and their ordering, and the source sorts paths by byte value, then reclaimable bytes descending, then digest ascending.&quot;,
+      &quot;evidence&quot;: [&quot;sources/run.sh A1/A2 expected listing matches output: groups ordered 1(1000B) 2(128B) 3(17B) 4(9B) 5(6B), paths sorted within group&quot;, &quot;internal/dupes/dupes.go Order(): sort.Strings on Paths; ri&gt;rj then Digest&lt;&quot;, &quot;internal/dupes/dupes.go GroupByDigest(): SHA-256 via digestFile, only groups of 2+ files kept&quot;]
+    },
+    {
+      &quot;id&quot;: &quot;st-005&quot;,
+      &quot;verdict&quot;: &quot;MET&quot;,
+      &quot;rationale&quot;: &quot;Zero-byte files are skipped and symlinks are neither reported nor followed inside the walked tree; a probe with a file symlink and a directory symlink listed only the real files.&quot;,
+      &quot;evidence&quot;: [&quot;internal/walk/walk.go: `info.Size() == 0` skipped; `!d.Type().IsRegular()` skips symlinks; filepath.WalkDir does not descend symlinked directories&quot;, &quot;probe: tree with linkdir -&gt; other/ and linkfile.txt -&gt; real/f1.txt printed only real/f1.txt and other/f2.txt, rc=0&quot;, &quot;grader C/D/E cases with empty files and report-link.txt pass&quot;]
+    },
+    {
+      &quot;id&quot;: &quot;st-006&quot;,
+      &quot;verdict&quot;: &quot;MET&quot;,
+      &quot;rationale&quot;: &quot;WriteSummary totals the same groups that WriteListing prints, and the grader&#x27;s summary checks B1, C2 and D2 pass with exact expected values.&quot;,
+      &quot;evidence&quot;: [&quot;internal/report/report.go WriteSummary: files += len(Paths)-1, reclaimable += Reclaimable(), groups = len(groups)&quot;, &quot;grader B1 &#x27;5,6,1177&#x27;, C2 &#x27;2,2,1128&#x27;, D2 &#x27;0,0,0&#x27; all PASS&quot;]
+    },
+    {
+      &quot;id&quot;: &quot;st-007&quot;,
+      &quot;verdict&quot;: &quot;MET&quot;,
+      &quot;rationale&quot;: &quot;A missing directory and a regular file given as the directory both exited 1 with zero stdout bytes, and malformed arguments exit 2 with empty stdout per grader cases U1-U5.&quot;,
+      &quot;evidence&quot;: [&quot;probe: `dupfind &lt;missing&gt;` rc=1 stdout_bytes=0, stderr &#x27;stat ...: no such file or directory&#x27;&quot;, &quot;probe: `dupfind &lt;regular file&gt;` rc=1 stdout_bytes=0, stderr &#x27;is not a directory&#x27;&quot;, &quot;grader U1-U5 compare stdout against empty expected output with rc 2, all PASS&quot;, &quot;internal/cli/cli.go Run(): usage errors return 2 and write only to stderr&quot;]
+    },
+    {
+      &quot;id&quot;: &quot;st-008&quot;,
+      &quot;verdict&quot;: &quot;MET&quot;,
+      &quot;rationale&quot;: &quot;No code path in the application creates, writes, renames or removes a file; the only file operation is a read-only os.Open, and a before/after stat of the probe tree was unchanged.&quot;,
+      &quot;evidence&quot;: [&quot;internal/dupes/dupes.go digestFile: os.Open (read-only) with io.Copy into the hash&quot;, &quot;internal/walk/walk.go: filepath.WalkDir and d.Info() only, no writes&quot;, &quot;probe: stat of every path in a tree before and after running dupfind was identical&quot;]
+    }
+  ],
+  &quot;improvements&quot;: [
+    &quot;st-008 is judged by reading the code; add a grader check that snapshots the tree&#x27;s paths, sizes and mtimes before and after a run and fails on any change, so it becomes a proof rather than an LLM judgement.&quot;,
+    &quot;st-005 says symlinks are never followed, but cli.validateDirectory resolves a symlinked root argument with filepath.EvalSymlinks. The behaviour is sensible, but the criterion should say whether a symlinked root argument is in scope so the grader can pin it.&quot;,
+    &quot;st-002 names &#x27;every automated test&#x27; but the POSIX requirement is only checked by reading the script; a `dash bin/test.sh` run in the grader would make the shell requirement observable.&quot;
+  ]
+}
+```</pre></article>
+</main>
+</body>
+</html>

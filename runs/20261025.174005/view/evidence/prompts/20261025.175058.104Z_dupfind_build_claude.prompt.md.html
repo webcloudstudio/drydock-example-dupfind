@@ -1,0 +1,2059 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>evidence/prompts/20261025.175058.104Z_dupfind_build_claude.prompt.md</title>
+<link rel="stylesheet" href="../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>evidence/prompts/20261025.175058.104Z_dupfind_build_claude.prompt.md</h1><div class="filenav"><a href="../../../index.html">&larr; Report</a><a href="../../../evidence/prompts/20261025.175058.104Z_dupfind_build_claude.prompt.md">Raw file</a></div></header>
+<article class="doc"><h1>System Instructions</h1>
+<p>This prompt is divided into three sections:</p>
+<ol><li><strong>System Instructions</strong> (this section) — structural orientation only. Do not treat this</li></ol>
+<p>section as task input.</p>
+<ol><li><strong>Input Context</strong> — begins with the heading <code># Input Context</code>. All blocks are wrapped in</li></ol>
+<p><code>&lt;pblock&gt;</code> tags. Two block types:</p>
+<ul><li>File blocks: <code>&lt;pblock filename=&quot;&lt;name&gt;&quot; role=&quot;&lt;role&gt;&quot; guidance=&quot;...&quot;&gt;</code> — optional</li></ul>
+<p><code>guidance</code> attribute carries context-specific instructions; content is in a fenced block.</p>
+<ul><li>Metadata/section blocks: <code>&lt;pblock label=&quot;&lt;label&gt;&quot; kind=&quot;&lt;kind&gt;&quot;&gt;</code> — job parameters,</li></ul>
+<p>rules, instructions, or group headers.</p>
+<ol><li><strong>Agent Task</strong> — begins with the heading <code># Agent Task</code>. Defines your persona, constraints,</li></ol>
+<p>and required outputs. Read all input context before acting on this section.</p>
+<h1>Input Context</h1>
+<p>&lt;pblock label=&quot;Build block job&quot; kind=&quot;job&quot;&gt;</p>
+<h2>Build block job</h2>
+<ul><li>TARGET: DupFind</li><li>BUILD_DIRECTORY: /mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261025.174005/build/DupFind</li><li>WORKING_DIRECTORY: /mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261025.174005/build/DupFind</li><li>BUILD_BLOCK: Block 2 · Service (block-2)</li><li>STORIES: Parse --summary, --min-size, and exactly one directory argument; reject malformed usage with exit 2. (arg-parsing), Provide the cmd/dupfind main package that builds with go build and delegates to cli.Run. (module-build), Exit 1 with empty stdout when the directory is missing or is not a directory. (directory-validation), Walk the directory recursively and yield eligible regular files at or above the minimum size. (walk), Group candidate files by exact size and keep only sizes shared by two or more files. (size-grouping), Hash same-size files with SHA-256 and form duplicate groups, skipping unreadable files with a warning. (digest-grouping), Compute reclaimable bytes, order groups, number them from 1, and order paths within each group. (group-ordering), Write the CSV duplicate listing with header group,size,sha256,path using encoding/csv. (listing), Write the one-row summary of groups, duplicate files, and reclaimable bytes with --summary. (summary), Provide POSIX bin/test.sh and a Go test suite covering every rule, output form, and exit code. (test-gate)</li><li>DATE: 2026-10-25</li><li>BUILD_SCOPE: exactly one MANIFEST.md build block</li></ul>
+<p>&lt;/pblock&gt;</p>
+<p>&lt;pblock label=&quot;Stories in this block&quot; kind=&quot;section&quot;&gt;</p>
+<h2>Stories in this block</h2>
+<ul><li>Parse --summary, --min-size, and exactly one directory argument; reject malformed usage with exit 2. (arg-parsing) [story]</li><li>Provide the cmd/dupfind main package that builds with go build and delegates to cli.Run. (module-build) [story]</li><li>Exit 1 with empty stdout when the directory is missing or is not a directory. (directory-validation) [story]</li><li>Walk the directory recursively and yield eligible regular files at or above the minimum size. (walk) [story]</li><li>Group candidate files by exact size and keep only sizes shared by two or more files. (size-grouping) [story]</li><li>Hash same-size files with SHA-256 and form duplicate groups, skipping unreadable files with a warning. (digest-grouping) [story]</li><li>Compute reclaimable bytes, order groups, number them from 1, and order paths within each group. (group-ordering) [story]</li><li>Write the CSV duplicate listing with header group,size,sha256,path using encoding/csv. (listing) [story]</li><li>Write the one-row summary of groups, duplicate files, and reclaimable bytes with --summary. (summary) [story]</li><li>Provide POSIX bin/test.sh and a Go test suite covering every rule, output form, and exit code. (test-gate) [story]</li></ul>
+<p>&lt;/pblock&gt;</p>
+<p>&lt;pblock label=&quot;Files on disk&quot; kind=&quot;section&quot;&gt;</p>
+<h2>Files on disk in the build directory</h2>
+<ul><li>sources/run.sh</li></ul>
+<p>These are the only imported files present on disk. Every other file named in this prompt is supplied as prompt context and is not on disk; read it here and do not report it as a missing input.</p>
+<p>&lt;/pblock&gt;</p>
+<h2>COMPASS - Target Orientation</h2>
+<p>&lt;pblock filename=&quot;COMPASS.md&quot; role=&quot;compass&quot; path=&quot;/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261025.174005/workspace/targets/DupFind/COMPASS.md&quot; guidance=&quot;Important: This is the core project intent, constraints, and guardrails. It should have presecedence in conflicts.&quot;&gt;</p>
+<pre><code># COMPASS: DupFind
+
+## Compass
+
+Build a command-line duplicate file finder, the Go executable `./cmd/dupfind`, as described in
+`sources/INSTRUCTIONS.md`. It walks a directory, groups regular files by size and then by SHA-256
+digest, and reports each duplicate group or a one-row summary of the space that removing the
+copies would recover.
+
+Correctness is measured by `sources/run.sh`: it builds the executable with `go build` and makes
+15 checks of exit code and standard output against a fixed directory tree. The goal is every check
+passing.
+
+## Constraints
+
+- Implement in Go 1.22 or newer with the standard library only. No third-party modules.
+- The application root is a Go module; the executable&#x27;s main package is `./cmd/dupfind`.
+- Read a file&#x27;s contents only when another file has the same size.
+- Write CSV with `encoding/csv`; diagnostics go to standard error and are never compared.
+
+## Guardrails
+
+- Do not modify, rewrite, regenerate, or substitute `sources/run.sh`.
+- Do not read `sources/run.sh` from application code, and do not hardcode a digest, a path, or a
+  total. Every value is computed from the directory examined.
+- Never delete, move, or write a file under the directory examined.
+
+## Verification Protocol
+
+| Story kind | Command | Asserts |
+|---|---|---|
+| Every behavioral story | `sh bin/test.sh` | exit `0` |
+| Terminal story (once, last) | `sh sources/run.sh` | exit `0` |
+
+&lt;!-- drydock:build-write-guardrail:start --&gt;
+## Build Write Guardrail
+
+- Authorized build directory: `/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261025.174005/build/DupFind`
+- Authorized Target directory: `/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261025.174005/workspace/targets/DupFind`
+- Build agents have permission to create, modify, and remove files required by the active build block inside these authorized directories.
+- No path outside these authorized directories may be modified.
+- Protected Drydock artifacts:
+  - `/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261025.174005/workspace/targets/DupFind/blueprint/`
+  - `/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261025.174005/workspace/targets/DupFind/MANIFEST.md`
+  - `/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261025.174005/workspace/targets/DupFind/COMPASS.md`
+  - `/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261025.174005/workspace/targets/DupFind/QuarterDeck/`
+  - `/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261025.174005/workspace/targets/DupFind/evidence/`
+&lt;!-- drydock:build-write-guardrail:end --&gt;</code></pre>
+<p>&lt;/pblock&gt;</p>
+<h2>STACK - Technology HOW</h2>
+<p>&lt;pblock filename=&quot;go_compact.md&quot; role=&quot;stack&quot; path=&quot;/mnt/c/Users/barlo/projects/drydock/Rigging/languages/go/go_compact.md&quot;&gt;</p>
+<pre><code>&lt;!-- Compacted from Rigging/languages/go/go.md sha256=aa96c7155b26f091e4f2ee9b7a47ff2202fc7c162254f2b8676779198c7147da on 2026-10-18 by Rigging maintenance --&gt;
+
+## Foundation Contract
+
+The published shape of this foundation. It is built before every other foundation: a web server,
+a database, or a CLI is built *into* this tree, this environment, and this test runner. Carried
+verbatim into `go_compact.md`.
+
+- source_root: internal/
+- test_command: go test ./...
+- environment: the module declared in `go.mod`; no vendored toolchain
+- dependencies: `go.mod`
+
+```
+project/
+  go.mod                  # module path; the Go toolchain version
+  cmd/                    # one directory per binary, each package main
+  internal/               # application packages; not importable outside this module
+  bin/                    # launchers; each runs the toolchain, never a vendored copy
+```
+
+Application foundations add packages under `internal/`. The generated persistence library is a
+separate module at `persistence/`, linked by the root `go.mod`.
+
+### Native application layouts and fixtures
+
+Initialize the root `go.mod` in the language foundation before the DATABASE block.
+Use `cmd/app/main.go` for process startup, `internal/cli` for CLI behavior, and
+`internal/appserver` for HTTP behavior. The root application module requires
+`drydock.local/persistence v0.0.0` with `replace drydock.local/persistence =&gt; ./persistence`;
+the generated persistence directory owns its nested module. Run both module test suites.
+
+For a CLI, expose `Run(args []string, stdout, stderr io.Writer) int`, use a local
+`flag.FlagSet` with `flag.ContinueOnError`, and test with `bytes.Buffer`. Only main calls
+`os.Exit`. For HTTP, expose `NewHandler(...) http.Handler` using `net/http.ServeMux`.
+Use `httptest.NewRecorder` and `httptest.NewRequest` for handler tests, or
+`httptest.NewServer` with `t.Cleanup(server.Close)` when testing a real HTTP client.
+Keep business logic in application packages and persistence access in the shipped library.
+
+### How do we execute and measure Acceptance Criteria in this language?
+
+An Acceptance Criterion (AC) is an executable check of Blueprint-required behavior. Native tests
+use `testing` in `*_test.go`; the project gate is `go test ./...`. Within the existing Blueprint
+Python AC container, execute a named test through the shipped helper:
+
+```python
+from drydock_go import run_test
+result = run_test(&quot;./internal/orders&quot;, &quot;TestCreateOrder&quot;)
+assert result.passed, (result.status, result.stdout, result.stderr)
+```
+
+Drydock stages this helper beside the criterion. It runs `go test -json -count=1 -run` with an
+exact test name, retains output and per-test outcomes, and rejects absent/skipped tests as proof.
+The enclosing AC provides identity, timeout, result storage and repair state. Compilation errors
+remain distinct from assertion failures in `result.status`. Coverage and persistence observations
+require explicit instrumentation per criterion; unavailable observations are unknown.
+
+A criterion that exercises the command line runs the built executable through the same helper,
+never `go run`, which reports every non-zero program exit as 1:
+
+```python
+from drydock_go import cli_runner
+code, out, err = cli_runner(&quot;--top&quot;, &quot;0&quot;, &quot;data.csv&quot;)
+assert code == 2, (code, out, err)
+```
+
+`cli_runner` builds the single `./cmd/&lt;name&gt;` main package once with `go build` and returns
+`(exit_code, stdout, stderr)`; pass `package=&quot;./cmd/&lt;name&gt;&quot;` when there are several, and `input=`
+for standard input. A failed build settles the criterion as `execution-error`.
+
+### How does this language provide the shared persistence contract?
+
+Use the shipped module in `Rigging/languages/go/persistence/`. Drydock copies it to the Target&#x27;s
+`persistence/`, generates `schema.go`, `testing.go` and a schema command from `DATABASE.md`, and
+links it into the existing root `go.mod` as `drydock.local/persistence`. Driver versions and sums
+are shipped; SQLite uses `go-sqlite3` (a C compiler and CGO are required), PostgreSQL uses `lib/pq`.
+Run `go mod download` during dependency provisioning; execution requires these modules available.
+
+Call `persistence.OpenDatabase(ctx, dsn)`, then typed methods such as
+`db.Tickets.List(ctx, persistence.TicketsListInput{Status: &quot;open&quot;})`. Methods return a value and
+an error. Optional inputs use pointers; read results are generated structs. Undeclared operations
+and unsupported field types fail explicitly. Use `OpenSession(ctx, dsn)` for native database criteria;
+empty DSN selects the configured, provisioned application store. Defer its cleanup and check the
+returned error: it rolls back on success and failure, never applies schema or deletes the store.
+Pass the same Store to the feature. Other connections and external effects require committed,
+idempotent criteria with owned records and supported cleanup. Both engines retain autocommit
+outside explicit rollback scopes.
+
+The Go library and generator are verified on SQLite and PostgreSQL. Keep application SQL inside
+the library; agents write callers. The language foundation must create `go.mod` before the
+DATABASE step. Python Blueprint AC containers invoke the native Go tests through `run_test`.
+
+---
+
+## Consumer Rules
+
+- Use `gofmt`, explicit errors, small consumer-owned interfaces and owned goroutine lifetimes.
+- Keep business logic in `internal/` and entry points in `cmd/`; commit `go.mod` and `go.sum`.
+- Gate with `go vet ./...`, `go build ./...` and `go test -race ./...`.</code></pre>
+<p>&lt;/pblock&gt;</p>
+<p>&lt;pblock filename=&quot;common_compact.md&quot; role=&quot;stack&quot; path=&quot;/mnt/c/Users/barlo/projects/drydock/Rigging/stack/common_compact.md&quot;&gt;</p>
+<pre><code>&lt;!-- Compacted from /mnt/c/Users/barlo/projects/drydock/Rigging/stack/common.md sha256=2d665e4a232b3ef5b681149974e74928c8f5abb9adaac02604cc6b5987ac0f85 on 2026-10-24 by drydock rigging compact — regenerate with: drydock rigging compact --include-file {rel_source} --&gt;
+
+# Common Best Practices — Contract Surface
+
+## Project Layout
+
+### Rule: project-directory-layout
+
+Every project must use the standard root layout and may add stack-specific directories.
+
+Constraints: Include `bin/`, `data/` with `logs/` and `backups/`, `docs/`, `tests/`, optional `PROJECT/`, `.env`, `.env.example`, `.gitignore`, `CLAUDE.md`, and `Links.md`; keep runtime data under `data/`.
+
+## Shell Scripts
+
+### Rule: user-facing-operation-scripts
+
+User-facing operations must be implemented as Bash scripts in `bin/`.
+
+Constraints: Scripts must use standardized headers, `set -euo pipefail`, resolve project-relative paths, create `data/logs/`, log execution details, run from the project root, tee output to console and a timestamped log, and record completion.
+
+### Rule: command-center-discovery-header
+
+A discoverable script must begin with a Command Center header.
+
+| Field | Required | Values |
+|---|---:|---|
+| `# CommandCenter Operation` | Yes | Literal |
+| `# Name:` | Yes | Free text |
+| `# Type:` | No | `daemon` or `batch`; defaults to `batch` |
+| `# Port:` | No | Integer; daemon port |
+
+Constraints: Scripts without `# CommandCenter Operation` remain valid but are not discoverable by Command Center.
+
+### Rule: standard-scripts
+
+Projects should provide applicable operation scripts with these names and purposes.
+
+| Script | Type | Purpose |
+|---|---|---|
+| `bin/start.sh` | daemon | Start the development server |
+| `bin/stop.sh` | batch | Stop the development server |
+| `bin/test.sh` | batch | Run tests |
+| `bin/build.sh` | batch | Build or compile |
+| `bin/deploy.sh` | batch | Deploy to production |
+| `bin/backup.sh` | batch | Back up data or databases |
+
+### Rule: script-logging
+
+Operation scripts must capture stdout and stderr in `data/logs/`.
+
+Constraints: Log filenames must follow `&lt;script&gt;_&lt;YYYY-MM-DD_HHMMSS&gt;.log`; initial log lines must record timestamp, arguments, and working directory.
+
+## Links
+
+### Rule: links-file
+
+Every project must provide a root-level `Links.md` containing one two-column Markdown table.
+
+| Column | Requirement |
+|---|---|
+| `Label` | Short and descriptive |
+| `URL` | Relevant project URL |
+
+Constraints: Command Center reads this table and exposes the links through project configuration.
+
+## Agent Instructions
+
+### Rule: claude-file
+
+Every project must provide a root-level `CLAUDE.md` with the following sections.
+
+| Section | Required content |
+|---|---|
+| `## Project Overview` | Purpose and key features |
+| `## Architecture` | Technology stack, key files, and patterns |
+| `## Dev Commands` | Bash project commands in a code block |
+| `## Service Endpoints` | `- Label: https://url` entries |
+| `## Bookmarks` | Grouped links using `### Group` and `- [Title](URL)` |
+
+Constraints: Normalize equivalent headings to the standard names: `Commands`, `Development Commands`, and `Build Commands` become `Dev Commands`; `Overview` and `Project Purpose` become `Project Overview`; `Stack` becomes `Architecture`.
+
+## Version Control
+
+### Rule: gitignore-and-secrets
+
+Repositories must ignore secrets, generated files, and runtime data.
+
+Constraints: Ignore `data/`, `*.db`, `*.log`, `.env`, `venv/`, `node_modules/`, Python caches and bytecode, `*.egg-info/`, `dist/`, `build/`, `.DS_Store`, and `Thumbs.db`; commit `.env.example` with placeholders.
+
+### Rule: commit-message
+
+Commit messages must use imperative, descriptive text without AI or tool mentions.
+
+## Development Workflow
+
+### Rule: task-commit
+
+Completed, error-free tasks must be committed immediately.
+
+### Rule: local-only-commit
+
+Changes must be committed locally and must not be pushed.
+
+### Rule: co-authorship
+
+Commits must not contain `Co-authored-by` lines.
+
+### Rule: restart-notice
+
+Code-change responses for web-server projects must state whether a restart is required.
+
+Constraints: Template, CSS, or static-only changes require the notice `No restart needed — browser refresh is enough.`; Python or JavaScript server changes require `Restart required — run the start script or equivalent.`</code></pre>
+<p>&lt;/pblock&gt;</p>
+<h2>CONTEXT - Read-Only Support</h2>
+<p>&lt;pblock filename=&quot;ARCHITECTURE.md&quot; role=&quot;context&quot; path=&quot;/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261025.174005/workspace/targets/DupFind/blueprint/ARCHITECTURE.md&quot; guidance=&quot;Foundational Architecture Specification&quot;&gt;</p>
+<pre><code># ARCHITECTURE: DupFind
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261025 V1 |
+| Description | Module layout, package boundaries, and pipeline of the dupfind command-line duplicate file finder. |
+| Depends On  | None |
+| Provides    | go.mod, internal/, cmd/dupfind, bin/ |
+
+## Overview
+
+`dupfind` is a single-binary Go command-line tool. It finds regular files under a directory whose
+contents are byte-for-byte identical, reports them as a CSV listing or a one-row CSV summary, and
+never deletes, moves, or modifies any file.
+
+Pipeline: parse arguments, validate the directory, walk, group by size, hash same-size groups with
+SHA-256, order and number groups, emit CSV.
+
+## Technology Stack
+
+Derived from `TECHNOLOGY_STACK.md`; that file is the decision of record.
+
+| Technology | Where it applies |
+|---|---|
+| Go 1.22 or newer, standard library only | All application code; `go.mod` declares no third-party requirement |
+| go test and go vet | Test runner behind `bin/test.sh` |
+| POSIX sh | `bin/test.sh` |
+
+## Module Layout
+
+| Path | Package | Responsibility |
+|---|---|---|
+| `go.mod` | module root | Module path and Go toolchain version; no `require` lines |
+| `cmd/dupfind` | `main` | Calls `cli.Run(os.Args[1:], os.Stdout, os.Stderr)` and passes the result to `os.Exit`; the only caller of `os.Exit` |
+| `internal/cli` | `cli` | `Run(args []string, stdout, stderr io.Writer) int`: argument parsing, directory validation, pipeline orchestration, exit codes |
+| `internal/walk` | `walk` | Recursive directory walk yielding eligible regular files |
+| `internal/dupes` | `dupes` | Size grouping, SHA-256 digest grouping, reclaimable bytes, ordering and numbering |
+| `internal/report` | `report` | CSV listing and summary writers using `encoding/csv` |
+| `bin/test.sh` | POSIX sh | Runs `go vet ./...` then `go test ./...` from the application root |
+
+## Boundaries
+
+- Only `main` calls `os.Exit`. `cli.Run` returns the exit code: 0 success, 1 operational failure, 2 usage error.
+- Standard output carries only CSV. A failing command writes nothing to standard output and one diagnostic line to standard error.
+- Warnings (unreadable file or subdirectory) go to standard error only and never change the exit code.
+- File contents are read only by `dupes`, and only for files that share a size with another file.
+- Files under the examined directory are opened read-only. Nothing is written, moved, or deleted there.
+- Application code never reads `sources/run.sh` and never embeds a digest, path, or total.
+
+## Module Ownership
+
+| Boundary | Owning module | Allowed low-level APIs |
+|---|---|---|
+| Directory traversal and file metadata | `internal/walk` | `os.Lstat`, `os.ReadDir`, `io/fs` |
+| File content reading and hashing | `internal/dupes` | `os.Open`, `crypto/sha256`, `io.Copy` |
+| CSV output | `internal/report` | `encoding/csv` |
+| Process arguments and exit codes | `internal/cli` and `cmd/dupfind` | `flag`, `os.Args`, `os.Exit` (main only) |
+| Persistence, configuration files, external services | None; the tool has no persistent state | None |
+
+## Foundation Scope
+
+The foundation story creates `go.mod`, the package tree above, a `cmd/dupfind/main.go` that
+delegates to `cli.Run`, and a minimal compiling placeholder in each internal package, so that
+`go build ./cmd/dupfind`, `go vet ./...`, and `go test ./...` succeed before feature stories land.
+The placeholder `Run` returns 0. `bin/` exists; `bin/test.sh` itself is delivered by the test-gate story.
+
+## Programmatic Acceptance
+
+=== AC arch-module-no-third-party ===
+Intent: The application root is a Go module that declares no third-party requirement.
+
+import pathlib
+
+text = pathlib.Path(&quot;go.mod&quot;).read_text()
+lines = [ln.strip() for ln in text.splitlines()]
+module_lines = [ln for ln in lines if ln.startswith(&quot;module &quot;)]
+go_lines = [ln for ln in lines if ln.startswith(&quot;go &quot;)]
+assert len(module_lines) == 1, text
+assert len(go_lines) == 1, text
+assert &quot;require&quot; not in text, text
+=== END AC arch-module-no-third-party ===
+
+=== AC arch-package-tree ===
+Intent: The package directories named by the architecture exist in the build tree.
+
+import pathlib
+
+for rel in [&quot;cmd/dupfind&quot;, &quot;internal/cli&quot;, &quot;internal/walk&quot;, &quot;internal/dupes&quot;, &quot;internal/report&quot;, &quot;bin&quot;]:
+    assert pathlib.Path(rel).is_dir(), rel
+assert pathlib.Path(&quot;cmd/dupfind/main.go&quot;).is_file()
+=== END AC arch-package-tree ===
+
+=== AC arch-vet-and-build ===
+Intent: The foundation compiles and passes go vet across every package.
+
+import subprocess
+import sys
+
+for cmd in ([&quot;go&quot;, &quot;vet&quot;, &quot;./...&quot;], [&quot;go&quot;, &quot;build&quot;, &quot;./...&quot;]):
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    print(result.stdout)
+    print(result.stderr, file=sys.stderr)
+    assert result.returncode == 0, cmd
+=== END AC arch-vet-and-build ===
+
+## User Acceptance
+
+- None.
+
+## Guardrails
+
+- Standard library only; no third-party modules.
+- Never delete, move, or write a file under the directory examined.
+- Do not modify, rewrite, regenerate, or substitute `sources/run.sh`, and never read it from application code.
+- Do not hardcode a digest, a path, or a total; every value is computed from the directory examined.
+- Read a file&#x27;s contents only when another file has the same size.</code></pre>
+<p>&lt;/pblock&gt;</p>
+<h2>IMPLEMENTS - Authoritative Step Specifications</h2>
+<p>&lt;pblock label=&quot;Implementation recency anchor&quot; kind=&quot;section&quot;&gt; The files in this section are the load-bearing specifications for this build block. Build these files exactly. Treat earlier sections as constraints and context.</p>
+<p>&lt;/pblock&gt;</p>
+<p>&lt;pblock filename=&quot;FEATURE-ArgParsing.md&quot; role=&quot;implements&quot; path=&quot;/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261025.174005/workspace/targets/DupFind/blueprint/FEATURE-ArgParsing.md&quot; guidance=&quot;Feature Specification&quot;&gt;</p>
+<pre><code># FEATURE: Arg Parsing
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261025 V1 |
+| Description | Parse --summary, --min-size, and exactly one directory argument, rejecting malformed usage with exit 2. |
+| Depends On  | ARCHITECTURE.md |
+| Provides    | cli.Run, cli.Config |
+
+## Purpose
+
+`cli.Run(args []string, stdout, stderr io.Writer) int` in `internal/cli` interprets the command
+line `dupfind [--summary] [--min-size &lt;bytes&gt;] &lt;directory&gt;` and produces a parsed configuration for
+later stories.
+
+## Behavior
+
+- Parsing uses a local `flag.FlagSet` with `flag.ContinueOnError` and its own output discarded.
+- `cli.Config` carries `Summary bool`, `MinSize int64`, and `Dir string`. `MinSize` defaults to 1.
+- Options precede the directory. Exactly one directory argument is required.
+- Usage errors return exit code 2, write nothing to stdout, and write exactly one diagnostic line to stderr. Usage errors are:
+  - no arguments, or an option with no directory;
+  - more than one positional argument, or an option placed after the directory (it counts as an extra argument);
+  - an unknown option, including `-h` and `--help`;
+  - `--min-size` with a missing value, or a value that is not a positive decimal integer.
+- A `--min-size` value is accepted only when it consists solely of ASCII decimal digits, is at least 1, and fits in an `int64`. Signs (`+5`, `-5`), zero, hexadecimal, exponent forms, and overflow are usage errors.
+- Argument errors take precedence over directory validation.
+
+## Reads
+
+None.
+
+## Writes
+
+Standard error only, on usage errors.
+
+## Programmatic Acceptance
+
+=== AC argparse-usage-errors-exit-2 ===
+Intent: Every malformed command line exits 2 with empty standard output.
+
+import os
+import tempfile
+from drydock_go import cli_runner
+
+with tempfile.TemporaryDirectory() as d:
+    other = os.path.join(d, &quot;other&quot;)
+    os.mkdir(other)
+    bad = [
+        [],
+        [&quot;--summary&quot;],
+        [&quot;--min-size&quot;, &quot;5&quot;],
+        [d, other],
+        [&quot;--frobnicate&quot;, d],
+        [&quot;-h&quot;, d],
+        [&quot;--min-size&quot;, &quot;abc&quot;, d],
+        [&quot;--min-size&quot;, &quot;0&quot;, d],
+        [&quot;--min-size&quot;, &quot;-5&quot;, d],
+        [&quot;--min-size&quot;, &quot;+5&quot;, d],
+        [&quot;--min-size&quot;, &quot;0x10&quot;, d],
+        [&quot;--min-size&quot;, &quot;1e3&quot;, d],
+        [&quot;--min-size&quot;, &quot;99999999999999999999999&quot;, d],
+        [&quot;--min-size&quot;, d],
+        [d, &quot;--summary&quot;],
+    ]
+    for args in bad:
+        code, out, err = cli_runner(*args)
+        print(args, code, repr(out), repr(err))
+        assert code == 2, args
+        assert out == &quot;&quot;, args
+=== END AC argparse-usage-errors-exit-2 ===
+
+=== AC argparse-diagnostic-on-stderr ===
+Intent: A usage error writes exactly one diagnostic line to standard error.
+
+from drydock_go import cli_runner
+
+code, out, err = cli_runner(&quot;--min-size&quot;, &quot;0&quot;, &quot;.&quot;)
+print(code, repr(out), repr(err))
+assert code == 2
+assert out == &quot;&quot;
+assert len(err.splitlines()) == 1
+=== END AC argparse-diagnostic-on-stderr ===
+
+=== AC argparse-valid-forms-not-usage-errors ===
+Intent: Well-formed command lines are not rejected as usage errors.
+
+import tempfile
+from drydock_go import cli_runner
+
+with tempfile.TemporaryDirectory() as d:
+    valid = [
+        [d],
+        [&quot;--summary&quot;, d],
+        [&quot;--min-size&quot;, &quot;5&quot;, d],
+        [&quot;--summary&quot;, &quot;--min-size&quot;, &quot;5&quot;, d],
+        [&quot;--min-size&quot;, &quot;5&quot;, &quot;--summary&quot;, d],
+    ]
+    for args in valid:
+        code, out, err = cli_runner(*args)
+        print(args, code, repr(out), repr(err))
+        assert code != 2, args
+=== END AC argparse-valid-forms-not-usage-errors ===
+
+## User Acceptance
+
+- None.
+
+## Guardrails
+
+- Standard library only; parsing uses `flag` with `flag.ContinueOnError`.
+- Only `main` calls `os.Exit`; `Run` returns the code.
+- A failing command writes nothing to standard output.
+- Never touch any file under the directory examined.</code></pre>
+<p>&lt;/pblock&gt;</p>
+<p>&lt;pblock filename=&quot;FEATURE-ModuleBuild.md&quot; role=&quot;implements&quot; path=&quot;/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261025.174005/workspace/targets/DupFind/blueprint/FEATURE-ModuleBuild.md&quot; guidance=&quot;Feature Specification&quot;&gt;</p>
+<pre><code># FEATURE: Module Build
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261025 V1 |
+| Description | The cmd/dupfind main package builds with go build using only the standard library and delegates to cli.Run. |
+| Depends On  | ARCHITECTURE.md, FEATURE-ArgParsing.md |
+| Provides    | cmd/dupfind |
+| Consumes    | cli.Run |
+
+## Purpose
+
+The application root is a Go module whose executable is the main package at `./cmd/dupfind`.
+`go build ./cmd/dupfind` must succeed using only the standard library.
+
+## Behavior
+
+- `cmd/dupfind/main.go` is `package main`. `main` calls `cli.Run(os.Args[1:], os.Stdout, os.Stderr)` and passes the returned code to `os.Exit`.
+- `main` contains no other logic and is the only caller of `os.Exit`.
+- Every package in the build&#x27;s dependency graph is either in the standard library or inside this module.
+
+## Reads
+
+Process arguments, standard output, standard error.
+
+## Writes
+
+None.
+
+## Programmatic Acceptance
+
+=== AC modbuild-go-build ===
+Intent: go build ./cmd/dupfind succeeds and produces an executable.
+
+import os
+import subprocess
+import sys
+import tempfile
+
+with tempfile.TemporaryDirectory() as d:
+    out_path = os.path.join(d, &quot;dupfind&quot;)
+    result = subprocess.run([&quot;go&quot;, &quot;build&quot;, &quot;-o&quot;, out_path, &quot;./cmd/dupfind&quot;], capture_output=True, text=True)
+    print(result.stdout)
+    print(result.stderr, file=sys.stderr)
+    assert result.returncode == 0
+    assert os.path.isfile(out_path)
+=== END AC modbuild-go-build ===
+
+=== AC modbuild-standard-library-only ===
+Intent: The executable&#x27;s dependency graph contains only standard library and in-module packages.
+
+import pathlib
+import subprocess
+import sys
+
+mod = &quot;&quot;
+for line in pathlib.Path(&quot;go.mod&quot;).read_text().splitlines():
+    if line.startswith(&quot;module &quot;):
+        mod = line.split()[1]
+assert mod
+result = subprocess.run(
+    [&quot;go&quot;, &quot;list&quot;, &quot;-deps&quot;, &quot;-f&quot;, &quot;{{if not .Standard}}{{.ImportPath}}{{end}}&quot;, &quot;./cmd/dupfind&quot;],
+    capture_output=True, text=True,
+)
+print(result.stdout)
+print(result.stderr, file=sys.stderr)
+assert result.returncode == 0
+for pkg in result.stdout.split():
+    assert pkg == mod or pkg.startswith(mod + &quot;/&quot;), pkg
+=== END AC modbuild-standard-library-only ===
+
+=== AC modbuild-executable-runs ===
+Intent: The built executable runs and rejects an empty command line with exit 2.
+
+from drydock_go import cli_runner
+
+code, out, err = cli_runner()
+print(code, repr(out), repr(err))
+assert code == 2
+assert out == &quot;&quot;
+=== END AC modbuild-executable-runs ===
+
+## User Acceptance
+
+- None.
+
+## Guardrails
+
+- Standard library only; no third-party modules.
+- `main` never reads `sources/run.sh` and embeds no digest, path, or total.
+- Only `main` calls `os.Exit`.</code></pre>
+<p>&lt;/pblock&gt;</p>
+<p>&lt;pblock filename=&quot;FEATURE-DirectoryValidation.md&quot; role=&quot;implements&quot; path=&quot;/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261025.174005/workspace/targets/DupFind/blueprint/FEATURE-DirectoryValidation.md&quot; guidance=&quot;Feature Specification&quot;&gt;</p>
+<pre><code># FEATURE: Directory Validation
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261025 V1 |
+| Description | Exit 1 with empty standard output when the directory argument is missing or is not a directory. |
+| Depends On  | ARCHITECTURE.md, FEATURE-ArgParsing.md |
+| Provides    | cli.validateDirectory |
+| Consumes    | cli.Config |
+
+## Purpose
+
+After successful argument parsing, `cli.Run` checks that `Config.Dir` names an existing directory
+before any walking or output.
+
+## Behavior
+
+- A nonexistent path, or a path that exists but is not a directory (for example a regular file), returns exit code 1.
+- A failure writes nothing to stdout and exactly one diagnostic line to stderr.
+- Validation runs after argument parsing and before the walk, so a usage error (exit 2) takes precedence over an operational failure (exit 1).
+- An existing directory, empty or not, proceeds and the run succeeds with exit 0.
+- The check uses `os.Stat`, so a symbolic link given as the directory argument that resolves to a directory is accepted.
+
+## Reads
+
+File metadata of the directory argument.
+
+## Writes
+
+Standard error only, on failure.
+
+## Programmatic Acceptance
+
+=== AC dirval-missing-directory ===
+Intent: A nonexistent directory exits 1 with empty standard output and one stderr line.
+
+import os
+import tempfile
+from drydock_go import cli_runner
+
+with tempfile.TemporaryDirectory() as d:
+    missing = os.path.join(d, &quot;no-such-directory&quot;)
+    for args in ([missing], [&quot;--summary&quot;, missing], [&quot;--min-size&quot;, &quot;3&quot;, missing]):
+        code, out, err = cli_runner(*args)
+        print(args, code, repr(out), repr(err))
+        assert code == 1, args
+        assert out == &quot;&quot;, args
+        assert len(err.splitlines()) == 1, args
+=== END AC dirval-missing-directory ===
+
+=== AC dirval-not-a-directory ===
+Intent: A regular file given as the directory exits 1 with empty standard output.
+
+import os
+import tempfile
+from drydock_go import cli_runner
+
+with tempfile.TemporaryDirectory() as d:
+    path = os.path.join(d, &quot;plain.txt&quot;)
+    with open(path, &quot;w&quot;) as fh:
+        fh.write(&quot;content&quot;)
+    for args in ([path], [&quot;--summary&quot;, path]):
+        code, out, err = cli_runner(*args)
+        print(args, code, repr(out), repr(err))
+        assert code == 1, args
+        assert out == &quot;&quot;, args
+=== END AC dirval-not-a-directory ===
+
+=== AC dirval-usage-precedes-validation ===
+Intent: A usage error on a nonexistent directory still exits 2, not 1.
+
+import os
+import tempfile
+from drydock_go import cli_runner
+
+with tempfile.TemporaryDirectory() as d:
+    missing = os.path.join(d, &quot;no-such-directory&quot;)
+    code, out, err = cli_runner(&quot;--min-size&quot;, &quot;0&quot;, missing)
+    print(code, repr(out), repr(err))
+    assert code == 2
+    assert out == &quot;&quot;
+=== END AC dirval-usage-precedes-validation ===
+
+=== AC dirval-existing-directory-succeeds ===
+Intent: An existing empty directory is accepted and the run exits 0.
+
+import tempfile
+from drydock_go import cli_runner
+
+with tempfile.TemporaryDirectory() as d:
+    code, out, err = cli_runner(d)
+    print(code, repr(out), repr(err))
+    assert code == 0
+=== END AC dirval-existing-directory-succeeds ===
+
+## User Acceptance
+
+- None.
+
+## Guardrails
+
+- A failing command writes nothing to standard output.
+- Validation never creates, modifies, or removes anything on disk.</code></pre>
+<p>&lt;/pblock&gt;</p>
+<p>&lt;pblock filename=&quot;FEATURE-Walk.md&quot; role=&quot;implements&quot; path=&quot;/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261025.174005/workspace/targets/DupFind/blueprint/FEATURE-Walk.md&quot; guidance=&quot;Feature Specification&quot;&gt;</p>
+<pre><code># FEATURE: Walk
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261025 V1 |
+| Description | Walk the directory recursively and yield eligible regular files at or above the minimum size. |
+| Depends On  | ARCHITECTURE.md, FEATURE-DirectoryValidation.md |
+| Provides    | walk.Files |
+| Consumes    | cli.Config |
+
+## Purpose
+
+`internal/walk` enumerates the files that may be considered for duplicate detection. It never opens
+file contents.
+
+## Interface
+
+```go
+package walk
+
+type Entry struct {
+	Path string // relative to root, &quot;/&quot; separated, no leading &quot;./&quot;
+	Size int64
+}
+
+func Files(root string, minSize int64, warn io.Writer) ([]Entry, error)
+```
+
+## Behavior
+
+- Traversal is recursive and includes hidden files and directories (names beginning `.`).
+- Only regular files are returned. Entries are classified without following links (`os.Lstat` or the `fs.DirEntry` type).
+- Symbolic links are neither followed nor reported, whether they point at files or directories. A directory reachable only through a symbolic link is not traversed.
+- Files whose size is below `minSize` are ignored. Zero-byte files are never returned, even if `minSize` is below 1.
+- Paths use `/` as the separator and no leading `./`.
+- A subdirectory that cannot be read yields one warning line on `warn`, is skipped, and the walk continues. This does not change the exit code.
+- Return order is unspecified; ordering is the responsibility of later stories.
+
+## Reads
+
+Directory listings and file metadata under the root.
+
+## Writes
+
+Warning lines on the `warn` writer only.
+
+## Programmatic Acceptance
+
+=== AC walk-rules ===
+Intent: Walk returns hidden and nested regular files, omits symbolic links and zero-byte files, and honors the minimum size.
+
+import os
+import pathlib
+import subprocess
+import sys
+
+mod = &quot;&quot;
+for line in pathlib.Path(&quot;go.mod&quot;).read_text().splitlines():
+    if line.startswith(&quot;module &quot;):
+        mod = line.split()[1]
+assert mod
+
+GO_TEST = &quot;&quot;&quot;package walk_test
+
+import (
+	&quot;io&quot;
+	&quot;os&quot;
+	&quot;path/filepath&quot;
+	&quot;sort&quot;
+	&quot;testing&quot;
+
+	&quot;MODPATH/internal/walk&quot;
+)
+
+func build(t *testing.T, files map[string]string) string {
+	root := t.TempDir()
+	for name, body := range files {
+		p := filepath.Join(root, filepath.FromSlash(name))
+		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(p, []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	return root
+}
+
+func check(t *testing.T, root string, files map[string]string, min int) {
+	got, err := walk.Files(root, int64(min), io.Discard)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var gotPaths []string
+	for _, e := range got {
+		gotPaths = append(gotPaths, e.Path)
+		if int(e.Size) != len(files[e.Path]) {
+			t.Errorf(&quot;size of %s = %d&quot;, e.Path, e.Size)
+		}
+	}
+	var want []string
+	for name, body := range files {
+		if len(body) &gt;= min &amp;&amp; len(body) &gt; 0 {
+			want = append(want, name)
+		}
+	}
+	sort.Strings(gotPaths)
+	sort.Strings(want)
+	if len(gotPaths) != len(want) {
+		t.Fatalf(&quot;got %v want %v&quot;, gotPaths, want)
+	}
+	for i := range want {
+		if gotPaths[i] != want[i] {
+			t.Fatalf(&quot;got %v want %v&quot;, gotPaths, want)
+		}
+	}
+}
+
+func TestAcceptanceWalkEligibility(t *testing.T) {
+	files := map[string]string{&quot;a.txt&quot;: &quot;abc&quot;, &quot;.hid/.x&quot;: &quot;hidden&quot;, &quot;sub/deep/f&quot;: &quot;ff&quot;, &quot;empty&quot;: &quot;&quot;, &quot;b&quot;: &quot;z&quot;}
+	root := build(t, files)
+	if err := os.Symlink(&quot;a.txt&quot;, filepath.Join(root, &quot;link&quot;)); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(&quot;sub&quot;, filepath.Join(root, &quot;dirlink&quot;)); err != nil {
+		t.Fatal(err)
+	}
+	check(t, root, files, 1)
+}
+
+func TestAcceptanceWalkMinSize(t *testing.T) {
+	files := map[string]string{&quot;one&quot;: &quot;a&quot;, &quot;two&quot;: &quot;ab&quot;, &quot;three&quot;: &quot;abc&quot;, &quot;d/four&quot;: &quot;abcd&quot;}
+	root := build(t, files)
+	check(t, root, files, 3)
+	check(t, root, files, 1)
+}
+&quot;&quot;&quot;.replace(&quot;MODPATH&quot;, mod)
+
+target = pathlib.Path(&quot;internal/walk/zz_acceptance_test.go&quot;)
+target.write_text(GO_TEST)
+try:
+    result = subprocess.run(
+        [&quot;go&quot;, &quot;test&quot;, &quot;./internal/walk&quot;, &quot;-run&quot;, &quot;TestAcceptanceWalk&quot;, &quot;-count=1&quot;, &quot;-v&quot;],
+        capture_output=True, text=True,
+    )
+    print(result.stdout)
+    print(result.stderr, file=sys.stderr)
+    assert result.returncode == 0
+finally:
+    if target.exists():
+        os.remove(target)
+=== END AC walk-rules ===
+
+=== AC walk-vet ===
+Intent: The walk package compiles and passes go vet.
+
+import subprocess
+import sys
+
+result = subprocess.run([&quot;go&quot;, &quot;vet&quot;, &quot;./internal/walk&quot;], capture_output=True, text=True)
+print(result.stdout)
+print(result.stderr, file=sys.stderr)
+assert result.returncode == 0
+=== END AC walk-vet ===
+
+## User Acceptance
+
+- None.
+
+## Guardrails
+
+- Never follow or report a symbolic link, and never traverse a directory reached only through one.
+- Never open file contents in the walk.
+- Never delete, move, or write any file under the directory examined.
+- Zero-byte files are never reported.</code></pre>
+<p>&lt;/pblock&gt;</p>
+<p>&lt;pblock filename=&quot;FEATURE-SizeGrouping.md&quot; role=&quot;implements&quot; path=&quot;/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261025.174005/workspace/targets/DupFind/blueprint/FEATURE-SizeGrouping.md&quot; guidance=&quot;Feature Specification&quot;&gt;</p>
+<pre><code># FEATURE: Size Grouping
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261025 V1 |
+| Description | Group candidate files by exact size and keep only sizes shared by two or more files, so unique-size files are never read. |
+| Depends On  | FEATURE-Walk.md, ARCHITECTURE.md |
+| Provides    | dupes.GroupBySize |
+| Consumes    | walk.Files |
+
+## Purpose
+
+Rule 3 of the build instructions says files are grouped by size first and only files that share a
+size are read. This feature implements that first stage in `internal/dupes`.
+
+## Interface
+
+`dupes.GroupBySize` takes the eligible files produced by `walk.Files` (relative path and size) and
+returns size buckets. Only buckets with two or more files are returned. The size is taken from the
+walk result; file contents are never opened in this stage. A file whose size is unique appears in
+no bucket and is therefore never opened for hashing.
+
+## Reads and Writes
+
+- Reads: the in-memory walk result only.
+- Writes: nothing.
+
+## Required Project Tests
+
+The project test suite in `internal/dupes` contains `TestGroupBySizeOmitsUniqueSizes` (a unique
+size produces no bucket) and `TestGroupBySizeKeepsSharedSizes` (two or more files with one size
+produce one bucket holding all of them).
+
+## Programmatic Acceptance
+
+=== AC size-unique-and-shared ===
+Intent: Files with a unique size are never reported and a shared size with identical contents is reported.
+
+import csv
+import os
+import tempfile
+from drydock_go import cli_runner
+
+def write(root, rel, data):
+    p = os.path.join(root, rel)
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    with open(p, &quot;wb&quot;) as f:
+        f.write(data)
+
+shared = b&quot;dddddd&quot;
+unique = b&quot;cc&quot;
+with tempfile.TemporaryDirectory() as root:
+    write(root, &quot;d1.bin&quot;, shared)
+    write(root, &quot;sub/d2.bin&quot;, shared)
+    write(root, &quot;c.bin&quot;, unique)
+    code, out, err = cli_runner(root)
+    print(out)
+    print(err)
+    assert code == 0
+    rows = list(csv.reader(out.splitlines()))[1:]
+    paths = sorted(r[3] for r in rows)
+    assert paths == [&quot;d1.bin&quot;, &quot;sub/d2.bin&quot;]
+=== END AC size-unique-and-shared ===
+
+=== AC size-same-size-different-content ===
+Intent: Files that share a size but differ in content are not reported as duplicates.
+
+import csv
+import os
+import tempfile
+from drydock_go import cli_runner
+
+def write(root, rel, data):
+    p = os.path.join(root, rel)
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    with open(p, &quot;wb&quot;) as f:
+        f.write(data)
+
+with tempfile.TemporaryDirectory() as root:
+    write(root, &quot;a.bin&quot;, b&quot;aaaa&quot;)
+    write(root, &quot;b.bin&quot;, b&quot;bbbb&quot;)
+    code, out, err = cli_runner(root)
+    print(out)
+    print(err)
+    assert code == 0
+    rows = list(csv.reader(out.splitlines()))
+    assert len(rows) == 1
+=== END AC size-same-size-different-content ===
+
+=== AC size-unit-tests ===
+Intent: The project&#x27;s own tests for the size bucketing pass and actually execute.
+
+from drydock_go import run_test
+
+result = run_test(&quot;./internal/dupes&quot;, &quot;TestGroupBySizeOmitsUniqueSizes&quot;)
+assert result.passed, (result.status, result.stdout, result.stderr)
+result = run_test(&quot;./internal/dupes&quot;, &quot;TestGroupBySizeKeepsSharedSizes&quot;)
+assert result.passed, (result.status, result.stdout, result.stderr)
+=== END AC size-unit-tests ===
+
+## User Acceptance
+
+- None.
+
+## Guardrails
+
+- Contents of a file whose size is unique are never opened.
+- No file under the examined directory is modified, moved, or deleted.
+- Only the standard library is used.</code></pre>
+<p>&lt;/pblock&gt;</p>
+<p>&lt;pblock filename=&quot;FEATURE-DigestGrouping.md&quot; role=&quot;implements&quot; path=&quot;/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261025.174005/workspace/targets/DupFind/blueprint/FEATURE-DigestGrouping.md&quot; guidance=&quot;Feature Specification&quot;&gt;</p>
+<pre><code># FEATURE: Digest Grouping
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261025 V1 |
+| Description | Hash same-size files with SHA-256 and form duplicate groups, skipping unreadable files with a stderr warning. |
+| Depends On  | FEATURE-SizeGrouping.md, ARCHITECTURE.md |
+| Provides    | dupes.GroupByDigest |
+| Consumes    | dupes.GroupBySize |
+
+## Purpose
+
+Rule 3 groups same-size files by the SHA-256 digest of their contents; a group of two or more files
+with the same size and digest is a duplicate group. Rule 6 skips unreadable files with one warning.
+
+## Interface
+
+`dupes.GroupByDigest` takes the size buckets from `dupes.GroupBySize`. For each bucket it opens each
+file read-only and streams it through `crypto/sha256`. The digest is the lowercase hexadecimal
+encoding of the full contents. Files with identical size and digest form one group; groups with a
+single member are dropped.
+
+A file that cannot be opened or read yields exactly one warning line on standard error, is excluded
+from grouping, and does not change the exit code. Files are opened read-only; nothing is written,
+moved, or deleted under the examined directory.
+
+## Reads and Writes
+
+- Reads: the contents of files in shared-size buckets.
+- Writes: warning lines to standard error only.
+
+## Required Project Tests
+
+`internal/dupes` contains `TestGroupByDigest` (identical contents group, same-size different
+contents do not) and `TestGroupByDigestSkipsUnreadable` (an unreadable file is skipped with one
+warning and does not fail the call).
+
+## Programmatic Acceptance
+
+=== AC digest-columns-match-contents ===
+Intent: Reported size and sha256 are the byte length and lowercase SHA-256 of the fixture contents.
+
+import csv
+import hashlib
+import os
+import tempfile
+from drydock_go import cli_runner
+
+def write(root, rel, data):
+    p = os.path.join(root, rel)
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    with open(p, &quot;wb&quot;) as f:
+        f.write(data)
+
+content = b&quot;quarterly report\n&quot;
+with tempfile.TemporaryDirectory() as root:
+    write(root, &quot;a/one.txt&quot;, content)
+    write(root, &quot;b/two.txt&quot;, content)
+    write(root, &quot;c/three.txt&quot;, content)
+    code, out, err = cli_runner(root)
+    print(out)
+    print(err)
+    assert code == 0
+    rows = list(csv.reader(out.splitlines()))[1:]
+    assert len(rows) == 3
+    for r in rows:
+        assert int(r[1]) == len(content)
+        assert r[2] == hashlib.sha256(content).hexdigest()
+    assert sorted(r[3] for r in rows) == [&quot;a/one.txt&quot;, &quot;b/two.txt&quot;, &quot;c/three.txt&quot;]
+=== END AC digest-columns-match-contents ===
+
+=== AC digest-splits-same-size-groups ===
+Intent: Same-size files with different digests form separate groups and a lone digest is dropped.
+
+import csv
+import os
+import tempfile
+from drydock_go import cli_runner
+
+def write(root, rel, data):
+    p = os.path.join(root, rel)
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    with open(p, &quot;wb&quot;) as f:
+        f.write(data)
+
+first = b&quot;abcd&quot;
+second = b&quot;abce&quot;
+third = b&quot;abcf&quot;
+with tempfile.TemporaryDirectory() as root:
+    write(root, &quot;x1&quot;, first)
+    write(root, &quot;x2&quot;, first)
+    write(root, &quot;y1&quot;, second)
+    write(root, &quot;y2&quot;, second)
+    write(root, &quot;z1&quot;, third)
+    code, out, err = cli_runner(root)
+    print(out)
+    print(err)
+    assert code == 0
+    rows = list(csv.reader(out.splitlines()))[1:]
+    by_group = {}
+    for r in rows:
+        by_group.setdefault(r[0], []).append(r[3])
+    assert len(by_group) == 2
+    assert sorted(sorted(v) for v in by_group.values()) == [[&quot;x1&quot;, &quot;x2&quot;], [&quot;y1&quot;, &quot;y2&quot;]]
+=== END AC digest-splits-same-size-groups ===
+
+=== AC digest-unreadable-skipped ===
+Intent: An unreadable duplicate candidate is skipped without changing the exit code (skipped when permissions cannot be enforced).
+
+import csv
+import os
+import tempfile
+from drydock_go import cli_runner
+
+def write(root, rel, data):
+    p = os.path.join(root, rel)
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    with open(p, &quot;wb&quot;) as f:
+        f.write(data)
+
+content = b&quot;same bytes\n&quot;
+with tempfile.TemporaryDirectory() as root:
+    write(root, &quot;ok1.txt&quot;, content)
+    write(root, &quot;ok2.txt&quot;, content)
+    write(root, &quot;locked.txt&quot;, content)
+    os.chmod(os.path.join(root, &quot;locked.txt&quot;), 0)
+    try:
+        enforced = False
+        try:
+            open(os.path.join(root, &quot;locked.txt&quot;), &quot;rb&quot;).close()
+        except PermissionError:
+            enforced = True
+        code, out, err = cli_runner(root)
+        print(out)
+        print(err)
+        assert code == 0
+        rows = list(csv.reader(out.splitlines()))[1:]
+        paths = sorted(r[3] for r in rows)
+        if enforced:
+            assert paths == [&quot;ok1.txt&quot;, &quot;ok2.txt&quot;]
+        else:
+            assert paths == [&quot;locked.txt&quot;, &quot;ok1.txt&quot;, &quot;ok2.txt&quot;]
+    finally:
+        os.chmod(os.path.join(root, &quot;locked.txt&quot;), 0o600)
+=== END AC digest-unreadable-skipped ===
+
+=== AC digest-tree-unmodified ===
+Intent: Running the tool leaves every file&#x27;s bytes and the directory listing unchanged.
+
+import os
+import tempfile
+from drydock_go import cli_runner
+
+def write(root, rel, data):
+    p = os.path.join(root, rel)
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    with open(p, &quot;wb&quot;) as f:
+        f.write(data)
+
+def snapshot(root):
+    snap = {}
+    for dirpath, dirnames, filenames in os.walk(root):
+        for n in filenames:
+            p = os.path.join(dirpath, n)
+            with open(p, &quot;rb&quot;) as f:
+                snap[os.path.relpath(p, root)] = f.read()
+        for n in dirnames:
+            snap[os.path.relpath(os.path.join(dirpath, n), root) + &quot;/&quot;] = None
+    return snap
+
+content = b&quot;keep me\n&quot;
+with tempfile.TemporaryDirectory() as root:
+    write(root, &quot;a/f1&quot;, content)
+    write(root, &quot;b/f2&quot;, content)
+    write(root, &quot;c/other&quot;, b&quot;different!&quot;)
+    before = snapshot(root)
+    code, out, err = cli_runner(root)
+    print(out)
+    print(err)
+    assert code == 0
+    code, out, err = cli_runner(&quot;--summary&quot;, root)
+    assert code == 0
+    assert snapshot(root) == before
+=== END AC digest-tree-unmodified ===
+
+=== AC digest-unit-tests ===
+Intent: The project&#x27;s own digest grouping tests pass and actually execute.
+
+from drydock_go import run_test
+
+result = run_test(&quot;./internal/dupes&quot;, &quot;TestGroupByDigest&quot;)
+assert result.passed, (result.status, result.stdout, result.stderr)
+result = run_test(&quot;./internal/dupes&quot;, &quot;TestGroupByDigestSkipsUnreadable&quot;)
+assert result.passed, (result.status, result.stdout, result.stderr)
+=== END AC digest-unit-tests ===
+
+## User Acceptance
+
+- None.
+
+## Guardrails
+
+- Files are opened read-only; nothing under the examined directory is written, moved, or deleted.
+- Warnings go to standard error only and never alter the exit code.
+- Only the standard library is used; no digest or path is hardcoded.</code></pre>
+<p>&lt;/pblock&gt;</p>
+<p>&lt;pblock filename=&quot;FEATURE-GroupOrdering.md&quot; role=&quot;implements&quot; path=&quot;/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261025.174005/workspace/targets/DupFind/blueprint/FEATURE-GroupOrdering.md&quot; guidance=&quot;Feature Specification&quot;&gt;</p>
+<pre><code># FEATURE: Group Ordering
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261025 V1 |
+| Description | Compute reclaimable bytes per group, order and number the groups, and order paths within each group. |
+| Depends On  | FEATURE-DigestGrouping.md, ARCHITECTURE.md |
+| Provides    | dupes.Order |
+| Consumes    | dupes.GroupByDigest |
+
+## Purpose
+
+Rules 4 and 5 fix how paths are written and how groups and paths are ordered so output is
+deterministic.
+
+## Interface
+
+`dupes.Order` takes the duplicate groups and returns them ordered and numbered.
+
+- Reclaimable bytes of a group are `size x (files - 1)`.
+- Groups are ordered by reclaimable bytes descending, then by digest ascending, and numbered from 1
+  in that order.
+- Within a group, paths are ordered by byte value ascending (plain string comparison).
+- Paths are relative to the examined directory, use `/` as the separator, and carry no leading `./`.
+
+## Reads and Writes
+
+- Reads: the in-memory groups.
+- Writes: nothing.
+
+## Required Project Tests
+
+`internal/dupes` contains `TestOrder` covering reclaimable-first ordering, digest tie-breaking,
+and byte-order paths.
+
+## Programmatic Acceptance
+
+=== AC order-by-reclaimable-then-digest ===
+Intent: Groups appear by reclaimable bytes descending then digest ascending and are numbered from 1.
+
+import csv
+import hashlib
+import os
+import tempfile
+from drydock_go import cli_runner
+
+def write(root, rel, data):
+    p = os.path.join(root, rel)
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    with open(p, &quot;wb&quot;) as f:
+        f.write(data)
+
+fixtures = {
+    b&quot;0123456789&quot;: [&quot;big/a&quot;, &quot;big/b&quot;],
+    b&quot;xyz&quot;: [&quot;s/1&quot;, &quot;s/2&quot;, &quot;s/3&quot;, &quot;s/4&quot;, &quot;s/5&quot;],
+    b&quot;tie-aa&quot;: [&quot;t1/a&quot;, &quot;t1/b&quot;],
+    b&quot;tie-bb&quot;: [&quot;t2/a&quot;, &quot;t2/b&quot;],
+    b&quot;tie-cc&quot;: [&quot;t3/a&quot;, &quot;t3/b&quot;],
+}
+groups = []
+for content, paths in fixtures.items():
+    groups.append((len(content) * (len(paths) - 1), hashlib.sha256(content).hexdigest(), len(content), sorted(paths)))
+expected = sorted(groups, key=lambda g: (-g[0], g[1]))
+
+with tempfile.TemporaryDirectory() as root:
+    for content, paths in fixtures.items():
+        for p in paths:
+            write(root, p, content)
+    code, out, err = cli_runner(root)
+    print(out)
+    print(err)
+    assert code == 0
+    rows = list(csv.reader(out.splitlines()))[1:]
+    seen = []
+    for r in rows:
+        if not seen or seen[-1][0] != r[0]:
+            seen.append((r[0], r[2], int(r[1]), []))
+        seen[-1][3].append(r[3])
+    assert [int(s[0]) for s in seen] == list(range(1, len(expected) + 1))
+    assert [s[1] for s in seen] == [g[1] for g in expected]
+    assert [s[3] for s in seen] == [g[3] for g in expected]
+=== END AC order-by-reclaimable-then-digest ===
+
+=== AC order-paths-byte-ascending ===
+Intent: Paths within a group are in byte order and written relative with slash separators and no leading dot-slash.
+
+import csv
+import os
+import tempfile
+from drydock_go import cli_runner
+
+def write(root, rel, data):
+    p = os.path.join(root, rel)
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    with open(p, &quot;wb&quot;) as f:
+        f.write(data)
+
+content = b&quot;order me\n&quot;
+paths = [&quot;b.txt&quot;, &quot;B.txt&quot;, &quot;a b.txt&quot;, &quot;a/z.txt&quot;, &quot;.hid/x.txt&quot;, &quot;a.txt&quot;]
+with tempfile.TemporaryDirectory() as root:
+    for p in paths:
+        write(root, p, content)
+    code, out, err = cli_runner(root)
+    print(out)
+    print(err)
+    assert code == 0
+    got = [r[3] for r in list(csv.reader(out.splitlines()))[1:]]
+    assert got == sorted(paths, key=lambda s: s.encode(&quot;utf-8&quot;))
+    for g in got:
+        assert not g.startswith(&quot;./&quot;)
+        assert not g.startswith(&quot;/&quot;)
+        assert &quot;\\&quot; not in g
+=== END AC order-paths-byte-ascending ===
+
+=== AC order-reclaimable-beats-size ===
+Intent: A smaller file with more copies precedes a larger file with fewer copies when it reclaims more bytes.
+
+import csv
+import hashlib
+import os
+import tempfile
+from drydock_go import cli_runner
+
+def write(root, rel, data):
+    p = os.path.join(root, rel)
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    with open(p, &quot;wb&quot;) as f:
+        f.write(data)
+
+large = b&quot;L&quot; * 10
+small = b&quot;s&quot; * 3
+large_paths = [&quot;l1&quot;, &quot;l2&quot;]
+small_paths = [&quot;s1&quot;, &quot;s2&quot;, &quot;s3&quot;, &quot;s4&quot;, &quot;s5&quot;]
+assert len(small) * (len(small_paths) - 1) &gt; len(large) * (len(large_paths) - 1)
+with tempfile.TemporaryDirectory() as root:
+    for p in large_paths:
+        write(root, p, large)
+    for p in small_paths:
+        write(root, p, small)
+    code, out, err = cli_runner(root)
+    print(out)
+    print(err)
+    assert code == 0
+    rows = list(csv.reader(out.splitlines()))[1:]
+    assert rows[0][2] == hashlib.sha256(small).hexdigest()
+    assert rows[0][0] == rows[len(small_paths) - 1][0]
+    assert rows[len(small_paths)][2] == hashlib.sha256(large).hexdigest()
+=== END AC order-reclaimable-beats-size ===
+
+=== AC order-unit-tests ===
+Intent: The project&#x27;s own ordering test passes and actually executes.
+
+from drydock_go import run_test
+
+result = run_test(&quot;./internal/dupes&quot;, &quot;TestOrder&quot;)
+assert result.passed, (result.status, result.stdout, result.stderr)
+=== END AC order-unit-tests ===
+
+## User Acceptance
+
+- None.
+
+## Guardrails
+
+- Ordering is deterministic and independent of directory enumeration order and locale.
+- Paths never contain a leading `./` or a backslash separator.</code></pre>
+<p>&lt;/pblock&gt;</p>
+<p>&lt;pblock filename=&quot;FEATURE-Listing.md&quot; role=&quot;implements&quot; path=&quot;/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261025.174005/workspace/targets/DupFind/blueprint/FEATURE-Listing.md&quot; guidance=&quot;Feature Specification&quot;&gt;</p>
+<pre><code># FEATURE: Listing
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261025 V1 |
+| Description | Write the CSV duplicate listing with header group,size,sha256,path using encoding/csv and wire the default mode of cli.Run. |
+| Depends On  | FEATURE-GroupOrdering.md, FEATURE-ModuleBuild.md, ARCHITECTURE.md |
+| Provides    | report.WriteListing |
+| Consumes    | dupes.Order |
+
+## Purpose
+
+The default output of `dupfind &lt;directory&gt;` is a CSV listing of every file in every duplicate group.
+
+## Interface
+
+`report.WriteListing` writes to standard output through `encoding/csv` with `\n` line endings
+(`UseCRLF` false). The header row is `group,size,sha256,path`. One row follows per file of every
+ordered group: group number, size in bytes, lowercase hexadecimal SHA-256, relative path. With no
+duplicates only the header is written. Fields containing a comma, a double quote, or a newline are
+quoted as RFC 4180 specifies, by the csv writer.
+
+The default (non-summary) mode of `cli.Run` runs the walk, size grouping, digest grouping, and
+ordering with the configured `--min-size`, then this writer, and returns 0. `--min-size` excludes
+files smaller than the given number of bytes.
+
+## Reads and Writes
+
+- Reads: ordered groups.
+- Writes: CSV to standard output only.
+
+## Programmatic Acceptance
+
+=== AC listing-full-output ===
+Intent: The entire standard output equals the CSV the standard csv writer produces from the fixture-derived rows.
+
+import csv
+import hashlib
+import io
+import os
+import tempfile
+from drydock_go import cli_runner
+
+def write(root, rel, data):
+    p = os.path.join(root, rel)
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    with open(p, &quot;wb&quot;) as f:
+        f.write(data)
+
+fixtures = {
+    b&quot;alpha alpha\n&quot;: [&quot;a/one.txt&quot;, &quot;b/two.txt&quot;, &quot;c/deep/three.txt&quot;],
+    b&quot;beta\n&quot;: [&quot;.hidden/.env&quot;, &quot;env.bak&quot;],
+}
+header = [&quot;group&quot;, &quot;size&quot;, &quot;sha256&quot;, &quot;path&quot;]
+groups = []
+for content, paths in fixtures.items():
+    groups.append((len(content) * (len(paths) - 1), hashlib.sha256(content).hexdigest(), len(content), sorted(paths)))
+groups.sort(key=lambda g: (-g[0], g[1]))
+buf = io.StringIO()
+w = csv.writer(buf, lineterminator=&quot;\n&quot;)
+w.writerow(header)
+for n, g in enumerate(groups, start=1):
+    for p in g[3]:
+        w.writerow([n, g[2], g[1], p])
+expected = buf.getvalue()
+
+with tempfile.TemporaryDirectory() as root:
+    for content, paths in fixtures.items():
+        for p in paths:
+            write(root, p, content)
+    code, out, err = cli_runner(root)
+    print(out)
+    print(err)
+    assert code == 0
+    assert out == expected
+    assert &quot;\r&quot; not in out
+=== END AC listing-full-output ===
+
+=== AC listing-csv-quoting ===
+Intent: Paths containing a comma or a double quote survive a CSV round trip unchanged.
+
+import csv
+import os
+import tempfile
+from drydock_go import cli_runner
+
+def write(root, rel, data):
+    p = os.path.join(root, rel)
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    with open(p, &quot;wb&quot;) as f:
+        f.write(data)
+
+content = b&quot;quote me\n&quot;
+paths = [&quot;song,live.mp3&quot;, &#x27;say &quot;hi&quot;.txt&#x27;, &quot;plain.txt&quot;]
+with tempfile.TemporaryDirectory() as root:
+    for p in paths:
+        write(root, p, content)
+    code, out, err = cli_runner(root)
+    print(out)
+    print(err)
+    assert code == 0
+    rows = list(csv.reader(out.splitlines()))
+    assert all(len(r) == 4 for r in rows)
+    assert sorted(r[3] for r in rows[1:]) == sorted(paths)
+=== END AC listing-csv-quoting ===
+
+=== AC listing-header-only-when-no-duplicates ===
+Intent: A directory without duplicates (or with only zero-byte files) yields the header row only, with exit 0.
+
+import csv
+import os
+import tempfile
+from drydock_go import cli_runner
+
+def write(root, rel, data):
+    p = os.path.join(root, rel)
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    with open(p, &quot;wb&quot;) as f:
+        f.write(data)
+
+with tempfile.TemporaryDirectory() as root:
+    write(root, &quot;solo.txt&quot;, b&quot;only one of me\n&quot;)
+    write(root, &quot;empty/one&quot;, b&quot;&quot;)
+    write(root, &quot;empty/two&quot;, b&quot;&quot;)
+    code, out, err = cli_runner(root)
+    print(out)
+    print(err)
+    assert code == 0
+    assert out.splitlines() == [&quot;group,size,sha256,path&quot;]
+    assert out.endswith(&quot;\n&quot;)
+=== END AC listing-header-only-when-no-duplicates ===
+
+=== AC listing-min-size ===
+Intent: Files smaller than --min-size are excluded from the listing while larger duplicates remain.
+
+import csv
+import os
+import tempfile
+from drydock_go import cli_runner
+
+def write(root, rel, data):
+    p = os.path.join(root, rel)
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    with open(p, &quot;wb&quot;) as f:
+        f.write(data)
+
+small = b&quot;tiny&quot;
+large = b&quot;L&quot; * 50
+threshold = len(small) + 1
+with tempfile.TemporaryDirectory() as root:
+    write(root, &quot;s1&quot;, small)
+    write(root, &quot;s2&quot;, small)
+    write(root, &quot;l1&quot;, large)
+    write(root, &quot;l2&quot;, large)
+    code, out, err = cli_runner(&quot;--min-size&quot;, str(threshold), root)
+    print(out)
+    print(err)
+    assert code == 0
+    rows = list(csv.reader(out.splitlines()))[1:]
+    assert sorted(r[3] for r in rows) == [&quot;l1&quot;, &quot;l2&quot;]
+    code, out, err = cli_runner(root)
+    assert code == 0
+    rows = list(csv.reader(out.splitlines()))[1:]
+    assert len(rows) == 4
+=== END AC listing-min-size ===
+
+=== AC listing-symlinks-and-hidden ===
+Intent: Hidden files are listed while symbolic links are neither followed nor reported.
+
+import csv
+import os
+import tempfile
+from drydock_go import cli_runner
+
+def write(root, rel, data):
+    p = os.path.join(root, rel)
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    with open(p, &quot;wb&quot;) as f:
+        f.write(data)
+
+content = b&quot;KEY=1\n&quot;
+with tempfile.TemporaryDirectory() as root:
+    write(root, &quot;.hidden/.env&quot;, content)
+    write(root, &quot;env.bak&quot;, content)
+    os.symlink(os.path.join(root, &quot;env.bak&quot;), os.path.join(root, &quot;link.bak&quot;))
+    os.symlink(os.path.join(root, &quot;.hidden&quot;), os.path.join(root, &quot;linkdir&quot;))
+    code, out, err = cli_runner(root)
+    print(out)
+    print(err)
+    assert code == 0
+    rows = list(csv.reader(out.splitlines()))[1:]
+    assert sorted(r[3] for r in rows) == [&quot;.hidden/.env&quot;, &quot;env.bak&quot;]
+=== END AC listing-symlinks-and-hidden ===
+
+## User Acceptance
+
+- None.
+
+## Guardrails
+
+- Output is produced with `encoding/csv`; fields are never concatenated by hand.
+- A failing command writes nothing to standard output.
+- No file under the examined directory is modified, moved, or deleted.</code></pre>
+<p>&lt;/pblock&gt;</p>
+<p>&lt;pblock filename=&quot;FEATURE-Summary.md&quot; role=&quot;implements&quot; path=&quot;/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261025.174005/workspace/targets/DupFind/blueprint/FEATURE-Summary.md&quot; guidance=&quot;Feature Specification&quot;&gt;</p>
+<pre><code># FEATURE: Summary
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261025 V1 |
+| Description | Write the one-row CSV summary of groups, duplicate files, and reclaimable bytes when --summary is given. |
+| Depends On  | FEATURE-Listing.md, ARCHITECTURE.md |
+| Provides    | report.WriteSummary |
+| Consumes    | dupes.Order |
+
+## Purpose
+
+With `--summary` the tool reports the totals of the listing that the same options would produce,
+instead of the listing itself.
+
+## Interface
+
+`report.WriteSummary` writes, through `encoding/csv` with `\n` line endings, the header
+`groups,duplicate_files,reclaimable_bytes` and one row:
+
+- `groups`: the number of duplicate groups.
+- `duplicate_files`: the sum of `files - 1` over all groups.
+- `reclaimable_bytes`: the sum of every group&#x27;s `size x (files - 1)`.
+
+With no duplicates the row is `0,0,0`. The `--summary` mode of `cli.Run` uses the same walk,
+grouping, and ordering as the listing, with the same `--min-size`, and returns 0.
+
+## Reads and Writes
+
+- Reads: ordered groups.
+- Writes: CSV to standard output only.
+
+## Programmatic Acceptance
+
+=== AC summary-totals-match-fixture ===
+Intent: The summary row equals totals computed from the fixture&#x27;s known duplicate structure.
+
+import csv
+import os
+import tempfile
+from drydock_go import cli_runner
+
+def write(root, rel, data):
+    p = os.path.join(root, rel)
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    with open(p, &quot;wb&quot;) as f:
+        f.write(data)
+
+fixtures = {
+    b&quot;quarterly report\n&quot;: [&quot;a/r.txt&quot;, &quot;b/r2.txt&quot;, &quot;c/r3.txt&quot;],
+    b&quot;la la la\n&quot;: [&quot;m/s.mp3&quot;, &quot;m/s2.mp3&quot;],
+    b&quot;unique content here\n&quot;: [&quot;u/solo&quot;],
+}
+dup_groups = [(c, p) for c, p in fixtures.items() if len(p) &gt; 1]
+want_groups = len(dup_groups)
+want_files = sum(len(p) - 1 for c, p in dup_groups)
+want_bytes = sum(len(c) * (len(p) - 1) for c, p in dup_groups)
+with tempfile.TemporaryDirectory() as root:
+    for content, paths in fixtures.items():
+        for p in paths:
+            write(root, p, content)
+    code, out, err = cli_runner(&quot;--summary&quot;, root)
+    print(out)
+    print(err)
+    assert code == 0
+    rows = list(csv.reader(out.splitlines()))
+    assert len(rows) == 2
+    assert rows[0] == [&quot;groups&quot;, &quot;duplicate_files&quot;, &quot;reclaimable_bytes&quot;]
+    assert [int(x) for x in rows[1]] == [want_groups, want_files, want_bytes]
+=== END AC summary-totals-match-fixture ===
+
+=== AC summary-no-duplicates ===
+Intent: With no duplicates the summary row holds three zeros and exit status is 0.
+
+import csv
+import os
+import tempfile
+from drydock_go import cli_runner
+
+def write(root, rel, data):
+    p = os.path.join(root, rel)
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    with open(p, &quot;wb&quot;) as f:
+        f.write(data)
+
+with tempfile.TemporaryDirectory() as root:
+    write(root, &quot;empty/one&quot;, b&quot;&quot;)
+    write(root, &quot;empty/two&quot;, b&quot;&quot;)
+    code, out, err = cli_runner(&quot;--summary&quot;, root)
+    print(out)
+    print(err)
+    assert code == 0
+    rows = list(csv.reader(out.splitlines()))
+    assert len(rows) == 2
+    assert [int(x) for x in rows[1]] == [0, 0, 0]
+=== END AC summary-no-duplicates ===
+
+=== AC summary-agrees-with-listing ===
+Intent: The summary totals equal the totals derived from the listing produced by the same options, including --min-size.
+
+import csv
+import os
+import tempfile
+from drydock_go import cli_runner
+
+def write(root, rel, data):
+    p = os.path.join(root, rel)
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    with open(p, &quot;wb&quot;) as f:
+        f.write(data)
+
+fixtures = {
+    b&quot;S&quot; * 4: [&quot;s1&quot;, &quot;s2&quot;],
+    b&quot;M&quot; * 30: [&quot;m1&quot;, &quot;m2&quot;, &quot;m3&quot;],
+    b&quot;B&quot; * 200: [&quot;b1&quot;, &quot;b2&quot;],
+}
+with tempfile.TemporaryDirectory() as root:
+    for content, paths in fixtures.items():
+        for p in paths:
+            write(root, p, content)
+    for opts in ([], [&quot;--min-size&quot;, &quot;20&quot;], [&quot;--min-size&quot;, &quot;100&quot;], [&quot;--min-size&quot;, &quot;1000&quot;]):
+        code, listing, err = cli_runner(*opts, root)
+        assert code == 0
+        rows = list(csv.reader(listing.splitlines()))[1:]
+        per_group = {}
+        for r in rows:
+            per_group.setdefault(r[0], []).append(int(r[1]))
+        want = [
+            len(per_group),
+            sum(len(v) - 1 for v in per_group.values()),
+            sum(v[0] * (len(v) - 1) for v in per_group.values()),
+        ]
+        code, summ, err = cli_runner(&quot;--summary&quot;, *opts, root)
+        print(summ)
+        print(err)
+        assert code == 0
+        srows = list(csv.reader(summ.splitlines()))
+        assert len(srows) == 2
+        assert [int(x) for x in srows[1]] == want
+=== END AC summary-agrees-with-listing ===
+
+=== AC summary-unit-tests ===
+Intent: The project&#x27;s own summary tests pass and actually execute.
+
+from drydock_go import run_test
+
+result = run_test(&quot;./internal/report&quot;, &quot;TestWriteSummary&quot;)
+assert result.passed, (result.status, result.stdout, result.stderr)
+=== END AC summary-unit-tests ===
+
+## User Acceptance
+
+- None.
+
+## Guardrails
+
+- The summary never prints the listing and the listing never prints the summary.
+- Output is produced with `encoding/csv`.
+- No file under the examined directory is modified, moved, or deleted.</code></pre>
+<p>&lt;/pblock&gt;</p>
+<p>&lt;pblock filename=&quot;FEATURE-TestGate.md&quot; role=&quot;implements&quot; path=&quot;/mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261025.174005/workspace/targets/DupFind/blueprint/FEATURE-TestGate.md&quot; guidance=&quot;Feature Specification&quot;&gt;</p>
+<pre><code># FEATURE: Test Gate
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261025 V1 |
+| Description | Provide the POSIX bin/test.sh launcher and a Go test suite that covers every rule, output form, and exit code of dupfind against real temporary directories. |
+| Depends On  | FEATURE-ModuleBuild.md, FEATURE-DirectoryValidation.md, FEATURE-Listing.md, FEATURE-Summary.md |
+| Provides    | bin/test.sh |
+| Consumes    | cli.Run |
+
+## Purpose
+
+The application needs one command that decides whether the code is healthy. `bin/test.sh` runs
+`go vet ./...` and then `go test ./...` from the application root and exits zero only when both
+pass. The Go test suite behind it exercises the finished tool, so a regression in any earlier story
+turns this gate red.
+
+## Trigger
+
+A developer, the build engine, or the terminal verification story runs `sh bin/test.sh`.
+
+## Sequence
+
+1. `bin/test.sh` is POSIX `sh`: no bashisms, no arrays, no `[[ ]]`.
+2. It derives the application root from the script&#x27;s own location (`dirname &quot;$0&quot;`/`..`), changes
+   into it, so the result is the same from any working directory.
+3. It runs `go vet ./...`. A non-zero status stops the script with that non-zero status.
+4. It runs `go test ./...`. Its status becomes the script&#x27;s exit status.
+5. The script exits `0` only when both commands succeeded.
+
+## Test Suite Coverage
+
+The Go test suite lives in `*_test.go` files beside the packages under `internal/`. Tests call
+`cli.Run(args, &amp;stdout, &amp;stderr)` with `bytes.Buffer` writers over real directories made with
+`t.TempDir()`, and parse standard output with `encoding/csv`. Expectations are written against
+observed real output. Each rule has at least one test named for the behavior:
+
+| Area | Behavior covered |
+|---|---|
+| Scope | Hidden files and hidden directories are walked; nested directories are walked |
+| Scope | A symbolic link to a file is neither followed nor reported; a link to a directory is not traversed |
+| Empty files | Zero-byte files are never reported, including with an explicit small `--min-size` |
+| Minimum size | Files below `--min-size` are ignored; the default is 1 |
+| Duplicate test | Same size but different content is not a duplicate; same size and content is |
+| Duplicate test | Files with a unique size are never opened for hashing |
+| Paths | Relative to the directory, `/` separator, no leading `./` |
+| Order | Groups by reclaimable bytes descending then digest ascending, numbered from 1; paths by byte value |
+| Unreadable | An unreadable file is skipped, one warning on stderr, exit code unchanged (skipped when running as root) |
+| Listing | Header `group,size,sha256,path`; header only when there are no duplicates |
+| CSV quoting | A path containing a comma is quoted and round-trips through `encoding/csv` |
+| Summary | Header `groups,duplicate_files,reclaimable_bytes`; `0,0,0` when there are no duplicates; totals equal those of the listing under the same options |
+| Exit codes | `0` for success with or without duplicates; `1` for a missing directory or a regular file; `2` for no arguments, extra arguments, unknown option, `--min-size` of `abc` and of `0` |
+| Failure output | Exit codes 1 and 2 write nothing to standard output |
+
+## Reads
+
+- The application source tree, through `go vet` and `go test`.
+
+## Writes
+
+- Nothing outside temporary directories created by the tests themselves. The suite never writes
+  under any directory the tool examines other than the temporary fixture it created.
+
+## Programmatic Acceptance
+
+=== AC test-script-exits-zero ===
+Intent: bin/test.sh runs go vet and go test on the finished application and exits zero.
+Requires: executable=sh; scope=test
+Requires: executable=go; scope=test
+
+import subprocess
+import sys
+
+result = subprocess.run([&quot;sh&quot;, &quot;bin/test.sh&quot;], capture_output=True, text=True)
+print(result.stdout)
+print(result.stderr, file=sys.stderr)
+assert result.returncode == 0, result.returncode
+=== END AC test-script-exits-zero ===
+
+=== AC test-script-posix-syntax ===
+Intent: bin/test.sh exists and parses as POSIX sh without executing.
+Requires: executable=sh; scope=test
+
+import os
+import subprocess
+import sys
+
+script = os.path.join(&quot;bin&quot;, &quot;test.sh&quot;)
+assert os.path.isfile(script)
+result = subprocess.run([&quot;sh&quot;, &quot;-n&quot;, script], capture_output=True, text=True)
+print(result.stdout)
+print(result.stderr, file=sys.stderr)
+assert result.returncode == 0, result.returncode
+=== END AC test-script-posix-syntax ===
+
+=== AC test-script-fails-on-failing-test ===
+Intent: bin/test.sh exits non-zero when any Go test fails, proven on a temporary copy of the application.
+Requires: executable=sh; scope=test
+Requires: executable=go; scope=test
+
+import os
+import shutil
+import subprocess
+import sys
+import tempfile
+
+root = os.getcwd()
+failing_test = &#x27;package cli\n\nimport &quot;testing&quot;\n\nfunc TestForcedFailure(t *testing.T) {\n\tt.Fatal(&quot;forced&quot;)\n}\n&#x27;
+with tempfile.TemporaryDirectory() as tmp:
+    dst = os.path.join(tmp, &quot;app&quot;)
+    shutil.copytree(root, dst, ignore=shutil.ignore_patterns(&quot;.git&quot;))
+    with open(os.path.join(dst, &quot;internal&quot;, &quot;cli&quot;, &quot;zz_forced_failure_test.go&quot;), &quot;w&quot;) as handle:
+        handle.write(failing_test)
+    result = subprocess.run([&quot;sh&quot;, &quot;bin/test.sh&quot;], cwd=dst, capture_output=True, text=True)
+    print(result.stdout)
+    print(result.stderr, file=sys.stderr)
+    assert result.returncode != 0, result.returncode
+=== END AC test-script-fails-on-failing-test ===
+
+=== AC test-script-independent-of-cwd ===
+Intent: bin/test.sh locates the application root itself, so running it from another directory still exits zero.
+Requires: executable=sh; scope=test
+Requires: executable=go; scope=test
+
+import os
+import subprocess
+import sys
+import tempfile
+
+script = os.path.abspath(os.path.join(&quot;bin&quot;, &quot;test.sh&quot;))
+with tempfile.TemporaryDirectory() as elsewhere:
+    result = subprocess.run([&quot;sh&quot;, script], cwd=elsewhere, capture_output=True, text=True)
+    print(result.stdout)
+    print(result.stderr, file=sys.stderr)
+    assert result.returncode == 0, result.returncode
+=== END AC test-script-independent-of-cwd ===
+
+=== AC suite-has-tests-for-cli ===
+Intent: The Go test suite contains test files for the cli package and they pass when run alone.
+Requires: executable=go; scope=test
+
+import glob
+import os
+import subprocess
+import sys
+
+test_files = glob.glob(os.path.join(&quot;internal&quot;, &quot;cli&quot;, &quot;*_test.go&quot;))
+assert len(test_files) &gt;= 1, test_files
+result = subprocess.run(
+    [&quot;go&quot;, &quot;test&quot;, &quot;-count=1&quot;, &quot;./internal/cli&quot;], capture_output=True, text=True
+)
+print(result.stdout)
+print(result.stderr, file=sys.stderr)
+assert result.returncode == 0, result.returncode
+=== END AC suite-has-tests-for-cli ===
+
+=== AC built-binary-exit-codes ===
+Intent: The built executable exits 0 for a directory, 1 for a missing path, and 2 for each malformed argument form the suite covers.
+Requires: executable=go; scope=test
+
+import os
+import tempfile
+from drydock_go import cli_runner
+
+with tempfile.TemporaryDirectory() as tree:
+    payload = &quot;same bytes\n&quot;
+    for name in (&quot;one.txt&quot;, &quot;two.txt&quot;):
+        with open(os.path.join(tree, name), &quot;w&quot;) as handle:
+            handle.write(payload)
+    missing = os.path.join(tree, &quot;no-such-directory&quot;)
+    regular = os.path.join(tree, &quot;one.txt&quot;)
+
+    ok_code, ok_out, ok_err = cli_runner(tree)
+    assert ok_code == 0, (ok_code, ok_out, ok_err)
+
+    missing_code, missing_out, missing_err = cli_runner(missing)
+    assert missing_code == 1, (missing_code, missing_out, missing_err)
+    assert missing_out == &quot;&quot;
+
+    file_code, file_out, file_err = cli_runner(regular)
+    assert file_code == 1, (file_code, file_out, file_err)
+    assert file_out == &quot;&quot;
+
+    for args in ([], [tree, tree], [&quot;--min-size&quot;, &quot;abc&quot;, tree], [&quot;--min-size&quot;, &quot;0&quot;, tree], [&quot;--frobnicate&quot;, tree]):
+        code, out, err = cli_runner(*args)
+        print(args, code, err)
+        assert code == 2, (args, code, out, err)
+        assert out == &quot;&quot;, (args, out)
+=== END AC built-binary-exit-codes ===
+
+## User Acceptance
+
+- None.
+
+## Guardrails
+
+- `bin/test.sh` is POSIX `sh`; it does not require bash.
+- The test suite never reads `sources/run.sh` and never embeds a digest, path, or total taken from it.
+- Tests write only inside temporary directories they create; nothing under a directory the tool examines is deleted, moved, or modified by the tool.
+- The tool is built with the standard library only; no third-party module is added for testing.</code></pre>
+<p>&lt;/pblock&gt;</p>
+<p>&lt;pblock label=&quot;Build instructions&quot; kind=&quot;instructions&quot;&gt;</p>
+<h3>Build instructions for this block</h3>
+<h4>Parse --summary, --min-size, and exactly one directory argument; reject malformed usage with exit 2. (arg-parsing)</h4>
+<p>Implement Run in internal/cli using a local flag.FlagSet with flag.ContinueOnError and its output discarded. Options precede the directory; exactly one directory argument is required.</p>
+<p>Missing or extra arguments, an unknown option, a help flag, or a --min-size value that is not a positive decimal integer (no sign, no zero, no non-decimal forms) return 2 with empty stdout and one diagnostic line on stderr. The default min-size is 1.</p>
+<p>Produce a parsed configuration (summary flag, min size, directory) for later stories.</p>
+<h4>Provide the cmd/dupfind main package that builds with go build and delegates to cli.Run. (module-build)</h4>
+<p>Write cmd/dupfind/main.go so main calls cli.Run(os.Args[1:], os.Stdout, os.Stderr) and passes the result to os.Exit. go build ./cmd/dupfind must succeed using only the standard library.</p>
+<h4>Exit 1 with empty stdout when the directory is missing or is not a directory. (directory-validation)</h4>
+<p>After successful argument parsing, stat the directory. A nonexistent path or a path that is not a directory returns exit 1 with nothing on stdout and one diagnostic line on stderr. Validation happens before any walking or output.</p>
+<h4>Walk the directory recursively and yield eligible regular files at or above the minimum size. (walk)</h4>
+<p>Implement walk.Files in internal/walk, returning each eligible file&#x27;s relative path (slash separated, no leading ./) and size.</p>
+<p>Traverse hidden files and directories. Consider regular files only: symbolic links are neither followed nor reported, and directories reached only through a symbolic link are not traversed. Ignore files smaller than min-size; zero-byte files are never returned. Use lstat semantics (os.Lstat or DirEntry type) and never open file contents here.</p>
+<p>A subdirectory that cannot be read yields one stderr warning and the walk continues.</p>
+<h4>Group candidate files by exact size and keep only sizes shared by two or more files. (size-grouping)</h4>
+<p>Implement dupes.GroupBySize, returning only size buckets with at least two files. A file whose size is unique is never opened for hashing. The size is taken from the walk result, not from reading contents.</p>
+<h4>Hash same-size files with SHA-256 and form duplicate groups, skipping unreadable files with a warning. (digest-grouping)</h4>
+<p>For each same-size bucket, open each file read-only and stream it through crypto/sha256. The digest is lowercase hexadecimal of the full contents. Files with identical size and digest form one group of two or more files.</p>
+<p>A file that cannot be opened or read yields exactly one warning line on stderr, is excluded from grouping, and does not change the exit code. Never delete, move, or write any file under the examined directory.</p>
+<h4>Compute reclaimable bytes, order groups, number them from 1, and order paths within each group. (group-ordering)</h4>
+<p>Reclaimable bytes per group equal size x (files - 1). Order groups by reclaimable bytes descending, then digest ascending, and number them from 1. Within a group order paths by byte value ascending (plain string comparison, not locale aware). Paths are relative to the directory with / separators and no leading ./.</p>
+<h4>Write the CSV duplicate listing with header group,size,sha256,path using encoding/csv. (listing)</h4>
+<p>Implement report.WriteListing with encoding/csv: header group,size,sha256,path, then one row per file in every ordered group. With no duplicates write only the header. Line endings are \n (Writer.UseCRLF false). Fields containing a comma, double quote, or newline are quoted by the csv writer.</p>
+<p>Wire the default (non-summary) mode of cli.Run through walk, grouping, ordering, and this writer, exit 0.</p>
+<h4>Write the one-row summary of groups, duplicate files, and reclaimable bytes with --summary. (summary)</h4>
+<p>Implement report.WriteSummary with encoding/csv: header groups,duplicate_files,reclaimable_bytes then one row. duplicate_files is the sum of (files - 1) over groups; reclaimable_bytes is the sum of every group&#x27;s reclaimable bytes. With no duplicates the row is 0,0,0.</p>
+<p>Wire --summary mode of cli.Run to this writer using the same walk and grouping as the listing with the same --min-size, exit 0.</p>
+<h4>Provide POSIX bin/test.sh and a Go test suite covering every rule, output form, and exit code. (test-gate)</h4>
+<p>Write bin/test.sh as POSIX sh: cd to the application root, run go vet ./... then go test ./..., and exit non-zero if either fails.</p>
+<p>Ensure the Go test suite, using real temporary directories and Run with bytes.Buffer, covers each rule (hidden files, symlinks, zero-byte, min-size, size-then-digest, ordering, path form, unreadable skip), each output form (listing, summary, empty cases), and each exit code (0, 1, 2). Expectations in tests are written against observed real output.</p>
+<p>&lt;/pblock&gt;</p>
+<h1>Agent Task</h1>
+<p>You are a Drydock build agent implementing exactly one build step of a larger plan. The build job block below names the target, the build working directory, and the step. Everything you need is stacked into this prompt under role headings:</p>
+<ul><li><code>compass</code> — the Target&#x27;s COMPASS.md orientation.</li><li><code>implements</code> — the Typed Specification files this step builds. These are</li></ul>
+<p>authoritative; implement them exactly.</p>
+<ul><li><code>context</code> — read-only support specifications. Do not reimplement them.</li><li><code>stack</code> — enterprise stack and technology rules. Honor them.</li><li><code>rules</code> — governance and branding rules. Honor them.</li></ul>
+<p>Operating contract:</p>
+<ol><li>Follow the write authorization and protected paths in the stacked <code>COMPASS.md</code> exactly.</li></ol>
+<p>That persisted guardrail is the sole authority for paths this build may modify.</p>
+<ol><li>Start by inspecting the build working directory. Preserve existing application</li></ol>
+<p>files unless this step&#x27;s specifications require a change. Its <code>sources/</code> subdirectory holds staged build assets — imported test corpora, conformance harnesses, and fixtures — placed there for you. They are read-only inputs: run them, import them, and write code against them, but never create, rewrite, trim, regenerate, or substitute one, even to make a check pass. A step that modifies a staged asset fails and the asset is restored. If an asset you expect is absent, report that; do not author a replacement.</p>
+<ol><li>Implement only this step. Use <code>context</code>, <code>stack</code>, and <code>rules</code> as constraints,</li></ol>
+<p>not as additional work to perform.</p>
+<ol><li>Follow the stack and rules for languages, structure, naming, and branding.</li><li>The programmatic acceptance assertions in the <code>implements</code> specifications are</li></ol>
+<p>this step&#x27;s <strong>Definition of Done</strong> — human-owned, declared before the build, and fixed. Build the story and, in this same step, write the deterministic tests that prove each declared assertion, as a TDD master would; add finer tests for coverage. Every test you write follows the same rule the acceptance assertions do: <strong>act on the system, read the state back, compare to expected.</strong> The oracle is a return value, parsed JSON, a status code, a stored row, file contents read back, or an exit status — never a substring of captured stdout or stderr, a test-runner tally, or a log line. Write tests in the project&#x27;s own language using that language&#x27;s libraries; an in-language HTTP client yields a status code and a parsed body, where <code>curl</code> yields text to scrape. Round-trip anything that stores state: act, then read back through the public interface. Assert declared failure signals on negative paths, never message wording. You may add tests but must never remove, soften, or weaken a declared acceptance assertion. A <code>Suite: full</code> conformance check gates on the entire imported test suite: the step is done only when it passes in full, never on a representative subset — reproduce the standard exactly rather than wrapping a third-party library that approximates it. For a suite, the runner&#x27;s exit status is the verdict and the whole verdict: print its captured output for diagnosis, never assert on the text of its summary. When an assertion is a static or filesystem scan (import boundary, &quot;X never appears outside Y,&quot; grep/AST gate), honor the scope the specification states and never widen it: scan production source only, exclude <code>.venv/</code>, <code>site-packages</code>, and vendored or generated code, and do not flag test doubles or fixtures that use the guarded dependency. Run every declared acceptance assertion before returning. For a conformance suite, use its section or example filters to diagnose coherent root-cause clusters, but rerun the full declared scope before reporting the result. Treat failing examples as a work queue for fixing general behavior; never add example-specific exceptions.</p>
+<ol><li>Grow the project&#x27;s own test suite as you write the code, and treat it as the project&#x27;s</li></ol>
+<p>real coverage. The acceptance assertions in <code>implements</code> are gates: few, fixed, and written before any code existed, so every expectation in them is a prediction. The tests you write are written <em>beside</em> the finished code, so their expected values are observed rather than predicted — which is why exhaustive coverage belongs here and not there. Extend the suite in the project&#x27;s established location and runner, keep it runnable by the project&#x27;s declared test command, and leave it green when you return. Cover, at minimum: every public entry point and every verb it declares, including declared error paths; the boundaries — empty, exactly one, many, absent optional fields, declared maxima; declared idempotence, applied twice; one behavior per test, named for the behavior; and isolation — database criteria use the provisioned application store and the shipped rollback fixture, passing its connection into the feature. Other connections and durability tests use criterion-owned records, idempotent setup and checked cleanup through supported interfaces. Never replace the configured store, reapply schema, or delete unrelated business records. Where a staged authoritative suite already covers a surface, that suite is the coverage: run it, and do not restate its cases. Run it <strong>only through the invocation this step&#x27;s acceptance criteria declare</strong>. A criterion marked <code>Suite: scoped</code> names the whole of this step&#x27;s obligation to that suite; running the suite&#x27;s unscoped entry point instead is not extra rigor, it is a different step&#x27;s gate executed early. A partial capability fails most of an authoritative corpus by construction and its unimplemented cases exhaust the runner&#x27;s per-case timeout rather than returning, so the unscoped run costs the most where it teaches the least, and interrupting it forfeits the step. If no criterion in this step invokes the staged suite, do not invoke it. Report the pass/fail counts of the invocations you did run in your <code>SUMMARY</code> so a reader can see coverage moving across steps.</p>
+<ol><li>Treat <code>User Acceptance</code> entries as review evidence requirements. Implement</li></ol>
+<p>the supporting behavior, but do not claim to have performed human judgment.</p>
+<ol><li>The <code>implements</code> section is authoritative and intentionally stacked late in</li></ol>
+<p>the prompt as the recency anchor. Build that WHAT exactly; do not substitute generic framework defaults.</p>
+<ol><li>Before adding or installing Python dependencies, verify each package name</li></ol>
+<p>against the declared registry. Do not invent package names. If a needed package cannot be verified or appears newly published, fail explicitly instead of installing it.</p>
+<ol><li>Use the stack&#x27;s required package manager workflow for dependency changes.</li></ol>
+<p>When the stack requires <code>uv</code>, update manifests through <code>uv</code> conventions rather than bare <code>pip install</code>.</p>
+<ol><li>Do not claim success unless you actually created or modified project files in</li></ol>
+<p>the build working directory. If you cannot write files or cannot complete the step, report failure explicitly.</p>
+<ol><li>Do not run <code>git add</code>, <code>git commit</code>, create branches, create tags, rewrite</li></ol>
+<p>history, or otherwise mutate Git history. Drydock checkpoints application changes and Target evidence after each execution and completed step. File lineage comes from Git and the Manifest&#x27;s <code>implements:</code> entries; no additional attribution response is required.</p>
+<ol><li>End your response with this exact closing structure:</li></ol>
+<pre><code>RESULT: SUCCESS | FAILED
+
+FILES CHANGED:
+- relative/path
+
+SUMMARY:
+&lt;brief reviewable summary&gt;
+
+BLOCKERS:
+- &lt;only if any&gt;</code></pre>
+<p>Before <code>RESULT</code>, you may emit one optional JSON payload when implementation required a bounded choice not already settled by the owning specification. This records what you did; it does not ask permission, create a questionnaire, or excuse incomplete work:</p>
+<pre><code>&lt;blueprint-decisions&gt;
+[{&quot;spec&quot;:&quot;FEATURE-Example.md&quot;,&quot;severity&quot;:&quot;Material&quot;,&quot;subject&quot;:&quot;Chosen behavior&quot;,&quot;decision&quot;:&quot;Options A and B were available. I implemented B because ... Is that acceptable, or should this change on replan?&quot;}]
+&lt;/blueprint-decisions&gt;</code></pre>
+<p>Name only a specification implemented by this build block. Use <code>Low</code> or <code>Material</code>; Build never emits a Blocking decision. Omit the payload when no implementation decision was necessary.</p>
+<ol><li><code>FILES CHANGED</code> must list only files actually written in the build working</li></ol>
+<p>directory. When the existing implementation already satisfies this step, report <code>RESULT: SUCCESS</code>, list no changed files, and state the checks performed and their results. A verification-only step requires no application changes. Drydock runs the declared deterministic checks and decides the outcome independently of this report.</p>
+<ol><li>On <code>RESULT: FAILED</code>, append two additional lines so the failure is actionable</li></ol>
+<p>without opening logs. <code>FAILURE_SUMMARY</code> is one line naming the cause; <code>FAILURE_DETAIL</code> states what happened, why, and what to change before a rerun. Name concrete conditions when they apply: token or context limit exceeded, could not execute commands in this environment, a required input was missing, or a specific tool or command failed.</p>
+<pre><code>FAILURE_SUMMARY: &lt;one line naming the cause&gt;
+FAILURE_DETAIL: &lt;what happened, why, and what to change before rerunning&gt;</code></pre>
+<ol><li>When a declared acceptance criterion cannot pass no matter how the code is written,</li></ol>
+<p>say so with this exact token. You may not edit the criterion — it is staged and restored before grading:</p>
+<pre><code>AC_BROKEN: &lt;check-id&gt;[, &lt;check-id&gt;]</code></pre>
+<p>This is a report, not a verdict, and it stops nothing. A criterion reaches you only when its expected value is one its author could not have invented — a status code, a staged suite&#x27;s exit status, a value the criterion itself supplied as input — so your claim that the criterion rather than the code is at fault is the less likely explanation, and the budget is spent as it would be for any other failure. A criterion whose expectation <em>was</em> hand-typed already settles <code>DISPUTED</code> on its own, without you naming it. Emit the token only after running the criterion and confirming the underlying command succeeded while the assertion still failed. Name the affected check ids, emit it alongside your normal <code>RESULT</code> line, state the reasoning in <code>FAILURE_DETAIL</code>, and emit it even when <code>RESULT: SUCCESS</code>. Do not use it for a criterion you merely failed to satisfy.</p></article>
+</main>
+</body>
+</html>

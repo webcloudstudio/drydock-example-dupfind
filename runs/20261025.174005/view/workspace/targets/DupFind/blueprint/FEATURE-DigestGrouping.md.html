@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>workspace/targets/DupFind/blueprint/FEATURE-DigestGrouping.md</title>
+<link rel="stylesheet" href="../../../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>workspace/targets/DupFind/blueprint/FEATURE-DigestGrouping.md</h1><div class="filenav"><a href="../../../../../index.html">&larr; Report</a><a href="../../../../../workspace/targets/DupFind/blueprint/FEATURE-DigestGrouping.md">Raw file</a></div></header>
+<article class="doc"><h1>FEATURE: Digest Grouping</h1>
+<div class="scroll"><table><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Version</td><td>20261025 V1</td></tr><tr><td>Description</td><td>Hash same-size files with SHA-256 and form duplicate groups, skipping unreadable files with a stderr warning.</td></tr><tr><td>Depends On</td><td>FEATURE-SizeGrouping.md, ARCHITECTURE.md</td></tr><tr><td>Provides</td><td>dupes.GroupByDigest</td></tr><tr><td>Consumes</td><td>dupes.GroupBySize</td></tr></tbody></table></div>
+<h2>Purpose</h2>
+<p>Rule 3 groups same-size files by the SHA-256 digest of their contents; a group of two or more files with the same size and digest is a duplicate group. Rule 6 skips unreadable files with one warning.</p>
+<h2>Interface</h2>
+<p><code>dupes.GroupByDigest</code> takes the size buckets from <code>dupes.GroupBySize</code>. For each bucket it opens each file read-only and streams it through <code>crypto/sha256</code>. The digest is the lowercase hexadecimal encoding of the full contents. Files with identical size and digest form one group; groups with a single member are dropped.</p>
+<p>A file that cannot be opened or read yields exactly one warning line on standard error, is excluded from grouping, and does not change the exit code. Files are opened read-only; nothing is written, moved, or deleted under the examined directory.</p>
+<h2>Reads and Writes</h2>
+<ul><li>Reads: the contents of files in shared-size buckets.</li><li>Writes: warning lines to standard error only.</li></ul>
+<h2>Required Project Tests</h2>
+<p><code>internal/dupes</code> contains <code>TestGroupByDigest</code> (identical contents group, same-size different contents do not) and <code>TestGroupByDigestSkipsUnreadable</code> (an unreadable file is skipped with one warning and does not fail the call).</p>
+<h2>Programmatic Acceptance</h2>
+<p>=== AC digest-columns-match-contents ===<br>Intent: Reported size and sha256 are the byte length and lowercase SHA-256 of the fixture contents.</p>
+<p>import csv import hashlib import os import tempfile from drydock_go import cli_runner</p>
+<p>def write(root, rel, data): p = os.path.join(root, rel) os.makedirs(os.path.dirname(p), exist_ok=True) with open(p, &quot;wb&quot;) as f: f.write(data)</p>
+<p>content = b&quot;quarterly report\n&quot; with tempfile.TemporaryDirectory() as root: write(root, &quot;a/one.txt&quot;, content) write(root, &quot;b/two.txt&quot;, content) write(root, &quot;c/three.txt&quot;, content) code, out, err = cli_runner(root) print(out) print(err) assert code == 0 rows = list(csv.reader(out.splitlines()))[1:] assert len(rows) == 3 for r in rows: assert int(r[1]) == len(content) assert r[2] == hashlib.sha256(content).hexdigest() assert sorted(r[3] for r in rows) == [&quot;a/one.txt&quot;, &quot;b/two.txt&quot;, &quot;c/three.txt&quot;] === END AC digest-columns-match-contents ===</p>
+<p>=== AC digest-splits-same-size-groups ===<br>Intent: Same-size files with different digests form separate groups and a lone digest is dropped.</p>
+<p>import csv import os import tempfile from drydock_go import cli_runner</p>
+<p>def write(root, rel, data): p = os.path.join(root, rel) os.makedirs(os.path.dirname(p), exist_ok=True) with open(p, &quot;wb&quot;) as f: f.write(data)</p>
+<p>first = b&quot;abcd&quot; second = b&quot;abce&quot; third = b&quot;abcf&quot; with tempfile.TemporaryDirectory() as root: write(root, &quot;x1&quot;, first) write(root, &quot;x2&quot;, first) write(root, &quot;y1&quot;, second) write(root, &quot;y2&quot;, second) write(root, &quot;z1&quot;, third) code, out, err = cli_runner(root) print(out) print(err) assert code == 0 rows = list(csv.reader(out.splitlines()))[1:] by_group = {} for r in rows: by_group.setdefault(r[0], []).append(r[3]) assert len(by_group) == 2 assert sorted(sorted(v) for v in by_group.values()) == [[&quot;x1&quot;, &quot;x2&quot;], [&quot;y1&quot;, &quot;y2&quot;]] === END AC digest-splits-same-size-groups ===</p>
+<p>=== AC digest-unreadable-skipped ===<br>Intent: An unreadable duplicate candidate is skipped without changing the exit code (skipped when permissions cannot be enforced).</p>
+<p>import csv import os import tempfile from drydock_go import cli_runner</p>
+<p>def write(root, rel, data): p = os.path.join(root, rel) os.makedirs(os.path.dirname(p), exist_ok=True) with open(p, &quot;wb&quot;) as f: f.write(data)</p>
+<p>content = b&quot;same bytes\n&quot; with tempfile.TemporaryDirectory() as root: write(root, &quot;ok1.txt&quot;, content) write(root, &quot;ok2.txt&quot;, content) write(root, &quot;locked.txt&quot;, content) os.chmod(os.path.join(root, &quot;locked.txt&quot;), 0) try: enforced = False try: open(os.path.join(root, &quot;locked.txt&quot;), &quot;rb&quot;).close() except PermissionError: enforced = True code, out, err = cli_runner(root) print(out) print(err) assert code == 0 rows = list(csv.reader(out.splitlines()))[1:] paths = sorted(r[3] for r in rows) if enforced: assert paths == [&quot;ok1.txt&quot;, &quot;ok2.txt&quot;] else: assert paths == [&quot;locked.txt&quot;, &quot;ok1.txt&quot;, &quot;ok2.txt&quot;] finally: os.chmod(os.path.join(root, &quot;locked.txt&quot;), 0o600) === END AC digest-unreadable-skipped ===</p>
+<p>=== AC digest-tree-unmodified ===<br>Intent: Running the tool leaves every file&#x27;s bytes and the directory listing unchanged.</p>
+<p>import os import tempfile from drydock_go import cli_runner</p>
+<p>def write(root, rel, data): p = os.path.join(root, rel) os.makedirs(os.path.dirname(p), exist_ok=True) with open(p, &quot;wb&quot;) as f: f.write(data)</p>
+<p>def snapshot(root): snap = {} for dirpath, dirnames, filenames in os.walk(root): for n in filenames: p = os.path.join(dirpath, n) with open(p, &quot;rb&quot;) as f: snap[os.path.relpath(p, root)] = f.read() for n in dirnames: snap[os.path.relpath(os.path.join(dirpath, n), root) + &quot;/&quot;] = None return snap</p>
+<p>content = b&quot;keep me\n&quot; with tempfile.TemporaryDirectory() as root: write(root, &quot;a/f1&quot;, content) write(root, &quot;b/f2&quot;, content) write(root, &quot;c/other&quot;, b&quot;different!&quot;) before = snapshot(root) code, out, err = cli_runner(root) print(out) print(err) assert code == 0 code, out, err = cli_runner(&quot;--summary&quot;, root) assert code == 0 assert snapshot(root) == before === END AC digest-tree-unmodified ===</p>
+<p>=== AC digest-unit-tests ===<br>Intent: The project&#x27;s own digest grouping tests pass and actually execute.</p>
+<p>from drydock_go import run_test</p>
+<p>result = run_test(&quot;./internal/dupes&quot;, &quot;TestGroupByDigest&quot;) assert result.passed, (result.status, result.stdout, result.stderr) result = run_test(&quot;./internal/dupes&quot;, &quot;TestGroupByDigestSkipsUnreadable&quot;) assert result.passed, (result.status, result.stdout, result.stderr) === END AC digest-unit-tests ===</p>
+<h2>User Acceptance</h2>
+<ul><li>None.</li></ul>
+<h2>Guardrails</h2>
+<ul><li>Files are opened read-only; nothing under the examined directory is written, moved, or deleted.</li><li>Warnings go to standard error only and never alter the exit code.</li><li>Only the standard library is used; no digest or path is hardcoded.</li></ul></article>
+</main>
+</body>
+</html>

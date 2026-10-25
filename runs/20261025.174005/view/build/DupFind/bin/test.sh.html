@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>build/DupFind/bin/test.sh</title>
+<link rel="stylesheet" href="../../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>build/DupFind/bin/test.sh</h1><div class="filenav"><a href="../../../../index.html">&larr; Report</a><a href="../../../../build/DupFind/bin/test.sh">Raw file</a></div></header>
+<article class="doc"><pre>#!/bin/sh
+# CommandCenter Operation
+# Name: Test
+# Type: batch
+#
+# Runs go vet and go test over the application root. Exits 0 only when both pass.
+# POSIX sh: no bashisms, so it runs under dash as well as bash.
+set -eu
+
+ROOT=$(cd &quot;$(dirname &quot;$0&quot;)/..&quot; &amp;&amp; pwd)
+cd &quot;$ROOT&quot;
+
+STAMP=$(date +%Y-%m-%d_%H%M%S)
+LOG_DIR=&quot;$ROOT/data/logs&quot;
+LOG=&quot;$LOG_DIR/test_$STAMP.log&quot;
+mkdir -p &quot;$LOG_DIR&quot;
+
+{
+    echo &quot;timestamp: $STAMP&quot;
+    echo &quot;arguments: $*&quot;
+    echo &quot;working directory: $ROOT&quot;
+} &gt; &quot;$LOG&quot;
+
+rc=0
+( go vet ./... &amp;&amp; go test ./... ) &gt;&gt; &quot;$LOG&quot; 2&gt;&amp;1 || rc=$?
+
+echo &quot;completed: exit $rc&quot; &gt;&gt; &quot;$LOG&quot;
+cat &quot;$LOG&quot;
+exit &quot;$rc&quot;
+</pre></article>
+</main>
+</body>
+</html>

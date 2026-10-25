@@ -1,0 +1,31 @@
+<requirement name="build-go-executable" stories="foundation,pipeline">
+The deliverable is a Go module whose main package is ./cmd/dupfind.
+</requirement>
+<requirement name="list-duplicate-files" stories="scan-walk,scan-size,scan-group,list-order,list-csv,cli-args,pipeline">
+group,size,sha256,path
+1,1000,950f88b09cf1d5e2cdbc5660c77dce3962265c548797950095629a0ea2daea46,big/blob-a.bin
+</requirement>
+<requirement name="exclude-zero-byte-and-symlink-entries" stories="scan-walk,scan-size">
+: > "$T/empty/one"
+ln -s ../a/report.txt "$T/notes/report-link.txt"
+</requirement>
+<requirement name="min-size-filter" stories="scan-size,cli-args">
+check C3 0 --min-size 200 tree <<'EOF'
+</requirement>
+<requirement name="summary-totals" stories="summary,scan-group,scan-size,cli-args">
+check B1 0 --summary tree <<'EOF'
+groups,duplicate_files,reclaimable_bytes
+</requirement>
+<requirement name="empty-result-header-only" stories="list-empty,summary">
+check D1 0 tree/unique <<'EOF'
+group,size,sha256,path
+</requirement>
+<requirement name="reject-missing-or-non-directory-target" stories="cli-targets">
+check E1 1 tree/no-such-directory < /dev/null
+check E2 1 tree/env.bak < /dev/null
+</requirement>
+<requirement name="reject-invalid-usage" stories="cli-args">
+check U3 2 --min-size abc tree < /dev/null
+</requirement>
+<unattached story="scan-unreadable"/>
+<unattached story="test-harness"/>

@@ -1,0 +1,22 @@
+Drydock 0.8.0  Copyright (c) 2026 Web Cloud Studio. All rights reserved.
+Drydock status
+
+  Target          /mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261025.174005/workspace/targets/DupFind
+  Name            drydock DupFind Uat Case
+  Description     Drydock uat - DupFind is the simplest Go kit and exercises go build end to end. The source is an
+                  original brief for a command-line duplicate file finder that groups regular files by size and SHA-256…
+  Phase           Loop
+  State           12 closed/implemented
+  Metadata        built · complete
+  Sources         2 imported · 12 authored blueprint files
+  Analysis        Ready · 16 stories · 0 questions · 0 blockers
+  Blueprint       ✓  0 errors · 0 warnings
+  Plan            12 closed/implemented
+  Frontier        (none)
+  Workflow        5 steps
+                  Initialize         complete at 2026-10-25T17:40:15.357+00:00
+                  Import             complete at 2026-10-25T17:40:27.823+00:00
+                  Analyze            complete at 2026-10-25T17:40:56.388+00:00
+                  Plan               complete at 2026-10-25T17:46:25.216+00:00
+                  Build              complete at 2026-10-25T17:58:08.760+00:00
+  Next step       drydock refit DupFind BOTH <Scope> <Change>

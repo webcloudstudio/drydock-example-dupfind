@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>workspace/targets/DupFind/blueprint/ARCHITECTURE.md</title>
+<link rel="stylesheet" href="../../../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>workspace/targets/DupFind/blueprint/ARCHITECTURE.md</h1><div class="filenav"><a href="../../../../../index.html">&larr; Report</a><a href="../../../../../workspace/targets/DupFind/blueprint/ARCHITECTURE.md">Raw file</a></div></header>
+<article class="doc"><h1>ARCHITECTURE: DupFind</h1>
+<div class="scroll"><table><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Version</td><td>20261025 V1</td></tr><tr><td>Description</td><td>Module layout, package boundaries, and pipeline of the dupfind command-line duplicate file finder.</td></tr><tr><td>Depends On</td><td>None</td></tr><tr><td>Provides</td><td>go.mod, internal/, cmd/dupfind, bin/</td></tr></tbody></table></div>
+<h2>Overview</h2>
+<p><code>dupfind</code> is a single-binary Go command-line tool. It finds regular files under a directory whose contents are byte-for-byte identical, reports them as a CSV listing or a one-row CSV summary, and never deletes, moves, or modifies any file.</p>
+<p>Pipeline: parse arguments, validate the directory, walk, group by size, hash same-size groups with SHA-256, order and number groups, emit CSV.</p>
+<h2>Technology Stack</h2>
+<p>Derived from <code>TECHNOLOGY_STACK.md</code>; that file is the decision of record.</p>
+<div class="scroll"><table><thead><tr><th>Technology</th><th>Where it applies</th></tr></thead><tbody><tr><td>Go 1.22 or newer, standard library only</td><td>All application code; <code>go.mod</code> declares no third-party requirement</td></tr><tr><td>go test and go vet</td><td>Test runner behind <code>bin/test.sh</code></td></tr><tr><td>POSIX sh</td><td><code>bin/test.sh</code></td></tr></tbody></table></div>
+<h2>Module Layout</h2>
+<div class="scroll"><table><thead><tr><th>Path</th><th>Package</th><th>Responsibility</th></tr></thead><tbody><tr><td><code>go.mod</code></td><td>module root</td><td>Module path and Go toolchain version; no <code>require</code> lines</td></tr><tr><td><code>cmd/dupfind</code></td><td><code>main</code></td><td>Calls <code>cli.Run(os.Args[1:], os.Stdout, os.Stderr)</code> and passes the result to <code>os.Exit</code>; the only caller of <code>os.Exit</code></td></tr><tr><td><code>internal/cli</code></td><td><code>cli</code></td><td><code>Run(args []string, stdout, stderr io.Writer) int</code>: argument parsing, directory validation, pipeline orchestration, exit codes</td></tr><tr><td><code>internal/walk</code></td><td><code>walk</code></td><td>Recursive directory walk yielding eligible regular files</td></tr><tr><td><code>internal/dupes</code></td><td><code>dupes</code></td><td>Size grouping, SHA-256 digest grouping, reclaimable bytes, ordering and numbering</td></tr><tr><td><code>internal/report</code></td><td><code>report</code></td><td>CSV listing and summary writers using <code>encoding/csv</code></td></tr><tr><td><code>bin/test.sh</code></td><td>POSIX sh</td><td>Runs <code>go vet ./...</code> then <code>go test ./...</code> from the application root</td></tr></tbody></table></div>
+<h2>Boundaries</h2>
+<ul><li>Only <code>main</code> calls <code>os.Exit</code>. <code>cli.Run</code> returns the exit code: 0 success, 1 operational failure, 2 usage error.</li><li>Standard output carries only CSV. A failing command writes nothing to standard output and one diagnostic line to standard error.</li><li>Warnings (unreadable file or subdirectory) go to standard error only and never change the exit code.</li><li>File contents are read only by <code>dupes</code>, and only for files that share a size with another file.</li><li>Files under the examined directory are opened read-only. Nothing is written, moved, or deleted there.</li><li>Application code never reads <code>sources/run.sh</code> and never embeds a digest, path, or total.</li></ul>
+<h2>Module Ownership</h2>
+<div class="scroll"><table><thead><tr><th>Boundary</th><th>Owning module</th><th>Allowed low-level APIs</th></tr></thead><tbody><tr><td>Directory traversal and file metadata</td><td><code>internal/walk</code></td><td><code>os.Lstat</code>, <code>os.ReadDir</code>, <code>io/fs</code></td></tr><tr><td>File content reading and hashing</td><td><code>internal/dupes</code></td><td><code>os.Open</code>, <code>crypto/sha256</code>, <code>io.Copy</code></td></tr><tr><td>CSV output</td><td><code>internal/report</code></td><td><code>encoding/csv</code></td></tr><tr><td>Process arguments and exit codes</td><td><code>internal/cli</code> and <code>cmd/dupfind</code></td><td><code>flag</code>, <code>os.Args</code>, <code>os.Exit</code> (main only)</td></tr><tr><td>Persistence, configuration files, external services</td><td>None; the tool has no persistent state</td><td>None</td></tr></tbody></table></div>
+<h2>Foundation Scope</h2>
+<p>The foundation story creates <code>go.mod</code>, the package tree above, a <code>cmd/dupfind/main.go</code> that delegates to <code>cli.Run</code>, and a minimal compiling placeholder in each internal package, so that <code>go build ./cmd/dupfind</code>, <code>go vet ./...</code>, and <code>go test ./...</code> succeed before feature stories land. The placeholder <code>Run</code> returns 0. <code>bin/</code> exists; <code>bin/test.sh</code> itself is delivered by the test-gate story.</p>
+<h2>Programmatic Acceptance</h2>
+<p>=== AC arch-module-no-third-party ===<br>Intent: The application root is a Go module that declares no third-party requirement.</p>
+<p>import pathlib</p>
+<p>text = pathlib.Path(&quot;go.mod&quot;).read_text() lines = [ln.strip() for ln in text.splitlines()] module_lines = [ln for ln in lines if ln.startswith(&quot;module &quot;)] go_lines = [ln for ln in lines if ln.startswith(&quot;go &quot;)] assert len(module_lines) == 1, text assert len(go_lines) == 1, text assert &quot;require&quot; not in text, text === END AC arch-module-no-third-party ===</p>
+<p>=== AC arch-package-tree ===<br>Intent: The package directories named by the architecture exist in the build tree.</p>
+<p>import pathlib</p>
+<p>for rel in [&quot;cmd/dupfind&quot;, &quot;internal/cli&quot;, &quot;internal/walk&quot;, &quot;internal/dupes&quot;, &quot;internal/report&quot;, &quot;bin&quot;]: assert pathlib.Path(rel).is_dir(), rel assert pathlib.Path(&quot;cmd/dupfind/main.go&quot;).is_file() === END AC arch-package-tree ===</p>
+<p>=== AC arch-vet-and-build ===<br>Intent: The foundation compiles and passes go vet across every package.</p>
+<p>import subprocess import sys</p>
+<p>for cmd in ([&quot;go&quot;, &quot;vet&quot;, &quot;./...&quot;], [&quot;go&quot;, &quot;build&quot;, &quot;./...&quot;]): result = subprocess.run(cmd, capture_output=True, text=True) print(result.stdout) print(result.stderr, file=sys.stderr) assert result.returncode == 0, cmd === END AC arch-vet-and-build ===</p>
+<h2>User Acceptance</h2>
+<ul><li>None.</li></ul>
+<h2>Guardrails</h2>
+<ul><li>Standard library only; no third-party modules.</li><li>Never delete, move, or write a file under the directory examined.</li><li>Do not modify, rewrite, regenerate, or substitute <code>sources/run.sh</code>, and never read it from application code.</li><li>Do not hardcode a digest, a path, or a total; every value is computed from the directory examined.</li><li>Read a file&#x27;s contents only when another file has the same size.</li></ul></article>
+</main>
+</body>
+</html>

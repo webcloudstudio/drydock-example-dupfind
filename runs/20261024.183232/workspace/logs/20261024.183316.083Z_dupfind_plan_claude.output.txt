@@ -1,0 +1,266 @@
+=== BEGIN ARTIFACT TOPOLOGY.md ===
+## Declarations
+
+## story foundation
+summary:      Establish the Go module, the cmd and internal layout, and the bin launcher directory.
+type:         foundational
+kind:         capability
+phase:        1
+implements:   ARCHITECTURE.md
+stack:        go.md, common.md
+provides:     go.mod module, cmd/dupfind main package directory, internal/ package directory
+acceptance:   yes
+instructions: |
+  Create go.mod at the application root declaring Go 1.22 and a module path, with no third-party requires.
+  Create cmd/dupfind/ as the main package directory, internal/ for application packages, and bin/ for launchers.
+  Use the standard library only.
+
+## story scan-walk
+summary:      Walk the target directory recursively and yield regular files only.
+type:         service
+kind:         capability
+phase:        1
+implements:   FEATURE-Walker.md
+covers:       SCAN-001
+accepts:      st-005
+stack:        go.md
+provides:     scan.Walk
+depends:      foundation
+acceptance:   yes
+instructions: |
+  Implement the recursive walker in internal/scan.
+  Descend into hidden directories and include hidden files such as .env.
+  Yield regular files only. Neither follow nor report symbolic links, even when a link targets a duplicate file.
+  Skip directories and special files.
+
+## story scan-size
+summary:      Drop zero-byte files and files smaller than the minimum size.
+type:         service
+kind:         capability
+phase:        1
+implements:   FEATURE-SizeFilter.md
+covers:       SCAN-002
+accepts:      st-005
+stack:        go.md
+provides:     scan.FilterSize
+consumes:     scan.Walk
+depends:      scan-walk
+acceptance:   yes
+instructions: |
+  Implement FilterSize in internal/scan as a pure function over the walker output.
+  Exclude every file of size 0. Exclude files smaller than the configured minimum, which defaults to 1 byte.
+
+## story scan-group
+summary:      Group files by size, then by SHA-256 digest, reading only size-matched files.
+type:         service
+kind:         capability
+phase:        1
+implements:   FEATURE-Grouping.md
+covers:       SCAN-003
+accepts:      st-004, st-008
+stack:        go.md
+provides:     scan.Group
+consumes:     scan.FilterSize
+depends:      scan-size
+acceptance:   yes
+instructions: |
+  Implement Group in internal/scan.
+  Bucket files by size. Read a file's contents only when another file shares its size.
+  Within a size bucket, group by SHA-256 digest. A group of two or more files with equal size and digest is a duplicate group.
+  Open files read-only. Never write, move, rename, or delete any file.
+
+## story scan-unreadable
+summary:      Skip unreadable files with one stderr warning line each, without changing the exit code.
+type:         service
+kind:         capability
+phase:        1
+implements:   FEATURE-UnreadableFiles.md
+covers:       SCAN-004
+stack:        go.md
+provides:     scan.Warn
+consumes:     scan.Group
+depends:      scan-group
+acceptance:   yes
+instructions: |
+  When a file cannot be opened or hashed, exclude it from grouping.
+  Write exactly one warning line naming the file to standard error, and write no stdout row for it.
+  The warning does not alter the exit code.
+
+## story list-csv
+summary:      Emit the duplicate listing as CSV with the exact header.
+type:         service
+kind:         capability
+phase:        1
+implements:   FEATURE-ListingCSV.md
+covers:       LIST-001
+accepts:      st-004
+stack:        go.md
+provides:     output.WriteListing
+consumes:     scan.Group
+depends:      scan-group
+acceptance:   yes
+instructions: |
+  Implement WriteListing in internal/output using encoding/csv.
+  Write the header group,size,sha256,path, then one row per file in every duplicate group.
+  Write sha256 as lowercase hexadecimal. Use \n line endings.
+
+## story list-order
+summary:      Order groups and paths, number groups from 1, and render relative paths.
+type:         service
+kind:         capability
+phase:        1
+implements:   FEATURE-ListingOrder.md
+covers:       LIST-002
+accepts:      st-004
+stack:        go.md
+provides:     output.Order
+consumes:     output.WriteListing
+depends:      list-csv
+acceptance:   yes
+instructions: |
+  Order groups by reclaimable bytes descending, where reclaimable bytes equal size times (files minus one), then by digest ascending.
+  Number groups from 1 in that order.
+  Within a group, order paths by byte value ascending.
+  Render paths relative to the target directory with / separators and no leading ./.
+
+## story list-empty
+summary:      Emit only the header when no duplicate groups exist.
+type:         service
+kind:         capability
+phase:        1
+implements:   FEATURE-ListingEmpty.md
+covers:       LIST-003
+stack:        go.md
+provides:     output.WriteListing empty case
+consumes:     output.Order
+depends:      list-order
+acceptance:   yes
+instructions: |
+  When there are no duplicate groups, output is exactly group,size,sha256,path followed by a newline and nothing else.
+
+## story summary
+summary:      Emit the --summary CSV totals computed from the same grouping as the listing.
+type:         service
+kind:         capability
+phase:        1
+implements:   FEATURE-Summary.md
+covers:       SUM-001
+accepts:      st-006
+stack:        go.md
+provides:     output.WriteSummary
+consumes:     scan.Group
+depends:      scan-group
+acceptance:   yes
+instructions: |
+  Implement WriteSummary in internal/output.
+  Write the header groups,duplicate_files,reclaimable_bytes and one totals row.
+  duplicate_files is the sum of files minus one over all groups. reclaimable_bytes is the sum of every group's reclaimable bytes.
+  With no duplicates, the row is 0,0,0.
+
+## story cli-args
+summary:      Parse the command line with options before the single directory argument.
+type:         service
+kind:         capability
+phase:        1
+implements:   FEATURE-CommandLine.md
+covers:       CLI-001
+accepts:      st-007
+stack:        go.md
+provides:     cli.Run
+depends:      foundation
+acceptance:   yes
+instructions: |
+  Implement Run(args []string, stdout, stderr io.Writer) int in internal/cli using a local flag.FlagSet with flag.ContinueOnError.
+  Accept [--summary] [--min-size <bytes>] <directory>. Exactly one directory is required.
+  Unknown options, missing or extra arguments, and a --min-size that is not a positive integer exit 2 with exactly one stderr line and no stdout.
+  Run receives an injected execute function that the pipeline story supplies. Only main calls os.Exit.
+
+## story cli-targets
+summary:      Reject a missing or non-directory target with exit 1.
+type:         service
+kind:         capability
+phase:        1
+implements:   FEATURE-TargetValidation.md
+covers:       CLI-002
+accepts:      st-007
+stack:        go.md
+provides:     cli.ValidateTarget
+consumes:     cli.Run
+depends:      cli-args
+acceptance:   yes
+instructions: |
+  After argument parsing succeeds, check the directory argument.
+  A nonexistent path or a regular file exits 1 with exactly one stderr line and empty stdout.
+  Validation runs after usage validation, so usage errors keep exit 2.
+
+## story pipeline
+summary:      Wire the main package to parsing, scanning, ordering, and rendering as the built executable.
+type:         feature
+kind:         integration
+phase:        1
+implements:   FEATURE-Pipeline.md
+accepts:      st-003, st-004, st-006
+stack:        go.md
+provides:     cmd/dupfind executable
+consumes:     cli.Run, cli.ValidateTarget, scan.Walk, scan.FilterSize, scan.Group, output.WriteListing, output.WriteSummary
+depends:      scan-unreadable, list-empty, summary, cli-targets
+acceptance:   yes
+instructions: |
+  Implement cmd/dupfind/main.go, which calls cli.Run with an execute function.
+  The execute function runs walk, size filter, group, order, and render in sequence, choosing listing or summary output.
+  Only main calls os.Exit.
+  This is the assembly story. Its acceptance verifies the seams by building the executable and running it through the command-line runner.
+
+## story test-harness
+summary:      Ship the POSIX bin/test.sh and act as the terminal verification gate.
+type:         feature
+kind:         test harness
+phase:        1
+implements:   FEATURE-TestHarness.md
+covers:       CLI-003
+accepts:      st-001, st-002
+stack:        go.md, common.md
+depends:      scan-walk, scan-size, scan-group, scan-unreadable, list-csv, list-order, list-empty, summary, cli-args, cli-targets, pipeline
+acceptance:   yes
+instructions: |
+  Create bin/test.sh as POSIX sh. Run go vet ./... and go test ./... from the application root.
+  Exit zero only when both pass.
+  This is the terminal story. Its acceptance runs the supplied grader sh sources/run.sh as the full suite and requires exit zero.
+=== END ARTIFACT ===
+=== BEGIN ARTIFACT DECISIONS.json ===
+[
+  {
+    "id": "Q-001",
+    "type": "text",
+    "severity": "low",
+    "blueprint": "FEATURE-Pipeline.md",
+    "story": "pipeline",
+    "title": "Assembly story added for the executable wiring",
+    "description": "ANALYSIS.md has no story that connects parsing, scanning, ordering, and rendering into the built executable. Without one, the command-line stories cannot be verified through the binary. A feature assembly story named pipeline owns cmd/dupfind/main.go and depends on the members that deliver the behavior.",
+    "options": [],
+    "system_choice": "Keep the pipeline assembly story as the single owner of cmd/dupfind/main.go."
+  },
+  {
+    "id": "Q-002",
+    "type": "text",
+    "severity": "low",
+    "blueprint": "ARCHITECTURE.md",
+    "story": null,
+    "title": "Feature criteria run native Go tests on internal packages",
+    "description": "Scan and listing stories precede the executable and the command-line stories. Their criteria therefore run native Go tests on internal packages through run_test. Command-line criteria use cli_runner only after the pipeline story builds the executable.",
+    "options": [],
+    "system_choice": "Scan and listing criteria use run_test on internal packages. Command-line and end-to-end criteria use cli_runner."
+  },
+  {
+    "id": "Q-003",
+    "type": "text",
+    "severity": "low",
+    "blueprint": "FEATURE-CommandLine.md",
+    "story": "cli-args",
+    "title": "Argument parsing uses the standard flag package",
+    "description": "TECHNOLOGY_STACK.md lists no command-line platform file, so no cli.md stack is selected. The standard library flag package is the conventional choice for a standard-library-only Go CLI.",
+    "options": [],
+    "system_choice": "Parse arguments with flag.FlagSet and flag.ContinueOnError, per the Go layout guidance."
+  }
+]
+=== END ARTIFACT ===

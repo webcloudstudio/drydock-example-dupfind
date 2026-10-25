@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>workspace/targets/DupFind/evidence/block-1.md</title>
+<link rel="stylesheet" href="../../../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>workspace/targets/DupFind/evidence/block-1.md</h1><div class="filenav"><a href="../../../../../index.html">&larr; Report</a><a href="../../../../../workspace/targets/DupFind/evidence/block-1.md">Raw file</a></div></header>
+<article class="doc"><h1>Evidence: Block 1 · Foundational (block-1)</h1>
+<ul><li>block type: block</li><li>date: 2026-10-25</li><li>resulting state: closed/verified</li><li>story points (combined assembled cost): 13594</li><li>execution id: 20261025.174754.270Z-8643e753</li></ul>
+<h2>Stories built</h2>
+<ul><li>Stand up the Go module, package tree, and test launcher that every other story builds into. (foundation) [story]</li></ul>
+<h2>Stacked context</h2>
+<ul><li>implements: go.md (SP 7578)</li><li>compass: COMPASS.md (SP 982)</li><li>implements: ARCHITECTURE.md (SP 2007)</li><li>stack: common.md (SP 2776)</li></ul>
+<h2>Build directory changes</h2>
+<ul><li>bin/.gitkeep</li><li>cmd/dupfind/main.go</li><li>go.mod</li><li>internal/cli/cli.go</li><li>internal/cli/cli_test.go</li><li>internal/dupes/dupes.go</li><li>internal/report/report.go</li><li>internal/walk/walk.go</li></ul>
+<h2>Pre-build acceptance observation</h2>
+<ul><li>RED: arch-module-no-third-party (ARCHITECTURE.md)</li></ul>
+<p>intent: The application root is a Go module that declares no third-party requirement. return code: 1 stderr: --- drydock: values at failure --- self = PosixPath(&#x27;go.mod&#x27;) mode = &#x27;r&#x27; buffering = -1 encoding = &#x27;locale&#x27; errors = None newline = None --- drydock: end values --- Traceback (most recent call last): File &quot;arch-module-no-third-party.py&quot;, line 3, in &lt;module&gt; text = pathlib.Path(&quot;go.mod&quot;).read_text() ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ File &quot;/home/barlo/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/pathlib.py&quot;, line 1027, in read_text with self.open(mode=&#x27;r&#x27;, encoding=encoding, errors=errors) as f: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ File &quot;/home/barlo/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/pathlib.py&quot;, line 1013, in open return io.open(self, mode, buffering, encoding, errors, newline) ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^<br>FileNotFoundError: [Errno 2] No such file or directory: &#x27;go.mod&#x27;</p>
+<ul><li>RED: arch-package-tree (ARCHITECTURE.md)</li></ul>
+<p>intent: The package directories named by the architecture exist in the build tree. return code: 1 stderr: --- drydock: values at failure --- rel = &#x27;cmd/dupfind&#x27; --- drydock: end values --- Traceback (most recent call last): File &quot;arch-package-tree.py&quot;, line 4, in &lt;module&gt; assert pathlib.Path(rel).is_dir(), rel ^^^^^^^^^^^^^^^^^^^^^^^^^^<br>AssertionError: cmd/dupfind</p>
+<ul><li>RED: arch-vet-and-build (ARCHITECTURE.md)</li></ul>
+<p>intent: The foundation compiles and passes go vet across every package. return code: 1 stderr: pattern ./...: directory prefix . does not contain main module or its selected dependencies</p>
+<p>--- drydock: values at failure --- cmd = [&#x27;go&#x27;, &#x27;vet&#x27;, &#x27;./...&#x27;] result = CompletedProcess(args=[&#x27;go&#x27;, &#x27;vet&#x27;, &#x27;./...&#x27;], returncode=1, stdout=&#x27;&#x27;, stderr=&#x27;pattern ./...: directory prefix . does not contain main module or its selected dependencies\n&#x27;) --- drydock: end values --- Traceback (most recent call last): File &quot;arch-vet-and-build.py&quot;, line 8, in &lt;module&gt; assert result.returncode == 0, cmd ^^^^^^^^^^^^^^^^^^^^^^<br>AssertionError: [&#x27;go&#x27;, &#x27;vet&#x27;, &#x27;./...&#x27;]</p>
+<h2>Post-build programmatic acceptance</h2>
+<ul><li>PASS: arch-module-no-third-party (ARCHITECTURE.md)</li></ul>
+<p>intent: The application root is a Go module that declares no third-party requirement. target interpreter: /mnt/c/Users/barlo/projects/drydock/.venv/bin/python provisioning: not required return code: 0</p>
+<ul><li>PASS: arch-package-tree (ARCHITECTURE.md)</li></ul>
+<p>intent: The package directories named by the architecture exist in the build tree. target interpreter: /mnt/c/Users/barlo/projects/drydock/.venv/bin/python provisioning: not required return code: 0</p>
+<ul><li>PASS: arch-vet-and-build (ARCHITECTURE.md)</li></ul>
+<p>intent: The foundation compiles and passes go vet across every package. target interpreter: /mnt/c/Users/barlo/projects/drydock/.venv/bin/python provisioning: not required return code: 0</p>
+<h2>Build summary</h2>
+<p>The build directory holds only <code>sources/run.sh</code> and an empty git repo. The foundation spec calls for a root module, the package tree, and placeholders that compile, so I&#x27;ll write those now. <code>run.sh</code> is only for the terminal story, so I won&#x27;t run it.Files are written. Next I&#x27;ll run the gates the foundation acceptance criteria name: gofmt, vet, build, the tests, and the two AC scripts.RESULT: SUCCESS</p>
+<p>FILES CHANGED:</p>
+<ul><li>go.mod</li><li>cmd/dupfind/main.go</li><li>internal/cli/cli.go</li><li>internal/cli/cli_test.go</li><li>internal/walk/walk.go</li><li>internal/dupes/dupes.go</li><li>internal/report/report.go</li><li>bin/.gitkeep</li></ul>
+<p>SUMMARY: The foundation is in place. The root module is <code>dupfind</code> with <code>go 1.22</code> and no <code>require</code> lines. <code>cmd/dupfind/main.go</code> calls <code>cli.Run</code> and is the only place that calls <code>os.Exit</code>. <code>internal/cli</code> exposes <code>Run(args, stdout, stderr) int</code>, which returns 0 for now. <code>internal/walk</code>, <code>internal/dupes</code>, and <code>internal/report</code> are package stubs that compile. <code>bin/</code> exists.</p>
+<p>Checks run, all passing:</p>
+<ul><li><code>gofmt -l .</code> printed nothing.</li><li><code>go vet ./...</code> and <code>go build ./...</code> passed, and <code>go build ./cmd/dupfind</code> passed (Go 1.24.6 toolchain).</li><li><code>go test ./...</code> passed. The one test, <code>TestRunPlaceholderSucceedsSilently</code>, checks that <code>Run</code> returns 0 and writes nothing to stdout.</li><li>AC <code>arch-module-no-third-party</code> passed.</li><li>AC <code>arch-package-tree</code> passed.</li><li>AC <code>arch-vet-and-build</code> passed (the vet and build commands above).</li></ul>
+<p>Not run: <code>sources/run.sh</code>. It is the terminal-story grader and will fail until the feature stories land.</p>
+<p>Choices I made:</p>
+<ul><li>Module path is <code>dupfind</code>. The spec did not name one.</li><li><code>bin/test.sh</code> is not written. ARCHITECTURE says the test-gate story delivers it, and that file is authoritative for this step. The story title mentions a &quot;test launcher&quot;, so that wording conflicts with ARCHITECTURE. <code>sh bin/test.sh</code> will not exist until the test-gate story runs.</li><li><code>bin/.gitkeep</code> keeps the empty <code>bin/</code> directory in git.</li><li>No commit was made, per the build rules.</li></ul>
+<p>BLOCKERS:</p>
+<ul><li>None.</li></ul></article>
+</main>
+</body>
+</html>

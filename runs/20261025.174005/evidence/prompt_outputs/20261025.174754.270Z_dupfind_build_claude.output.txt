@@ -1,0 +1,33 @@
+The build directory holds only `sources/run.sh` and an empty git repo. The foundation spec calls for a root module, the package tree, and placeholders that compile, so I'll write those now. `run.sh` is only for the terminal story, so I won't run it.Files are written. Next I'll run the gates the foundation acceptance criteria name: gofmt, vet, build, the tests, and the two AC scripts.RESULT: SUCCESS
+
+FILES CHANGED:
+- go.mod
+- cmd/dupfind/main.go
+- internal/cli/cli.go
+- internal/cli/cli_test.go
+- internal/walk/walk.go
+- internal/dupes/dupes.go
+- internal/report/report.go
+- bin/.gitkeep
+
+SUMMARY:
+The foundation is in place. The root module is `dupfind` with `go 1.22` and no `require` lines. `cmd/dupfind/main.go` calls `cli.Run` and is the only place that calls `os.Exit`. `internal/cli` exposes `Run(args, stdout, stderr) int`, which returns 0 for now. `internal/walk`, `internal/dupes`, and `internal/report` are package stubs that compile. `bin/` exists.
+
+Checks run, all passing:
+- `gofmt -l .` printed nothing.
+- `go vet ./...` and `go build ./...` passed, and `go build ./cmd/dupfind` passed (Go 1.24.6 toolchain).
+- `go test ./...` passed. The one test, `TestRunPlaceholderSucceedsSilently`, checks that `Run` returns 0 and writes nothing to stdout.
+- AC `arch-module-no-third-party` passed.
+- AC `arch-package-tree` passed.
+- AC `arch-vet-and-build` passed (the vet and build commands above).
+
+Not run: `sources/run.sh`. It is the terminal-story grader and will fail until the feature stories land.
+
+Choices I made:
+- Module path is `dupfind`. The spec did not name one.
+- `bin/test.sh` is not written. ARCHITECTURE says the test-gate story delivers it, and that file is authoritative for this step. The story title mentions a "test launcher", so that wording conflicts with ARCHITECTURE. `sh bin/test.sh` will not exist until the test-gate story runs.
+- `bin/.gitkeep` keeps the empty `bin/` directory in git.
+- No commit was made, per the build rules.
+
+BLOCKERS:
+- None.

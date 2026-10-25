@@ -1,0 +1,12 @@
+// Command dupfind reports byte-identical regular files under a directory.
+package main
+
+import (
+	"os"
+
+	"dupfind/internal/cli"
+)
+
+func main() {
+	os.Exit(cli.Run(os.Args[1:], os.Stdout, os.Stderr))
+}

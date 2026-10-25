@@ -1,0 +1,54 @@
+Drydock 0.8.0  Copyright (c) 2026 Web Cloud Studio. All rights reserved.
+Build: DupFind
+scope: entire project
+frontier: foundation
+git: baseline DupFind 422fe1fedf35
+git: baseline DupFind b2f20340222f
+
+BLOCK block-1  name="Block 1 · Foundational"  calls_max=7
+  story=foundation  "Stand up the Go module, package tree, and test launcher that every other story builds into."
+
+  [call 1/7]  kind=initial  llm=claude/claude-haiku-5-5
+    result=ok  rc=0  execution=20261025.174754.270Z-8643e753
+    status  3/3
+git: block-1 | go.md, ARCHITECTURE.md | call=1 | app=bf980a7171bc target=5440f3975cd1
+
+  DONE  story=foundation  state=closed/implemented  execution=20261025.174754.270Z-8643e753  elapsed=55.1s
+git: block-1 | go.md, ARCHITECTURE.md | step_completed | app=unchanged target=40350cdcdae7
+
+BLOCK block-2  name="Block 2 · Service"  calls_max=7
+  story=arg-parsing  "Parse --summary, --min-size, and exactly one directory argument; reject malformed usage with exit 2."
+  story=module-build  "Provide the cmd/dupfind main package that builds with go build and delegates to cli.Run."
+  story=directory-validation  "Exit 1 with empty stdout when the directory is missing or is not a directory."
+  story=walk  "Walk the directory recursively and yield eligible regular files at or above the minimum size."
+  story=size-grouping  "Group candidate files by exact size and keep only sizes shared by two or more files."
+  story=digest-grouping  "Hash same-size files with SHA-256 and form duplicate groups, skipping unreadable files with a warning."
+  story=group-ordering  "Compute reclaimable bytes, order groups, number them from 1, and order paths within each group."
+  story=listing  "Write the CSV duplicate listing with header group,size,sha256,path using encoding/csv."
+  story=summary  "Write the one-row summary of groups, duplicate files, and reclaimable bytes with --summary."
+  story=test-gate  "Provide POSIX bin/test.sh and a Go test suite covering every rule, output form, and exit code."
+
+  [call 1/7]  kind=initial  llm=claude/claude-haiku-5-5
+    result=ok  rc=0  execution=20261025.175058.104Z-fca82587
+    status  39/39
+git: block-2 | FEATURE-ArgParsing.md, FEATURE-ModuleBuild.md, FEATURE-DirectoryValidation.md, FEATURE-Walk.md, FEATURE-SizeGrouping.md, FEATURE-DigestGrouping.md, FEATURE-GroupOrdering.md, FEATURE-Listing.md, FEATURE-Summary.md, FEATURE-TestGate.md | call=1 | app=54be4bdb0c60 target=124e8b0f81e4
+
+  DONE  story=arg-parsing  state=closed/implemented  execution=20261025.175058.104Z-fca82587  elapsed=7m14s
+git: block-2 | FEATURE-ArgParsing.md, FEATURE-ModuleBuild.md, FEATURE-DirectoryValidation.md, FEATURE-Walk.md, FEATURE-SizeGrouping.md, FEATURE-DigestGrouping.md, FEATURE-GroupOrdering.md, FEATURE-Listing.md, FEATURE-Summary.md, FEATURE-TestGate.md | step_completed | app=unchanged target=4124b2d1d836
+
+BLOCK block-3  name="Block 3 · Feature"  calls_max=7
+  story=verification  "Assemble the finished tool and confirm the supplied grader passes end to end."
+
+  [call 1/7]  kind=initial  llm=claude/claude-haiku-5-5
+    result=ok  rc=0  execution=20261025.175614.224Z-5c16fcc2
+    status  3/3
+git: block-3 | VERIFICATION.md | call=1 | app=unchanged target=c4dd7e8a490c
+
+  DONE  story=verification  state=closed/implemented  execution=20261025.175614.224Z-5c16fcc2  elapsed=1m58s
+git: block-3 | VERIFICATION.md | step_completed | app=unchanged target=6c13478e2b03
+git: build complete DupFind 591161c373d7
+git: build complete DupFind 9d5b285500a0
+
+result: 12 built, 0 failed, 0 unchanged
+elapsed: 10 minutes 59 seconds
+Target - committed project workspace git store

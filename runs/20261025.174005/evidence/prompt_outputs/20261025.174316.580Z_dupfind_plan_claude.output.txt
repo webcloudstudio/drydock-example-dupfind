@@ -1,0 +1,872 @@
+=== BEGIN ARTIFACT FEATURE-SizeGrouping.md ===
+# FEATURE: Size Grouping
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261025 V1 |
+| Description | Group candidate files by exact size and keep only sizes shared by two or more files, so unique-size files are never read. |
+| Depends On  | FEATURE-Walk.md, ARCHITECTURE.md |
+| Provides    | dupes.GroupBySize |
+| Consumes    | walk.Files |
+
+## Questions
+
+- None.
+
+## Purpose
+
+Rule 3 of the build instructions says files are grouped by size first and only files that share a
+size are read. This feature implements that first stage in `internal/dupes`.
+
+## Interface
+
+`dupes.GroupBySize` takes the eligible files produced by `walk.Files` (relative path and size) and
+returns size buckets. Only buckets with two or more files are returned. The size is taken from the
+walk result; file contents are never opened in this stage. A file whose size is unique appears in
+no bucket and is therefore never opened for hashing.
+
+## Reads and Writes
+
+- Reads: the in-memory walk result only.
+- Writes: nothing.
+
+## Required Project Tests
+
+The project test suite in `internal/dupes` contains `TestGroupBySizeOmitsUniqueSizes` (a unique
+size produces no bucket) and `TestGroupBySizeKeepsSharedSizes` (two or more files with one size
+produce one bucket holding all of them).
+
+## Programmatic Acceptance
+
+=== AC size-unique-and-shared ===
+Intent: Files with a unique size are never reported and a shared size with identical contents is reported.
+
+import csv
+import os
+import tempfile
+from drydock_go import cli_runner
+
+def write(root, rel, data):
+    p = os.path.join(root, rel)
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    with open(p, "wb") as f:
+        f.write(data)
+
+shared = b"dddddd"
+unique = b"cc"
+with tempfile.TemporaryDirectory() as root:
+    write(root, "d1.bin", shared)
+    write(root, "sub/d2.bin", shared)
+    write(root, "c.bin", unique)
+    code, out, err = cli_runner(root)
+    print(out)
+    print(err)
+    assert code == 0
+    rows = list(csv.reader(out.splitlines()))[1:]
+    paths = sorted(r[3] for r in rows)
+    assert paths == ["d1.bin", "sub/d2.bin"]
+=== END AC size-unique-and-shared ===
+
+=== AC size-same-size-different-content ===
+Intent: Files that share a size but differ in content are not reported as duplicates.
+
+import csv
+import os
+import tempfile
+from drydock_go import cli_runner
+
+def write(root, rel, data):
+    p = os.path.join(root, rel)
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    with open(p, "wb") as f:
+        f.write(data)
+
+with tempfile.TemporaryDirectory() as root:
+    write(root, "a.bin", b"aaaa")
+    write(root, "b.bin", b"bbbb")
+    code, out, err = cli_runner(root)
+    print(out)
+    print(err)
+    assert code == 0
+    rows = list(csv.reader(out.splitlines()))
+    assert len(rows) == 1
+=== END AC size-same-size-different-content ===
+
+=== AC size-unit-tests ===
+Intent: The project's own tests for the size bucketing pass and actually execute.
+
+from drydock_go import run_test
+
+result = run_test("./internal/dupes", "TestGroupBySizeOmitsUniqueSizes")
+assert result.passed, (result.status, result.stdout, result.stderr)
+result = run_test("./internal/dupes", "TestGroupBySizeKeepsSharedSizes")
+assert result.passed, (result.status, result.stdout, result.stderr)
+=== END AC size-unit-tests ===
+
+## User Acceptance
+
+- None.
+
+## Guardrails
+
+- Contents of a file whose size is unique are never opened.
+- No file under the examined directory is modified, moved, or deleted.
+- Only the standard library is used.
+=== END ARTIFACT ===
+=== BEGIN ARTIFACT FEATURE-DigestGrouping.md ===
+# FEATURE: Digest Grouping
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261025 V1 |
+| Description | Hash same-size files with SHA-256 and form duplicate groups, skipping unreadable files with a stderr warning. |
+| Depends On  | FEATURE-SizeGrouping.md, ARCHITECTURE.md |
+| Provides    | dupes.GroupByDigest |
+| Consumes    | dupes.GroupBySize |
+
+## Questions
+
+- None.
+
+## Purpose
+
+Rule 3 groups same-size files by the SHA-256 digest of their contents; a group of two or more files
+with the same size and digest is a duplicate group. Rule 6 skips unreadable files with one warning.
+
+## Interface
+
+`dupes.GroupByDigest` takes the size buckets from `dupes.GroupBySize`. For each bucket it opens each
+file read-only and streams it through `crypto/sha256`. The digest is the lowercase hexadecimal
+encoding of the full contents. Files with identical size and digest form one group; groups with a
+single member are dropped.
+
+A file that cannot be opened or read yields exactly one warning line on standard error, is excluded
+from grouping, and does not change the exit code. Files are opened read-only; nothing is written,
+moved, or deleted under the examined directory.
+
+## Reads and Writes
+
+- Reads: the contents of files in shared-size buckets.
+- Writes: warning lines to standard error only.
+
+## Required Project Tests
+
+`internal/dupes` contains `TestGroupByDigest` (identical contents group, same-size different
+contents do not) and `TestGroupByDigestSkipsUnreadable` (an unreadable file is skipped with one
+warning and does not fail the call).
+
+## Programmatic Acceptance
+
+=== AC digest-columns-match-contents ===
+Intent: Reported size and sha256 are the byte length and lowercase SHA-256 of the fixture contents.
+
+import csv
+import hashlib
+import os
+import tempfile
+from drydock_go import cli_runner
+
+def write(root, rel, data):
+    p = os.path.join(root, rel)
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    with open(p, "wb") as f:
+        f.write(data)
+
+content = b"quarterly report\n"
+with tempfile.TemporaryDirectory() as root:
+    write(root, "a/one.txt", content)
+    write(root, "b/two.txt", content)
+    write(root, "c/three.txt", content)
+    code, out, err = cli_runner(root)
+    print(out)
+    print(err)
+    assert code == 0
+    rows = list(csv.reader(out.splitlines()))[1:]
+    assert len(rows) == 3
+    for r in rows:
+        assert int(r[1]) == len(content)
+        assert r[2] == hashlib.sha256(content).hexdigest()
+    assert sorted(r[3] for r in rows) == ["a/one.txt", "b/two.txt", "c/three.txt"]
+=== END AC digest-columns-match-contents ===
+
+=== AC digest-splits-same-size-groups ===
+Intent: Same-size files with different digests form separate groups and a lone digest is dropped.
+
+import csv
+import os
+import tempfile
+from drydock_go import cli_runner
+
+def write(root, rel, data):
+    p = os.path.join(root, rel)
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    with open(p, "wb") as f:
+        f.write(data)
+
+first = b"abcd"
+second = b"abce"
+third = b"abcf"
+with tempfile.TemporaryDirectory() as root:
+    write(root, "x1", first)
+    write(root, "x2", first)
+    write(root, "y1", second)
+    write(root, "y2", second)
+    write(root, "z1", third)
+    code, out, err = cli_runner(root)
+    print(out)
+    print(err)
+    assert code == 0
+    rows = list(csv.reader(out.splitlines()))[1:]
+    by_group = {}
+    for r in rows:
+        by_group.setdefault(r[0], []).append(r[3])
+    assert len(by_group) == 2
+    assert sorted(sorted(v) for v in by_group.values()) == [["x1", "x2"], ["y1", "y2"]]
+=== END AC digest-splits-same-size-groups ===
+
+=== AC digest-unreadable-skipped ===
+Intent: An unreadable duplicate candidate is skipped without changing the exit code (skipped when permissions cannot be enforced).
+
+import csv
+import os
+import tempfile
+from drydock_go import cli_runner
+
+def write(root, rel, data):
+    p = os.path.join(root, rel)
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    with open(p, "wb") as f:
+        f.write(data)
+
+content = b"same bytes\n"
+with tempfile.TemporaryDirectory() as root:
+    write(root, "ok1.txt", content)
+    write(root, "ok2.txt", content)
+    write(root, "locked.txt", content)
+    os.chmod(os.path.join(root, "locked.txt"), 0)
+    try:
+        enforced = False
+        try:
+            open(os.path.join(root, "locked.txt"), "rb").close()
+        except PermissionError:
+            enforced = True
+        code, out, err = cli_runner(root)
+        print(out)
+        print(err)
+        assert code == 0
+        rows = list(csv.reader(out.splitlines()))[1:]
+        paths = sorted(r[3] for r in rows)
+        if enforced:
+            assert paths == ["ok1.txt", "ok2.txt"]
+        else:
+            assert paths == ["locked.txt", "ok1.txt", "ok2.txt"]
+    finally:
+        os.chmod(os.path.join(root, "locked.txt"), 0o600)
+=== END AC digest-unreadable-skipped ===
+
+=== AC digest-tree-unmodified ===
+Intent: Running the tool leaves every file's bytes and the directory listing unchanged.
+
+import os
+import tempfile
+from drydock_go import cli_runner
+
+def write(root, rel, data):
+    p = os.path.join(root, rel)
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    with open(p, "wb") as f:
+        f.write(data)
+
+def snapshot(root):
+    snap = {}
+    for dirpath, dirnames, filenames in os.walk(root):
+        for n in filenames:
+            p = os.path.join(dirpath, n)
+            with open(p, "rb") as f:
+                snap[os.path.relpath(p, root)] = f.read()
+        for n in dirnames:
+            snap[os.path.relpath(os.path.join(dirpath, n), root) + "/"] = None
+    return snap
+
+content = b"keep me\n"
+with tempfile.TemporaryDirectory() as root:
+    write(root, "a/f1", content)
+    write(root, "b/f2", content)
+    write(root, "c/other", b"different!")
+    before = snapshot(root)
+    code, out, err = cli_runner(root)
+    print(out)
+    print(err)
+    assert code == 0
+    code, out, err = cli_runner("--summary", root)
+    assert code == 0
+    assert snapshot(root) == before
+=== END AC digest-tree-unmodified ===
+
+=== AC digest-unit-tests ===
+Intent: The project's own digest grouping tests pass and actually execute.
+
+from drydock_go import run_test
+
+result = run_test("./internal/dupes", "TestGroupByDigest")
+assert result.passed, (result.status, result.stdout, result.stderr)
+result = run_test("./internal/dupes", "TestGroupByDigestSkipsUnreadable")
+assert result.passed, (result.status, result.stdout, result.stderr)
+=== END AC digest-unit-tests ===
+
+## User Acceptance
+
+- None.
+
+## Guardrails
+
+- Files are opened read-only; nothing under the examined directory is written, moved, or deleted.
+- Warnings go to standard error only and never alter the exit code.
+- Only the standard library is used; no digest or path is hardcoded.
+=== END ARTIFACT ===
+=== BEGIN ARTIFACT FEATURE-GroupOrdering.md ===
+# FEATURE: Group Ordering
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261025 V1 |
+| Description | Compute reclaimable bytes per group, order and number the groups, and order paths within each group. |
+| Depends On  | FEATURE-DigestGrouping.md, ARCHITECTURE.md |
+| Provides    | dupes.Order |
+| Consumes    | dupes.GroupByDigest |
+
+## Questions
+
+- None.
+
+## Purpose
+
+Rules 4 and 5 fix how paths are written and how groups and paths are ordered so output is
+deterministic.
+
+## Interface
+
+`dupes.Order` takes the duplicate groups and returns them ordered and numbered.
+
+- Reclaimable bytes of a group are `size x (files - 1)`.
+- Groups are ordered by reclaimable bytes descending, then by digest ascending, and numbered from 1
+  in that order.
+- Within a group, paths are ordered by byte value ascending (plain string comparison).
+- Paths are relative to the examined directory, use `/` as the separator, and carry no leading `./`.
+
+## Reads and Writes
+
+- Reads: the in-memory groups.
+- Writes: nothing.
+
+## Required Project Tests
+
+`internal/dupes` contains `TestOrder` covering reclaimable-first ordering, digest tie-breaking,
+and byte-order paths.
+
+## Programmatic Acceptance
+
+=== AC order-by-reclaimable-then-digest ===
+Intent: Groups appear by reclaimable bytes descending then digest ascending and are numbered from 1.
+
+import csv
+import hashlib
+import os
+import tempfile
+from drydock_go import cli_runner
+
+def write(root, rel, data):
+    p = os.path.join(root, rel)
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    with open(p, "wb") as f:
+        f.write(data)
+
+fixtures = {
+    b"0123456789": ["big/a", "big/b"],
+    b"xyz": ["s/1", "s/2", "s/3", "s/4", "s/5"],
+    b"tie-aa": ["t1/a", "t1/b"],
+    b"tie-bb": ["t2/a", "t2/b"],
+    b"tie-cc": ["t3/a", "t3/b"],
+}
+groups = []
+for content, paths in fixtures.items():
+    groups.append((len(content) * (len(paths) - 1), hashlib.sha256(content).hexdigest(), len(content), sorted(paths)))
+expected = sorted(groups, key=lambda g: (-g[0], g[1]))
+
+with tempfile.TemporaryDirectory() as root:
+    for content, paths in fixtures.items():
+        for p in paths:
+            write(root, p, content)
+    code, out, err = cli_runner(root)
+    print(out)
+    print(err)
+    assert code == 0
+    rows = list(csv.reader(out.splitlines()))[1:]
+    seen = []
+    for r in rows:
+        if not seen or seen[-1][0] != r[0]:
+            seen.append((r[0], r[2], int(r[1]), []))
+        seen[-1][3].append(r[3])
+    assert [int(s[0]) for s in seen] == list(range(1, len(expected) + 1))
+    assert [s[1] for s in seen] == [g[1] for g in expected]
+    assert [s[3] for s in seen] == [g[3] for g in expected]
+=== END AC order-by-reclaimable-then-digest ===
+
+=== AC order-paths-byte-ascending ===
+Intent: Paths within a group are in byte order and written relative with slash separators and no leading dot-slash.
+
+import csv
+import os
+import tempfile
+from drydock_go import cli_runner
+
+def write(root, rel, data):
+    p = os.path.join(root, rel)
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    with open(p, "wb") as f:
+        f.write(data)
+
+content = b"order me\n"
+paths = ["b.txt", "B.txt", "a b.txt", "a/z.txt", ".hid/x.txt", "a.txt"]
+with tempfile.TemporaryDirectory() as root:
+    for p in paths:
+        write(root, p, content)
+    code, out, err = cli_runner(root)
+    print(out)
+    print(err)
+    assert code == 0
+    got = [r[3] for r in list(csv.reader(out.splitlines()))[1:]]
+    assert got == sorted(paths, key=lambda s: s.encode("utf-8"))
+    for g in got:
+        assert not g.startswith("./")
+        assert not g.startswith("/")
+        assert "\\" not in g
+=== END AC order-paths-byte-ascending ===
+
+=== AC order-reclaimable-beats-size ===
+Intent: A smaller file with more copies precedes a larger file with fewer copies when it reclaims more bytes.
+
+import csv
+import hashlib
+import os
+import tempfile
+from drydock_go import cli_runner
+
+def write(root, rel, data):
+    p = os.path.join(root, rel)
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    with open(p, "wb") as f:
+        f.write(data)
+
+large = b"L" * 10
+small = b"s" * 3
+large_paths = ["l1", "l2"]
+small_paths = ["s1", "s2", "s3", "s4", "s5"]
+assert len(small) * (len(small_paths) - 1) > len(large) * (len(large_paths) - 1)
+with tempfile.TemporaryDirectory() as root:
+    for p in large_paths:
+        write(root, p, large)
+    for p in small_paths:
+        write(root, p, small)
+    code, out, err = cli_runner(root)
+    print(out)
+    print(err)
+    assert code == 0
+    rows = list(csv.reader(out.splitlines()))[1:]
+    assert rows[0][2] == hashlib.sha256(small).hexdigest()
+    assert rows[0][0] == rows[len(small_paths) - 1][0]
+    assert rows[len(small_paths)][2] == hashlib.sha256(large).hexdigest()
+=== END AC order-reclaimable-beats-size ===
+
+=== AC order-unit-tests ===
+Intent: The project's own ordering test passes and actually executes.
+
+from drydock_go import run_test
+
+result = run_test("./internal/dupes", "TestOrder")
+assert result.passed, (result.status, result.stdout, result.stderr)
+=== END AC order-unit-tests ===
+
+## User Acceptance
+
+- None.
+
+## Guardrails
+
+- Ordering is deterministic and independent of directory enumeration order and locale.
+- Paths never contain a leading `./` or a backslash separator.
+=== END ARTIFACT ===
+=== BEGIN ARTIFACT FEATURE-Listing.md ===
+# FEATURE: Listing
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261025 V1 |
+| Description | Write the CSV duplicate listing with header group,size,sha256,path using encoding/csv and wire the default mode of cli.Run. |
+| Depends On  | FEATURE-GroupOrdering.md, FEATURE-ModuleBuild.md, ARCHITECTURE.md |
+| Provides    | report.WriteListing |
+| Consumes    | dupes.Order |
+
+## Questions
+
+- None.
+
+## Purpose
+
+The default output of `dupfind <directory>` is a CSV listing of every file in every duplicate group.
+
+## Interface
+
+`report.WriteListing` writes to standard output through `encoding/csv` with `\n` line endings
+(`UseCRLF` false). The header row is `group,size,sha256,path`. One row follows per file of every
+ordered group: group number, size in bytes, lowercase hexadecimal SHA-256, relative path. With no
+duplicates only the header is written. Fields containing a comma, a double quote, or a newline are
+quoted as RFC 4180 specifies, by the csv writer.
+
+The default (non-summary) mode of `cli.Run` runs the walk, size grouping, digest grouping, and
+ordering with the configured `--min-size`, then this writer, and returns 0. `--min-size` excludes
+files smaller than the given number of bytes.
+
+## Reads and Writes
+
+- Reads: ordered groups.
+- Writes: CSV to standard output only.
+
+## Programmatic Acceptance
+
+=== AC listing-full-output ===
+Intent: The entire standard output equals the CSV the standard csv writer produces from the fixture-derived rows.
+
+import csv
+import hashlib
+import io
+import os
+import tempfile
+from drydock_go import cli_runner
+
+def write(root, rel, data):
+    p = os.path.join(root, rel)
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    with open(p, "wb") as f:
+        f.write(data)
+
+fixtures = {
+    b"alpha alpha\n": ["a/one.txt", "b/two.txt", "c/deep/three.txt"],
+    b"beta\n": [".hidden/.env", "env.bak"],
+}
+header = ["group", "size", "sha256", "path"]
+groups = []
+for content, paths in fixtures.items():
+    groups.append((len(content) * (len(paths) - 1), hashlib.sha256(content).hexdigest(), len(content), sorted(paths)))
+groups.sort(key=lambda g: (-g[0], g[1]))
+buf = io.StringIO()
+w = csv.writer(buf, lineterminator="\n")
+w.writerow(header)
+for n, g in enumerate(groups, start=1):
+    for p in g[3]:
+        w.writerow([n, g[2], g[1], p])
+expected = buf.getvalue()
+
+with tempfile.TemporaryDirectory() as root:
+    for content, paths in fixtures.items():
+        for p in paths:
+            write(root, p, content)
+    code, out, err = cli_runner(root)
+    print(out)
+    print(err)
+    assert code == 0
+    assert out == expected
+    assert "\r" not in out
+=== END AC listing-full-output ===
+
+=== AC listing-csv-quoting ===
+Intent: Paths containing a comma or a double quote survive a CSV round trip unchanged.
+
+import csv
+import os
+import tempfile
+from drydock_go import cli_runner
+
+def write(root, rel, data):
+    p = os.path.join(root, rel)
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    with open(p, "wb") as f:
+        f.write(data)
+
+content = b"quote me\n"
+paths = ["song,live.mp3", 'say "hi".txt', "plain.txt"]
+with tempfile.TemporaryDirectory() as root:
+    for p in paths:
+        write(root, p, content)
+    code, out, err = cli_runner(root)
+    print(out)
+    print(err)
+    assert code == 0
+    rows = list(csv.reader(out.splitlines()))
+    assert all(len(r) == 4 for r in rows)
+    assert sorted(r[3] for r in rows[1:]) == sorted(paths)
+=== END AC listing-csv-quoting ===
+
+=== AC listing-header-only-when-no-duplicates ===
+Intent: A directory without duplicates (or with only zero-byte files) yields the header row only, with exit 0.
+
+import csv
+import os
+import tempfile
+from drydock_go import cli_runner
+
+def write(root, rel, data):
+    p = os.path.join(root, rel)
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    with open(p, "wb") as f:
+        f.write(data)
+
+with tempfile.TemporaryDirectory() as root:
+    write(root, "solo.txt", b"only one of me\n")
+    write(root, "empty/one", b"")
+    write(root, "empty/two", b"")
+    code, out, err = cli_runner(root)
+    print(out)
+    print(err)
+    assert code == 0
+    assert out.splitlines() == ["group,size,sha256,path"]
+    assert out.endswith("\n")
+=== END AC listing-header-only-when-no-duplicates ===
+
+=== AC listing-min-size ===
+Intent: Files smaller than --min-size are excluded from the listing while larger duplicates remain.
+
+import csv
+import os
+import tempfile
+from drydock_go import cli_runner
+
+def write(root, rel, data):
+    p = os.path.join(root, rel)
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    with open(p, "wb") as f:
+        f.write(data)
+
+small = b"tiny"
+large = b"L" * 50
+threshold = len(small) + 1
+with tempfile.TemporaryDirectory() as root:
+    write(root, "s1", small)
+    write(root, "s2", small)
+    write(root, "l1", large)
+    write(root, "l2", large)
+    code, out, err = cli_runner("--min-size", str(threshold), root)
+    print(out)
+    print(err)
+    assert code == 0
+    rows = list(csv.reader(out.splitlines()))[1:]
+    assert sorted(r[3] for r in rows) == ["l1", "l2"]
+    code, out, err = cli_runner(root)
+    assert code == 0
+    rows = list(csv.reader(out.splitlines()))[1:]
+    assert len(rows) == 4
+=== END AC listing-min-size ===
+
+=== AC listing-symlinks-and-hidden ===
+Intent: Hidden files are listed while symbolic links are neither followed nor reported.
+
+import csv
+import os
+import tempfile
+from drydock_go import cli_runner
+
+def write(root, rel, data):
+    p = os.path.join(root, rel)
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    with open(p, "wb") as f:
+        f.write(data)
+
+content = b"KEY=1\n"
+with tempfile.TemporaryDirectory() as root:
+    write(root, ".hidden/.env", content)
+    write(root, "env.bak", content)
+    os.symlink(os.path.join(root, "env.bak"), os.path.join(root, "link.bak"))
+    os.symlink(os.path.join(root, ".hidden"), os.path.join(root, "linkdir"))
+    code, out, err = cli_runner(root)
+    print(out)
+    print(err)
+    assert code == 0
+    rows = list(csv.reader(out.splitlines()))[1:]
+    assert sorted(r[3] for r in rows) == [".hidden/.env", "env.bak"]
+=== END AC listing-symlinks-and-hidden ===
+
+## User Acceptance
+
+- None.
+
+## Guardrails
+
+- Output is produced with `encoding/csv`; fields are never concatenated by hand.
+- A failing command writes nothing to standard output.
+- No file under the examined directory is modified, moved, or deleted.
+=== END ARTIFACT ===
+=== BEGIN ARTIFACT FEATURE-Summary.md ===
+# FEATURE: Summary
+
+| Field       | Value |
+|-------------|-------|
+| Version     | 20261025 V1 |
+| Description | Write the one-row CSV summary of groups, duplicate files, and reclaimable bytes when --summary is given. |
+| Depends On  | FEATURE-Listing.md, ARCHITECTURE.md |
+| Provides    | report.WriteSummary |
+| Consumes    | dupes.Order |
+
+## Questions
+
+- None.
+
+## Purpose
+
+With `--summary` the tool reports the totals of the listing that the same options would produce,
+instead of the listing itself.
+
+## Interface
+
+`report.WriteSummary` writes, through `encoding/csv` with `\n` line endings, the header
+`groups,duplicate_files,reclaimable_bytes` and one row:
+
+- `groups`: the number of duplicate groups.
+- `duplicate_files`: the sum of `files - 1` over all groups.
+- `reclaimable_bytes`: the sum of every group's `size x (files - 1)`.
+
+With no duplicates the row is `0,0,0`. The `--summary` mode of `cli.Run` uses the same walk,
+grouping, and ordering as the listing, with the same `--min-size`, and returns 0.
+
+## Reads and Writes
+
+- Reads: ordered groups.
+- Writes: CSV to standard output only.
+
+## Programmatic Acceptance
+
+=== AC summary-totals-match-fixture ===
+Intent: The summary row equals totals computed from the fixture's known duplicate structure.
+
+import csv
+import os
+import tempfile
+from drydock_go import cli_runner
+
+def write(root, rel, data):
+    p = os.path.join(root, rel)
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    with open(p, "wb") as f:
+        f.write(data)
+
+fixtures = {
+    b"quarterly report\n": ["a/r.txt", "b/r2.txt", "c/r3.txt"],
+    b"la la la\n": ["m/s.mp3", "m/s2.mp3"],
+    b"unique content here\n": ["u/solo"],
+}
+dup_groups = [(c, p) for c, p in fixtures.items() if len(p) > 1]
+want_groups = len(dup_groups)
+want_files = sum(len(p) - 1 for c, p in dup_groups)
+want_bytes = sum(len(c) * (len(p) - 1) for c, p in dup_groups)
+with tempfile.TemporaryDirectory() as root:
+    for content, paths in fixtures.items():
+        for p in paths:
+            write(root, p, content)
+    code, out, err = cli_runner("--summary", root)
+    print(out)
+    print(err)
+    assert code == 0
+    rows = list(csv.reader(out.splitlines()))
+    assert len(rows) == 2
+    assert rows[0] == ["groups", "duplicate_files", "reclaimable_bytes"]
+    assert [int(x) for x in rows[1]] == [want_groups, want_files, want_bytes]
+=== END AC summary-totals-match-fixture ===
+
+=== AC summary-no-duplicates ===
+Intent: With no duplicates the summary row holds three zeros and exit status is 0.
+
+import csv
+import os
+import tempfile
+from drydock_go import cli_runner
+
+def write(root, rel, data):
+    p = os.path.join(root, rel)
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    with open(p, "wb") as f:
+        f.write(data)
+
+with tempfile.TemporaryDirectory() as root:
+    write(root, "empty/one", b"")
+    write(root, "empty/two", b"")
+    code, out, err = cli_runner("--summary", root)
+    print(out)
+    print(err)
+    assert code == 0
+    rows = list(csv.reader(out.splitlines()))
+    assert len(rows) == 2
+    assert [int(x) for x in rows[1]] == [0, 0, 0]
+=== END AC summary-no-duplicates ===
+
+=== AC summary-agrees-with-listing ===
+Intent: The summary totals equal the totals derived from the listing produced by the same options, including --min-size.
+
+import csv
+import os
+import tempfile
+from drydock_go import cli_runner
+
+def write(root, rel, data):
+    p = os.path.join(root, rel)
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    with open(p, "wb") as f:
+        f.write(data)
+
+fixtures = {
+    b"S" * 4: ["s1", "s2"],
+    b"M" * 30: ["m1", "m2", "m3"],
+    b"B" * 200: ["b1", "b2"],
+}
+with tempfile.TemporaryDirectory() as root:
+    for content, paths in fixtures.items():
+        for p in paths:
+            write(root, p, content)
+    for opts in ([], ["--min-size", "20"], ["--min-size", "100"], ["--min-size", "1000"]):
+        code, listing, err = cli_runner(*opts, root)
+        assert code == 0
+        rows = list(csv.reader(listing.splitlines()))[1:]
+        per_group = {}
+        for r in rows:
+            per_group.setdefault(r[0], []).append(int(r[1]))
+        want = [
+            len(per_group),
+            sum(len(v) - 1 for v in per_group.values()),
+            sum(v[0] * (len(v) - 1) for v in per_group.values()),
+        ]
+        code, summ, err = cli_runner("--summary", *opts, root)
+        print(summ)
+        print(err)
+        assert code == 0
+        srows = list(csv.reader(summ.splitlines()))
+        assert len(srows) == 2
+        assert [int(x) for x in srows[1]] == want
+=== END AC summary-agrees-with-listing ===
+
+=== AC summary-unit-tests ===
+Intent: The project's own summary tests pass and actually execute.
+
+from drydock_go import run_test
+
+result = run_test("./internal/report", "TestWriteSummary")
+assert result.passed, (result.status, result.stdout, result.stderr)
+=== END AC summary-unit-tests ===
+
+## User Acceptance
+
+- None.
+
+## Guardrails
+
+- The summary never prints the listing and the listing never prints the summary.
+- Output is produced with `encoding/csv`.
+- No file under the examined directory is modified, moved, or deleted.
+=== END ARTIFACT ===

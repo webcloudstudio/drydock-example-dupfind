@@ -1,0 +1,8 @@
+Drydock 0.8.0  Copyright (c) 2026 Web Cloud Studio. All rights reserved.
+plan verify: DupFind
+  2 criteria cannot run as written
+  ✗  FEATURE-SizeFilter.md [feature-sizefilter-1]: calls `cli_runner` at line(s) 11, 22 without asserting its exit status; bind it as `code, out, err = cli_runner(...)` and assert `code` before the next call
+  ✗  FEATURE-UnreadableFiles.md [feature-unreadablefiles-1]: calls `cli_runner` at line(s) 18, 38 without asserting its exit status; bind it as `code, out, err = cli_runner(...)` and assert `code` before the next call
+  ⚠  FEATURE-Walker.md [walker-hidden-and-regular]: captures a program's output and prints none of it; print its pass/fail counts before asserting so repair can see progress
+  Run: drydock plan repair DupFind
+Target - committed project workspace git store

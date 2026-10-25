@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>workspace/targets/DupFind/blueprint/FEATURE-GroupOrdering.md</title>
+<link rel="stylesheet" href="../../../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>workspace/targets/DupFind/blueprint/FEATURE-GroupOrdering.md</h1><div class="filenav"><a href="../../../../../index.html">&larr; Report</a><a href="../../../../../workspace/targets/DupFind/blueprint/FEATURE-GroupOrdering.md">Raw file</a></div></header>
+<article class="doc"><h1>FEATURE: Group Ordering</h1>
+<div class="scroll"><table><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Version</td><td>20261025 V1</td></tr><tr><td>Description</td><td>Compute reclaimable bytes per group, order and number the groups, and order paths within each group.</td></tr><tr><td>Depends On</td><td>FEATURE-DigestGrouping.md, ARCHITECTURE.md</td></tr><tr><td>Provides</td><td>dupes.Order</td></tr><tr><td>Consumes</td><td>dupes.GroupByDigest</td></tr></tbody></table></div>
+<h2>Purpose</h2>
+<p>Rules 4 and 5 fix how paths are written and how groups and paths are ordered so output is deterministic.</p>
+<h2>Interface</h2>
+<p><code>dupes.Order</code> takes the duplicate groups and returns them ordered and numbered.</p>
+<ul><li>Reclaimable bytes of a group are <code>size x (files - 1)</code>.</li><li>Groups are ordered by reclaimable bytes descending, then by digest ascending, and numbered from 1</li></ul>
+<p>in that order.</p>
+<ul><li>Within a group, paths are ordered by byte value ascending (plain string comparison).</li><li>Paths are relative to the examined directory, use <code>/</code> as the separator, and carry no leading <code>./</code>.</li></ul>
+<h2>Reads and Writes</h2>
+<ul><li>Reads: the in-memory groups.</li><li>Writes: nothing.</li></ul>
+<h2>Required Project Tests</h2>
+<p><code>internal/dupes</code> contains <code>TestOrder</code> covering reclaimable-first ordering, digest tie-breaking, and byte-order paths.</p>
+<h2>Programmatic Acceptance</h2>
+<p>=== AC order-by-reclaimable-then-digest ===<br>Intent: Groups appear by reclaimable bytes descending then digest ascending and are numbered from 1.</p>
+<p>import csv import hashlib import os import tempfile from drydock_go import cli_runner</p>
+<p>def write(root, rel, data): p = os.path.join(root, rel) os.makedirs(os.path.dirname(p), exist_ok=True) with open(p, &quot;wb&quot;) as f: f.write(data)</p>
+<p>fixtures = { b&quot;0123456789&quot;: [&quot;big/a&quot;, &quot;big/b&quot;], b&quot;xyz&quot;: [&quot;s/1&quot;, &quot;s/2&quot;, &quot;s/3&quot;, &quot;s/4&quot;, &quot;s/5&quot;], b&quot;tie-aa&quot;: [&quot;t1/a&quot;, &quot;t1/b&quot;], b&quot;tie-bb&quot;: [&quot;t2/a&quot;, &quot;t2/b&quot;], b&quot;tie-cc&quot;: [&quot;t3/a&quot;, &quot;t3/b&quot;], } groups = [] for content, paths in fixtures.items(): groups.append((len(content) * (len(paths) - 1), hashlib.sha256(content).hexdigest(), len(content), sorted(paths))) expected = sorted(groups, key=lambda g: (-g[0], g[1]))</p>
+<p>with tempfile.TemporaryDirectory() as root: for content, paths in fixtures.items(): for p in paths: write(root, p, content) code, out, err = cli_runner(root) print(out) print(err) assert code == 0 rows = list(csv.reader(out.splitlines()))[1:] seen = [] for r in rows: if not seen or seen[-1][0] != r[0]: seen.append((r[0], r[2], int(r[1]), [])) seen[-1][3].append(r[3]) assert [int(s[0]) for s in seen] == list(range(1, len(expected) + 1)) assert [s[1] for s in seen] == [g[1] for g in expected] assert [s[3] for s in seen] == [g[3] for g in expected] === END AC order-by-reclaimable-then-digest ===</p>
+<p>=== AC order-paths-byte-ascending ===<br>Intent: Paths within a group are in byte order and written relative with slash separators and no leading dot-slash.</p>
+<p>import csv import os import tempfile from drydock_go import cli_runner</p>
+<p>def write(root, rel, data): p = os.path.join(root, rel) os.makedirs(os.path.dirname(p), exist_ok=True) with open(p, &quot;wb&quot;) as f: f.write(data)</p>
+<p>content = b&quot;order me\n&quot; paths = [&quot;b.txt&quot;, &quot;B.txt&quot;, &quot;a b.txt&quot;, &quot;a/z.txt&quot;, &quot;.hid/x.txt&quot;, &quot;a.txt&quot;] with tempfile.TemporaryDirectory() as root: for p in paths: write(root, p, content) code, out, err = cli_runner(root) print(out) print(err) assert code == 0 got = [r[3] for r in list(csv.reader(out.splitlines()))[1:]] assert got == sorted(paths, key=lambda s: s.encode(&quot;utf-8&quot;)) for g in got: assert not g.startswith(&quot;./&quot;) assert not g.startswith(&quot;/&quot;) assert &quot;\\&quot; not in g === END AC order-paths-byte-ascending ===</p>
+<p>=== AC order-reclaimable-beats-size ===<br>Intent: A smaller file with more copies precedes a larger file with fewer copies when it reclaims more bytes.</p>
+<p>import csv import hashlib import os import tempfile from drydock_go import cli_runner</p>
+<p>def write(root, rel, data): p = os.path.join(root, rel) os.makedirs(os.path.dirname(p), exist_ok=True) with open(p, &quot;wb&quot;) as f: f.write(data)</p>
+<p>large = b&quot;L&quot; * 10 small = b&quot;s&quot; * 3 large_paths = [&quot;l1&quot;, &quot;l2&quot;] small_paths = [&quot;s1&quot;, &quot;s2&quot;, &quot;s3&quot;, &quot;s4&quot;, &quot;s5&quot;] assert len(small) * (len(small_paths) - 1) &gt; len(large) * (len(large_paths) - 1) with tempfile.TemporaryDirectory() as root: for p in large_paths: write(root, p, large) for p in small_paths: write(root, p, small) code, out, err = cli_runner(root) print(out) print(err) assert code == 0 rows = list(csv.reader(out.splitlines()))[1:] assert rows[0][2] == hashlib.sha256(small).hexdigest() assert rows[0][0] == rows[len(small_paths) - 1][0] assert rows[len(small_paths)][2] == hashlib.sha256(large).hexdigest() === END AC order-reclaimable-beats-size ===</p>
+<p>=== AC order-unit-tests ===<br>Intent: The project&#x27;s own ordering test passes and actually executes.</p>
+<p>from drydock_go import run_test</p>
+<p>result = run_test(&quot;./internal/dupes&quot;, &quot;TestOrder&quot;) assert result.passed, (result.status, result.stdout, result.stderr) === END AC order-unit-tests ===</p>
+<h2>User Acceptance</h2>
+<ul><li>None.</li></ul>
+<h2>Guardrails</h2>
+<ul><li>Ordering is deterministic and independent of directory enumeration order and locale.</li><li>Paths never contain a leading <code>./</code> or a backslash separator.</li></ul></article>
+</main>
+</body>
+</html>

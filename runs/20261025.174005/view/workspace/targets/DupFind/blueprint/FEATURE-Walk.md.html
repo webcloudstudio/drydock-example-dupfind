@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>workspace/targets/DupFind/blueprint/FEATURE-Walk.md</title>
+<link rel="stylesheet" href="../../../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>workspace/targets/DupFind/blueprint/FEATURE-Walk.md</h1><div class="filenav"><a href="../../../../../index.html">&larr; Report</a><a href="../../../../../workspace/targets/DupFind/blueprint/FEATURE-Walk.md">Raw file</a></div></header>
+<article class="doc"><h1>FEATURE: Walk</h1>
+<div class="scroll"><table><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Version</td><td>20261025 V1</td></tr><tr><td>Description</td><td>Walk the directory recursively and yield eligible regular files at or above the minimum size.</td></tr><tr><td>Depends On</td><td>ARCHITECTURE.md, FEATURE-DirectoryValidation.md</td></tr><tr><td>Provides</td><td>walk.Files</td></tr><tr><td>Consumes</td><td>cli.Config</td></tr></tbody></table></div>
+<h2>Purpose</h2>
+<p><code>internal/walk</code> enumerates the files that may be considered for duplicate detection. It never opens file contents.</p>
+<h2>Interface</h2>
+<pre><code>package walk
+
+type Entry struct {
+	Path string // relative to root, &quot;/&quot; separated, no leading &quot;./&quot;
+	Size int64
+}
+
+func Files(root string, minSize int64, warn io.Writer) ([]Entry, error)</code></pre>
+<h2>Behavior</h2>
+<ul><li>Traversal is recursive and includes hidden files and directories (names beginning <code>.</code>).</li><li>Only regular files are returned. Entries are classified without following links (<code>os.Lstat</code> or the <code>fs.DirEntry</code> type).</li><li>Symbolic links are neither followed nor reported, whether they point at files or directories. A directory reachable only through a symbolic link is not traversed.</li><li>Files whose size is below <code>minSize</code> are ignored. Zero-byte files are never returned, even if <code>minSize</code> is below 1.</li><li>Paths use <code>/</code> as the separator and no leading <code>./</code>.</li><li>A subdirectory that cannot be read yields one warning line on <code>warn</code>, is skipped, and the walk continues. This does not change the exit code.</li><li>Return order is unspecified; ordering is the responsibility of later stories.</li></ul>
+<h2>Reads</h2>
+<p>Directory listings and file metadata under the root.</p>
+<h2>Writes</h2>
+<p>Warning lines on the <code>warn</code> writer only.</p>
+<h2>Programmatic Acceptance</h2>
+<p>=== AC walk-rules ===<br>Intent: Walk returns hidden and nested regular files, omits symbolic links and zero-byte files, and honors the minimum size.</p>
+<p>import os import pathlib import subprocess import sys</p>
+<p>mod = &quot;&quot; for line in pathlib.Path(&quot;go.mod&quot;).read_text().splitlines(): if line.startswith(&quot;module &quot;): mod = line.split()[1] assert mod</p>
+<p>GO_TEST = &quot;&quot;&quot;package walk_test</p>
+<p>import ( &quot;io&quot; &quot;os&quot; &quot;path/filepath&quot; &quot;sort&quot; &quot;testing&quot;</p>
+<p>&quot;MODPATH/internal/walk&quot; )</p>
+<p>func build(t *testing.T, files map[string]string) string { root := t.TempDir() for name, body := range files { p := filepath.Join(root, filepath.FromSlash(name)) if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil { t.Fatal(err) } if err := os.WriteFile(p, []byte(body), 0o644); err != nil { t.Fatal(err) } } return root }</p>
+<p>func check(t *testing.T, root string, files map[string]string, min int) { got, err := walk.Files(root, int64(min), io.Discard) if err != nil { t.Fatal(err) } var gotPaths []string for _, e := range got { gotPaths = append(gotPaths, e.Path) if int(e.Size) != len(files[e.Path]) { t.Errorf(&quot;size of %s = %d&quot;, e.Path, e.Size) } } var want []string for name, body := range files { if len(body) &gt;= min &amp;&amp; len(body) &gt; 0 { want = append(want, name) } } sort.Strings(gotPaths) sort.Strings(want) if len(gotPaths) != len(want) { t.Fatalf(&quot;got %v want %v&quot;, gotPaths, want) } for i := range want { if gotPaths[i] != want[i] { t.Fatalf(&quot;got %v want %v&quot;, gotPaths, want) } } }</p>
+<p>func TestAcceptanceWalkEligibility(t *testing.T) { files := map[string]string{&quot;a.txt&quot;: &quot;abc&quot;, &quot;.hid/.x&quot;: &quot;hidden&quot;, &quot;sub/deep/f&quot;: &quot;ff&quot;, &quot;empty&quot;: &quot;&quot;, &quot;b&quot;: &quot;z&quot;} root := build(t, files) if err := os.Symlink(&quot;a.txt&quot;, filepath.Join(root, &quot;link&quot;)); err != nil { t.Fatal(err) } if err := os.Symlink(&quot;sub&quot;, filepath.Join(root, &quot;dirlink&quot;)); err != nil { t.Fatal(err) } check(t, root, files, 1) }</p>
+<p>func TestAcceptanceWalkMinSize(t *testing.T) { files := map[string]string{&quot;one&quot;: &quot;a&quot;, &quot;two&quot;: &quot;ab&quot;, &quot;three&quot;: &quot;abc&quot;, &quot;d/four&quot;: &quot;abcd&quot;} root := build(t, files) check(t, root, files, 3) check(t, root, files, 1) } &quot;&quot;&quot;.replace(&quot;MODPATH&quot;, mod)</p>
+<p>target = pathlib.Path(&quot;internal/walk/zz_acceptance_test.go&quot;) target.write_text(GO_TEST) try: result = subprocess.run( [&quot;go&quot;, &quot;test&quot;, &quot;./internal/walk&quot;, &quot;-run&quot;, &quot;TestAcceptanceWalk&quot;, &quot;-count=1&quot;, &quot;-v&quot;], capture_output=True, text=True, ) print(result.stdout) print(result.stderr, file=sys.stderr) assert result.returncode == 0 finally: if target.exists(): os.remove(target) === END AC walk-rules ===</p>
+<p>=== AC walk-vet ===<br>Intent: The walk package compiles and passes go vet.</p>
+<p>import subprocess import sys</p>
+<p>result = subprocess.run([&quot;go&quot;, &quot;vet&quot;, &quot;./internal/walk&quot;], capture_output=True, text=True) print(result.stdout) print(result.stderr, file=sys.stderr) assert result.returncode == 0 === END AC walk-vet ===</p>
+<h2>User Acceptance</h2>
+<ul><li>None.</li></ul>
+<h2>Guardrails</h2>
+<ul><li>Never follow or report a symbolic link, and never traverse a directory reached only through one.</li><li>Never open file contents in the walk.</li><li>Never delete, move, or write any file under the directory examined.</li><li>Zero-byte files are never reported.</li></ul></article>
+</main>
+</body>
+</html>

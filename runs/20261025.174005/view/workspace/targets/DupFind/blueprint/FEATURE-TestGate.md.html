@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>workspace/targets/DupFind/blueprint/FEATURE-TestGate.md</title>
+<link rel="stylesheet" href="../../../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>workspace/targets/DupFind/blueprint/FEATURE-TestGate.md</h1><div class="filenav"><a href="../../../../../index.html">&larr; Report</a><a href="../../../../../workspace/targets/DupFind/blueprint/FEATURE-TestGate.md">Raw file</a></div></header>
+<article class="doc"><h1>FEATURE: Test Gate</h1>
+<div class="scroll"><table><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Version</td><td>20261025 V1</td></tr><tr><td>Description</td><td>Provide the POSIX bin/test.sh launcher and a Go test suite that covers every rule, output form, and exit code of dupfind against real temporary directories.</td></tr><tr><td>Depends On</td><td>FEATURE-ModuleBuild.md, FEATURE-DirectoryValidation.md, FEATURE-Listing.md, FEATURE-Summary.md</td></tr><tr><td>Provides</td><td>bin/test.sh</td></tr><tr><td>Consumes</td><td>cli.Run</td></tr></tbody></table></div>
+<h2>Purpose</h2>
+<p>The application needs one command that decides whether the code is healthy. <code>bin/test.sh</code> runs <code>go vet ./...</code> and then <code>go test ./...</code> from the application root and exits zero only when both pass. The Go test suite behind it exercises the finished tool, so a regression in any earlier story turns this gate red.</p>
+<h2>Trigger</h2>
+<p>A developer, the build engine, or the terminal verification story runs <code>sh bin/test.sh</code>.</p>
+<h2>Sequence</h2>
+<ol><li><code>bin/test.sh</code> is POSIX <code>sh</code>: no bashisms, no arrays, no <code>[[ ]]</code>.</li><li>It derives the application root from the script&#x27;s own location (<code>dirname &quot;$0&quot;</code>/<code>..</code>), changes</li></ol>
+<p>into it, so the result is the same from any working directory.</p>
+<ol><li>It runs <code>go vet ./...</code>. A non-zero status stops the script with that non-zero status.</li><li>It runs <code>go test ./...</code>. Its status becomes the script&#x27;s exit status.</li><li>The script exits <code>0</code> only when both commands succeeded.</li></ol>
+<h2>Test Suite Coverage</h2>
+<p>The Go test suite lives in <code>*_test.go</code> files beside the packages under <code>internal/</code>. Tests call <code>cli.Run(args, &amp;stdout, &amp;stderr)</code> with <code>bytes.Buffer</code> writers over real directories made with <code>t.TempDir()</code>, and parse standard output with <code>encoding/csv</code>. Expectations are written against observed real output. Each rule has at least one test named for the behavior:</p>
+<div class="scroll"><table><thead><tr><th>Area</th><th>Behavior covered</th></tr></thead><tbody><tr><td>Scope</td><td>Hidden files and hidden directories are walked; nested directories are walked</td></tr><tr><td>Scope</td><td>A symbolic link to a file is neither followed nor reported; a link to a directory is not traversed</td></tr><tr><td>Empty files</td><td>Zero-byte files are never reported, including with an explicit small <code>--min-size</code></td></tr><tr><td>Minimum size</td><td>Files below <code>--min-size</code> are ignored; the default is 1</td></tr><tr><td>Duplicate test</td><td>Same size but different content is not a duplicate; same size and content is</td></tr><tr><td>Duplicate test</td><td>Files with a unique size are never opened for hashing</td></tr><tr><td>Paths</td><td>Relative to the directory, <code>/</code> separator, no leading <code>./</code></td></tr><tr><td>Order</td><td>Groups by reclaimable bytes descending then digest ascending, numbered from 1; paths by byte value</td></tr><tr><td>Unreadable</td><td>An unreadable file is skipped, one warning on stderr, exit code unchanged (skipped when running as root)</td></tr><tr><td>Listing</td><td>Header <code>group,size,sha256,path</code>; header only when there are no duplicates</td></tr><tr><td>CSV quoting</td><td>A path containing a comma is quoted and round-trips through <code>encoding/csv</code></td></tr><tr><td>Summary</td><td>Header <code>groups,duplicate_files,reclaimable_bytes</code>; <code>0,0,0</code> when there are no duplicates; totals equal those of the listing under the same options</td></tr><tr><td>Exit codes</td><td><code>0</code> for success with or without duplicates; <code>1</code> for a missing directory or a regular file; <code>2</code> for no arguments, extra arguments, unknown option, <code>--min-size</code> of <code>abc</code> and of <code>0</code></td></tr><tr><td>Failure output</td><td>Exit codes 1 and 2 write nothing to standard output</td></tr></tbody></table></div>
+<h2>Reads</h2>
+<ul><li>The application source tree, through <code>go vet</code> and <code>go test</code>.</li></ul>
+<h2>Writes</h2>
+<ul><li>Nothing outside temporary directories created by the tests themselves. The suite never writes</li></ul>
+<p>under any directory the tool examines other than the temporary fixture it created.</p>
+<h2>Programmatic Acceptance</h2>
+<p>=== AC test-script-exits-zero ===<br>Intent: bin/test.sh runs go vet and go test on the finished application and exits zero.<br>Requires: executable=sh; scope=test<br>Requires: executable=go; scope=test</p>
+<p>import subprocess import sys</p>
+<p>result = subprocess.run([&quot;sh&quot;, &quot;bin/test.sh&quot;], capture_output=True, text=True) print(result.stdout) print(result.stderr, file=sys.stderr) assert result.returncode == 0, result.returncode === END AC test-script-exits-zero ===</p>
+<p>=== AC test-script-posix-syntax ===<br>Intent: bin/test.sh exists and parses as POSIX sh without executing.<br>Requires: executable=sh; scope=test</p>
+<p>import os import subprocess import sys</p>
+<p>script = os.path.join(&quot;bin&quot;, &quot;test.sh&quot;) assert os.path.isfile(script) result = subprocess.run([&quot;sh&quot;, &quot;-n&quot;, script], capture_output=True, text=True) print(result.stdout) print(result.stderr, file=sys.stderr) assert result.returncode == 0, result.returncode === END AC test-script-posix-syntax ===</p>
+<p>=== AC test-script-fails-on-failing-test ===<br>Intent: bin/test.sh exits non-zero when any Go test fails, proven on a temporary copy of the application.<br>Requires: executable=sh; scope=test<br>Requires: executable=go; scope=test</p>
+<p>import os import shutil import subprocess import sys import tempfile</p>
+<p>root = os.getcwd() failing_test = &#x27;package cli\n\nimport &quot;testing&quot;\n\nfunc TestForcedFailure(t *testing.T) {\n\tt.Fatal(&quot;forced&quot;)\n}\n&#x27; with tempfile.TemporaryDirectory() as tmp: dst = os.path.join(tmp, &quot;app&quot;) shutil.copytree(root, dst, ignore=shutil.ignore_patterns(&quot;.git&quot;)) with open(os.path.join(dst, &quot;internal&quot;, &quot;cli&quot;, &quot;zz_forced_failure_test.go&quot;), &quot;w&quot;) as handle: handle.write(failing_test) result = subprocess.run([&quot;sh&quot;, &quot;bin/test.sh&quot;], cwd=dst, capture_output=True, text=True) print(result.stdout) print(result.stderr, file=sys.stderr) assert result.returncode != 0, result.returncode === END AC test-script-fails-on-failing-test ===</p>
+<p>=== AC test-script-independent-of-cwd ===<br>Intent: bin/test.sh locates the application root itself, so running it from another directory still exits zero.<br>Requires: executable=sh; scope=test<br>Requires: executable=go; scope=test</p>
+<p>import os import subprocess import sys import tempfile</p>
+<p>script = os.path.abspath(os.path.join(&quot;bin&quot;, &quot;test.sh&quot;)) with tempfile.TemporaryDirectory() as elsewhere: result = subprocess.run([&quot;sh&quot;, script], cwd=elsewhere, capture_output=True, text=True) print(result.stdout) print(result.stderr, file=sys.stderr) assert result.returncode == 0, result.returncode === END AC test-script-independent-of-cwd ===</p>
+<p>=== AC suite-has-tests-for-cli ===<br>Intent: The Go test suite contains test files for the cli package and they pass when run alone.<br>Requires: executable=go; scope=test</p>
+<p>import glob import os import subprocess import sys</p>
+<p>test_files = glob.glob(os.path.join(&quot;internal&quot;, &quot;cli&quot;, &quot;*_test.go&quot;)) assert len(test_files) &gt;= 1, test_files result = subprocess.run( [&quot;go&quot;, &quot;test&quot;, &quot;-count=1&quot;, &quot;./internal/cli&quot;], capture_output=True, text=True ) print(result.stdout) print(result.stderr, file=sys.stderr) assert result.returncode == 0, result.returncode === END AC suite-has-tests-for-cli ===</p>
+<p>=== AC built-binary-exit-codes ===<br>Intent: The built executable exits 0 for a directory, 1 for a missing path, and 2 for each malformed argument form the suite covers.<br>Requires: executable=go; scope=test</p>
+<p>import os import tempfile from drydock_go import cli_runner</p>
+<p>with tempfile.TemporaryDirectory() as tree: payload = &quot;same bytes\n&quot; for name in (&quot;one.txt&quot;, &quot;two.txt&quot;): with open(os.path.join(tree, name), &quot;w&quot;) as handle: handle.write(payload) missing = os.path.join(tree, &quot;no-such-directory&quot;) regular = os.path.join(tree, &quot;one.txt&quot;)</p>
+<p>ok_code, ok_out, ok_err = cli_runner(tree) assert ok_code == 0, (ok_code, ok_out, ok_err)</p>
+<p>missing_code, missing_out, missing_err = cli_runner(missing) assert missing_code == 1, (missing_code, missing_out, missing_err) assert missing_out == &quot;&quot;</p>
+<p>file_code, file_out, file_err = cli_runner(regular) assert file_code == 1, (file_code, file_out, file_err) assert file_out == &quot;&quot;</p>
+<p>for args in ([], [tree, tree], [&quot;--min-size&quot;, &quot;abc&quot;, tree], [&quot;--min-size&quot;, &quot;0&quot;, tree], [&quot;--frobnicate&quot;, tree]): code, out, err = cli_runner(*args) print(args, code, err) assert code == 2, (args, code, out, err) assert out == &quot;&quot;, (args, out) === END AC built-binary-exit-codes ===</p>
+<h2>User Acceptance</h2>
+<ul><li>None.</li></ul>
+<h2>Guardrails</h2>
+<ul><li><code>bin/test.sh</code> is POSIX <code>sh</code>; it does not require bash.</li><li>The test suite never reads <code>sources/run.sh</code> and never embeds a digest, path, or total taken from it.</li><li>Tests write only inside temporary directories they create; nothing under a directory the tool examines is deleted, moved, or modified by the tool.</li><li>The tool is built with the standard library only; no third-party module is added for testing.</li></ul></article>
+</main>
+</body>
+</html>

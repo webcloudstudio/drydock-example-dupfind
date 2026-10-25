@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>evidence/prompt_outputs/20261025.174535.904Z_dupfind_lineage_attribute_claude.output.txt</title>
+<link rel="stylesheet" href="../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>evidence/prompt_outputs/20261025.174535.904Z_dupfind_lineage_attribute_claude.output.txt</h1><div class="filenav"><a href="../../../index.html">&larr; Report</a><a href="../../../evidence/prompt_outputs/20261025.174535.904Z_dupfind_lineage_attribute_claude.output.txt">Raw file</a></div></header>
+<article class="doc"><pre>&lt;requirement name=&quot;duplicate-definition&quot; stories=&quot;size-grouping,digest-grouping&quot;&gt;
+Two files are duplicates
+when their contents are byte-for-byte identical.
+&lt;/requirement&gt;
+&lt;requirement name=&quot;report-groups-and-space&quot; stories=&quot;listing,summary,group-ordering&quot;&gt;
+The tool reports each group of duplicates and the
+disk space that deleting all but one copy of each would recover.
+&lt;/requirement&gt;
+&lt;requirement name=&quot;read-only-operation&quot; stories=&quot;walk,digest-grouping&quot;&gt;
+It never deletes, moves, or
+modifies a file.
+&lt;/requirement&gt;
+&lt;requirement name=&quot;go-stdlib-module&quot; stories=&quot;foundation,module-build&quot;&gt;
+Implement in Go 1.22 or newer using only the standard library. The application root is a Go
+module, and its executable is the main package at `./cmd/dupfind`. Tests run under `go test`.
+&lt;/requirement&gt;
+&lt;requirement name=&quot;run-harness&quot; stories=&quot;verification,module-build&quot;&gt;
+`sources/run.sh` is the scoring entry point. It is supplied, not authored, and is staged verbatim
+into the application root.
+&lt;/requirement&gt;
+&lt;requirement name=&quot;command-line-options&quot; stories=&quot;arg-parsing&quot;&gt;
+dupfind [--summary] [--min-size &lt;bytes&gt;] &lt;directory&gt;
+&lt;/requirement&gt;
+&lt;requirement name=&quot;option-semantics&quot; stories=&quot;arg-parsing,summary,walk&quot;&gt;
+Options precede the directory. Exactly one directory is required.
+&lt;/requirement&gt;
+&lt;requirement name=&quot;scope-rule&quot; stories=&quot;walk&quot;&gt;
+**Scope.** The tool walks `&lt;directory&gt;` recursively, including hidden files and directories
+(names beginning `.`). It considers regular files only. It neither follows nor reports
+symbolic links.
+&lt;/requirement&gt;
+&lt;requirement name=&quot;ignore-empty-files&quot; stories=&quot;walk,arg-parsing&quot;&gt;
+**Empty files are never duplicates.** A file of zero bytes is always ignored, which the
+default `--min-size 1` guarantees.
+&lt;/requirement&gt;
+&lt;requirement name=&quot;duplicate-test&quot; stories=&quot;size-grouping,digest-grouping&quot;&gt;
+**Duplicate test.** Files are grouped by size first. Only files that share a size are read.
+Within a size, files are grouped by the SHA-256 digest of their contents. A group of two or
+more files with the same size and digest is a duplicate group.
+&lt;/requirement&gt;
+&lt;requirement name=&quot;relative-paths&quot; stories=&quot;listing,walk&quot;&gt;
+**Paths** are written relative to `&lt;directory&gt;`, with `/` as the separator and no leading
+`./`.
+&lt;/requirement&gt;
+&lt;requirement name=&quot;group-order&quot; stories=&quot;group-ordering&quot;&gt;
+**Order.** Groups are ordered by reclaimable bytes descending, then by digest ascending.
+A group&#x27;s reclaimable bytes are `size × (files − 1)`. Groups are numbered from 1 in that order.
+Within a group, paths are ordered by byte value ascending.
+&lt;/requirement&gt;
+&lt;requirement name=&quot;unreadable-files&quot; stories=&quot;digest-grouping&quot;&gt;
+**Unreadable files.** A file that cannot be read is skipped with one warning line on standard
+error. It does not change the exit code.
+&lt;/requirement&gt;
+&lt;requirement name=&quot;csv-output&quot; stories=&quot;listing,summary&quot;&gt;
+Output is CSV on standard output: a header row, then data rows, with `\n` line endings. A field
+that contains a comma, a double quote, or a newline is quoted as RFC 4180 specifies. Go&#x27;s
+`encoding/csv` writer produces this format.
+&lt;/requirement&gt;
+&lt;requirement name=&quot;listing-output&quot; stories=&quot;listing&quot;&gt;
+**Listing** (default): header `group,size,sha256,path`, then one row per file in every duplicate
+group. `sha256` is the lowercase hexadecimal digest. With no duplicates, only the header is
+written.
+&lt;/requirement&gt;
+&lt;requirement name=&quot;summary-output&quot; stories=&quot;summary&quot;&gt;
+**Summary** (`--summary`): header `groups,duplicate_files,reclaimable_bytes`, then one row.
+`duplicate_files` is the sum of `files − 1` over all groups. `reclaimable_bytes` is the sum of
+every group&#x27;s reclaimable bytes. With no duplicates the row is `0,0,0`.
+&lt;/requirement&gt;
+&lt;requirement name=&quot;failure-output&quot; stories=&quot;directory-validation,arg-parsing&quot;&gt;
+A failing command writes nothing to standard output and one diagnostic line to standard error.
+&lt;/requirement&gt;
+&lt;requirement name=&quot;exit-code-success&quot; stories=&quot;listing,summary&quot;&gt;
+`0` | Success, whether or not duplicates were found.
+&lt;/requirement&gt;
+&lt;requirement name=&quot;exit-code-operational&quot; stories=&quot;directory-validation&quot;&gt;
+`1` | Operational failure: `&lt;directory&gt;` does not exist or is not a directory.
+&lt;/requirement&gt;
+&lt;requirement name=&quot;exit-code-usage&quot; stories=&quot;arg-parsing&quot;&gt;
+`2` | Usage error: missing or extra arguments, unknown option, `--min-size` not a positive integer.
+&lt;/requirement&gt;
+&lt;requirement name=&quot;test-script&quot; stories=&quot;test-gate,foundation&quot;&gt;
+The completed application provides a POSIX-compatible `bin/test.sh` that runs `go vet ./...` and
+`go test ./...` from the application root and exits zero only when both pass. The suite covers
+each rule, each output form, and each exit code against real temporary directories.
+&lt;/requirement&gt;</pre></article>
+</main>
+</body>
+</html>

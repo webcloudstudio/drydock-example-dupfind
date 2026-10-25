@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>workspace/targets/DupFind/blueprint/FEATURE-ModuleBuild.md</title>
+<link rel="stylesheet" href="../../../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>workspace/targets/DupFind/blueprint/FEATURE-ModuleBuild.md</h1><div class="filenav"><a href="../../../../../index.html">&larr; Report</a><a href="../../../../../workspace/targets/DupFind/blueprint/FEATURE-ModuleBuild.md">Raw file</a></div></header>
+<article class="doc"><h1>FEATURE: Module Build</h1>
+<div class="scroll"><table><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Version</td><td>20261025 V1</td></tr><tr><td>Description</td><td>The cmd/dupfind main package builds with go build using only the standard library and delegates to cli.Run.</td></tr><tr><td>Depends On</td><td>ARCHITECTURE.md, FEATURE-ArgParsing.md</td></tr><tr><td>Provides</td><td>cmd/dupfind</td></tr><tr><td>Consumes</td><td>cli.Run</td></tr></tbody></table></div>
+<h2>Purpose</h2>
+<p>The application root is a Go module whose executable is the main package at <code>./cmd/dupfind</code>. <code>go build ./cmd/dupfind</code> must succeed using only the standard library.</p>
+<h2>Behavior</h2>
+<ul><li><code>cmd/dupfind/main.go</code> is <code>package main</code>. <code>main</code> calls <code>cli.Run(os.Args[1:], os.Stdout, os.Stderr)</code> and passes the returned code to <code>os.Exit</code>.</li><li><code>main</code> contains no other logic and is the only caller of <code>os.Exit</code>.</li><li>Every package in the build&#x27;s dependency graph is either in the standard library or inside this module.</li></ul>
+<h2>Reads</h2>
+<p>Process arguments, standard output, standard error.</p>
+<h2>Writes</h2>
+<p>None.</p>
+<h2>Programmatic Acceptance</h2>
+<p>=== AC modbuild-go-build ===<br>Intent: go build ./cmd/dupfind succeeds and produces an executable.</p>
+<p>import os import subprocess import sys import tempfile</p>
+<p>with tempfile.TemporaryDirectory() as d: out_path = os.path.join(d, &quot;dupfind&quot;) result = subprocess.run([&quot;go&quot;, &quot;build&quot;, &quot;-o&quot;, out_path, &quot;./cmd/dupfind&quot;], capture_output=True, text=True) print(result.stdout) print(result.stderr, file=sys.stderr) assert result.returncode == 0 assert os.path.isfile(out_path) === END AC modbuild-go-build ===</p>
+<p>=== AC modbuild-standard-library-only ===<br>Intent: The executable&#x27;s dependency graph contains only standard library and in-module packages.</p>
+<p>import pathlib import subprocess import sys</p>
+<p>mod = &quot;&quot; for line in pathlib.Path(&quot;go.mod&quot;).read_text().splitlines(): if line.startswith(&quot;module &quot;): mod = line.split()[1] assert mod result = subprocess.run( [&quot;go&quot;, &quot;list&quot;, &quot;-deps&quot;, &quot;-f&quot;, &quot;{{if not .Standard}}{{.ImportPath}}{{end}}&quot;, &quot;./cmd/dupfind&quot;], capture_output=True, text=True, ) print(result.stdout) print(result.stderr, file=sys.stderr) assert result.returncode == 0 for pkg in result.stdout.split(): assert pkg == mod or pkg.startswith(mod + &quot;/&quot;), pkg === END AC modbuild-standard-library-only ===</p>
+<p>=== AC modbuild-executable-runs ===<br>Intent: The built executable runs and rejects an empty command line with exit 2.</p>
+<p>from drydock_go import cli_runner</p>
+<p>code, out, err = cli_runner() print(code, repr(out), repr(err)) assert code == 2 assert out == &quot;&quot; === END AC modbuild-executable-runs ===</p>
+<h2>User Acceptance</h2>
+<ul><li>None.</li></ul>
+<h2>Guardrails</h2>
+<ul><li>Standard library only; no third-party modules.</li><li><code>main</code> never reads <code>sources/run.sh</code> and embeds no digest, path, or total.</li><li>Only <code>main</code> calls <code>os.Exit</code>.</li></ul></article>
+</main>
+</body>
+</html>

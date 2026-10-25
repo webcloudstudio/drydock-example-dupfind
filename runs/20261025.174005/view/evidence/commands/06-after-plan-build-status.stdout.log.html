@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>evidence/commands/06-after-plan-build-status.stdout.log</title>
+<link rel="stylesheet" href="../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>evidence/commands/06-after-plan-build-status.stdout.log</h1><div class="filenav"><a href="../../../index.html">&larr; Report</a><a href="../../../evidence/commands/06-after-plan-build-status.stdout.log">Raw file</a></div></header>
+<article class="doc"><pre>Drydock 0.8.0  Copyright (c) 2026 Web Cloud Studio. All rights reserved.
+Next: drydock build DupFind
+
+Blueprint: DupFind
+Target: /mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261025.174005/workspace/targets/DupFind
+Rows: &lt;state&gt; &lt;type&gt;  &lt;Name&gt;  [&lt;id&gt;]   — pass [&lt;id&gt;] to --step
+
+Block: Build Block 1 · Foundational  [block-1]   — 0/1 stories complete
+  [pending] story  Stand up the Go module, package tree, and test launcher that every other story builds into.  [foundation]  &lt;- next
+
+Block: Build Block 2 · Service  [block-2]   — 0/10 stories complete
+  [pending] story  Parse --summary, --min-size, and exactly one directory argument; reject malformed usage with exit 2.  [arg-parsing]
+  [pending] story  Provide the cmd/dupfind main package that builds with go build and delegates to cli.Run.  [module-build]
+  [pending] story  Exit 1 with empty stdout when the directory is missing or is not a directory.  [directory-validation]
+  [pending] story  Walk the directory recursively and yield eligible regular files at or above the minimum size.  [walk]
+  [pending] story  Group candidate files by exact size and keep only sizes shared by two or more files.  [size-grouping]
+  [pending] story  Hash same-size files with SHA-256 and form duplicate groups, skipping unreadable files with a warning.  [digest-grouping]
+  [pending] story  Compute reclaimable bytes, order groups, number them from 1, and order paths within each group.  [group-ordering]
+  [pending] story  Write the CSV duplicate listing with header group,size,sha256,path using encoding/csv.  [listing]
+  [pending] story  Write the one-row summary of groups, duplicate files, and reclaimable bytes with --summary.  [summary]
+  [pending] story  Provide POSIX bin/test.sh and a Go test suite covering every rule, output form, and exit code.  [test-gate]
+
+Block: Build Block 3 · Feature  [block-3]   — 0/1 stories complete
+  [pending] story  Assemble the finished tool and confirm the supplied grader passes end to end.  [verification]
+
+Steps: 12 total — 0 done, 0 built (await verify), 0 in review, 12 pending, 0 blocked by questions, 0 failed (0% complete)
+Buildable now: block-1
+</pre></article>
+</main>
+</body>
+</html>

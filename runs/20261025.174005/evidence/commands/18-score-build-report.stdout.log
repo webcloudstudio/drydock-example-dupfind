@@ -1,0 +1,20 @@
+Drydock 0.8.0  Copyright (c) 2026 Web Cloud Studio. All rights reserved.
+
+Build report: DupFind
+  evidence: /mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261025.174005/workspace/targets/DupFind/evidence
+  usage:    /mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261025.174005/workspace/logs/llm.jsonl
+
+  Blueprint acceptance (last `score ac`): PASS 34  FAIL 0  UNVERIFIED 0  PREPASSED 11  (45 AC)
+
+  Block                     Build AC  Calls     Cached  Uncached     Hit  Output    Time
+  ──────────────────────────────────────────────────────────────────────────────────────
+  ✓ Block 1 · Foundational       3/3      1     97,628         8  100.0%   5,054     35s
+  ✓ Block 2 · Service          39/39      1  1,225,050        34  100.0%  48,613  3m 41s
+  ✓ Block 3 · Feature            3/3      1     98,661        10  100.0%   2,366     25s
+  ──────────────────────────────────────────────────────────────────────────────────────
+  TOTAL                        45/45      3  1,421,339        52  100.0%  56,033  4m 42s
+
+  Blocks: 3/3 verified · 3 on first call · 0 repaired
+  Model:  claude-haiku-5-5
+  Tokens: 1,421,339 cached · 52 uncached · 56,033 out
+

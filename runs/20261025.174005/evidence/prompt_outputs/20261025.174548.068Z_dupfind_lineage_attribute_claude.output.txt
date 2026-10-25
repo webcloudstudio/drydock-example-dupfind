@@ -1,0 +1,37 @@
+<requirement name="build-with-go" stories="module-build,foundation">
+Builds ./cmd/dupfind with `go build`
+</requirement>
+<requirement name="full-listing" stories="walk,size-grouping,digest-grouping,group-ordering,listing">
+check A1 0 tree <<'EOF'
+group,size,sha256,path
+</requirement>
+<requirement name="summary-output" stories="summary">
+check B1 0 --summary tree <<'EOF'
+groups,duplicate_files,reclaimable_bytes
+5,6,1177
+</requirement>
+<requirement name="min-size-filter" stories="arg-parsing,walk">
+check C1 0 --min-size 20 tree <<'EOF'
+</requirement>
+<requirement name="no-duplicates-output" stories="listing,summary">
+check D1 0 tree/unique <<'EOF'
+group,size,sha256,path
+EOF
+check D2 0 --summary tree/empty <<'EOF'
+groups,duplicate_files,reclaimable_bytes
+0,0,0
+</requirement>
+<requirement name="operational-failures" stories="directory-validation">
+check E1 1 tree/no-such-directory < /dev/null
+check E2 1 tree/env.bak < /dev/null
+</requirement>
+<requirement name="usage-errors" stories="arg-parsing">
+check U1 2 < /dev/null
+check U2 2 tree tree/a < /dev/null
+check U3 2 --min-size abc tree < /dev/null
+check U4 2 --min-size 0 tree < /dev/null
+check U5 2 --frobnicate tree < /dev/null
+</requirement>
+<requirement name="grader-passes" stories="verification,test-gate">
+Exit 0 only when the build succeeds and every check passes.
+</requirement>

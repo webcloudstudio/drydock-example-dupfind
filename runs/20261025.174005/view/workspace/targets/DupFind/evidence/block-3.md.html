@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>workspace/targets/DupFind/evidence/block-3.md</title>
+<link rel="stylesheet" href="../../../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>workspace/targets/DupFind/evidence/block-3.md</h1><div class="filenav"><a href="../../../../../index.html">&larr; Report</a><a href="../../../../../workspace/targets/DupFind/evidence/block-3.md">Raw file</a></div></header>
+<article class="doc"><h1>Evidence: Block 3 · Feature (block-3)</h1>
+<ul><li>block type: block</li><li>date: 2026-10-25</li><li>resulting state: closed/verified</li><li>story points (combined assembled cost): 6074</li><li>execution id: 20261025.175614.224Z-5c16fcc2</li></ul>
+<h2>Stories built</h2>
+<ul><li>Assemble the finished tool and confirm the supplied grader passes end to end. (verification) [story]</li></ul>
+<h2>Acceptance tooling authorization</h2>
+<ul><li>VERIFICATION.md#verification-test-gate-passes: executable=sh; scope=test; authorization=existing Target environment</li><li>VERIFICATION.md#verification-test-gate-passes: executable=go; scope=test; authorization=existing Target environment</li><li>VERIFICATION.md#verification-no-grader-coupling: executable=go; scope=test; authorization=existing Target environment</li><li>VERIFICATION.md#verification-grader-passes: executable=sh; scope=test; authorization=existing Target environment</li><li>VERIFICATION.md#verification-grader-passes: executable=go; scope=test; authorization=existing Target environment</li></ul>
+<h2>Stacked context</h2>
+<ul><li>stack: go_compact.md (SP 2105)</li><li>compass: COMPASS.md (SP 982)</li><li>implements: VERIFICATION.md (SP 1227)</li><li>stack: common_compact.md (SP 1653)</li></ul>
+<h2>Build directory changes</h2>
+<ul><li>data/logs/test_2026-10-25_135622.log</li></ul>
+<h2>Pre-build acceptance observation</h2>
+<ul><li>GREEN (prepassed): verification-test-gate-passes (VERIFICATION.md)</li></ul>
+<p>intent: The project&#x27;s own gate, bin/test.sh, exits zero on the assembled application. return code: 0 stdout: timestamp: 2026-10-25_135604 arguments: working directory: /mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261025.174005/build/DupFind ?   	dupfind/cmd/dupfind	[no test files] ok  	dupfind/internal/cli	(cached) ok  	dupfind/internal/dupes	(cached) ok  	dupfind/internal/report	(cached) ok  	dupfind/internal/walk	(cached) completed: exit 0</p>
+<ul><li>GREEN (prepassed): verification-no-grader-coupling (VERIFICATION.md)</li></ul>
+<p>intent: Application code, tests excluded, never refers to the supplied grader script. return code: 0 stdout: []</p>
+<ul><li>GREEN (prepassed): verification-grader-passes (VERIFICATION.md)</li></ul>
+<p>intent: The supplied grader sources/run.sh builds ./cmd/dupfind and exits zero with every check passing. return code: 0 stdout:<br>PASS A1: dupfind tree<br>PASS A2: dupfind /tmp/tmp.Qy3YkyFpCI/tree<br>PASS B1: dupfind --summary tree<br>PASS C1: dupfind --min-size 20 tree<br>PASS C2: dupfind --summary --min-size 20 tree<br>PASS C3: dupfind --min-size 200 tree<br>PASS D1: dupfind tree/unique<br>PASS D2: dupfind --summary tree/empty<br>PASS E1: dupfind tree/no-such-directory<br>PASS E2: dupfind tree/env.bak<br>PASS U1: dupfind<br>PASS U2: dupfind tree tree/a<br>PASS U3: dupfind --min-size abc tree<br>PASS U4: dupfind --min-size 0 tree<br>PASS U5: dupfind --frobnicate tree<br>DupFind: 15 passed, 0 failed (of 15)</p>
+<h2>Post-build programmatic acceptance</h2>
+<ul><li>PASS: verification-test-gate-passes (VERIFICATION.md)</li></ul>
+<p>intent: The project&#x27;s own gate, bin/test.sh, exits zero on the assembled application. target interpreter: /mnt/c/Users/barlo/projects/drydock/.venv/bin/python provisioning: not required return code: 0 stdout: timestamp: 2026-10-25_135642 arguments: working directory: /mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261025.174005/build/DupFind ?   	dupfind/cmd/dupfind	[no test files] ok  	dupfind/internal/cli	(cached) ok  	dupfind/internal/dupes	(cached) ok  	dupfind/internal/report	(cached) ok  	dupfind/internal/walk	(cached) completed: exit 0</p>
+<ul><li>PASS: verification-no-grader-coupling (VERIFICATION.md)</li></ul>
+<p>intent: Application code, tests excluded, never refers to the supplied grader script. target interpreter: /mnt/c/Users/barlo/projects/drydock/.venv/bin/python provisioning: not required return code: 0 stdout: []</p>
+<ul><li>PASS: verification-grader-passes (VERIFICATION.md)</li></ul>
+<p>intent: The supplied grader sources/run.sh builds ./cmd/dupfind and exits zero with every check passing. target interpreter: /mnt/c/Users/barlo/projects/drydock/.venv/bin/python provisioning: not required return code: 0 stdout:<br>PASS A1: dupfind tree<br>PASS A2: dupfind /tmp/tmp.TQE9axe6E5/tree<br>PASS B1: dupfind --summary tree<br>PASS C1: dupfind --min-size 20 tree<br>PASS C2: dupfind --summary --min-size 20 tree<br>PASS C3: dupfind --min-size 200 tree<br>PASS D1: dupfind tree/unique<br>PASS D2: dupfind --summary tree/empty<br>PASS E1: dupfind tree/no-such-directory<br>PASS E2: dupfind tree/env.bak<br>PASS U1: dupfind<br>PASS U2: dupfind tree tree/a<br>PASS U3: dupfind --min-size abc tree<br>PASS U4: dupfind --min-size 0 tree<br>PASS U5: dupfind --frobnicate tree<br>DupFind: 15 passed, 0 failed (of 15)</p>
+<h2>Build summary</h2>
+<p>I&#x27;ll start by inspecting the build directory and the grader.The grader is in place. Next I&#x27;ll read the existing implementation and run both gates to see where things stand.Both gates pass already. The verification AC <code>verification-no-grader-coupling</code> is still unchecked, so I&#x27;ll run that scan, plus an uncached test run to rule out stale results.The finished tool passes both gates. This step adds no code, so I changed no files.</p>
+<ul><li><code>sh bin/test.sh</code> exits 0: <code>go vet</code> is clean and all four packages pass.</li><li><code>sh sources/run.sh</code> exits 0: 15 passed, 0 failed.</li><li><code>verification-no-grader-coupling</code> passes: no non-test Go file under <code>cmd/</code> or <code>internal/</code> mentions the grader.</li><li>An uncached <code>go vet</code> and <code>go test -race -count=1 ./...</code> also passes.</li></ul>
+<p><code>git status</code> is clean after these runs; the test gate&#x27;s logs under <code>data/logs/</code> are git-ignored.</p>
+<p>RESULT: SUCCESS</p>
+<p>FILES CHANGED:</p>
+<ul><li>None</li></ul>
+<p>SUMMARY: Verification-only terminal story; no application changes were needed. Checks run:</p>
+<ul><li><code>sh bin/test.sh</code>: exit 0. <code>go vet ./...</code> clean; <code>go test ./...</code> passes for <code>internal/cli</code>, <code>internal/dupes</code>, <code>internal/report</code>, <code>internal/walk</code>.</li><li><code>sh sources/run.sh</code>: exit 0, &quot;DupFind: 15 passed, 0 failed (of 15)&quot;.</li><li><code>verification-no-grader-coupling</code> (Python scan of non-test <code>.go</code> files under <code>cmd/</code> and <code>internal/</code>): no offenders.</li><li><code>go vet ./...</code> and <code>go test -race -count=1 ./...</code>: exit 0.</li></ul>
+<p>The grader was run as-is and not modified, regenerated, or read by application code. Test pass/fail counts for this step: 15/15 grader checks; the four package suites all passed. The <code>verification-test-gate-passes</code>, <code>verification-no-grader-coupling</code>, and <code>verification-grader-passes</code> assertions each passed on this run.</p>
+<p>BLOCKERS:</p>
+<ul><li>None</li></ul></article>
+</main>
+</body>
+</html>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>workspace/targets/DupFind/blueprint/FEATURE-Summary.md</title>
+<link rel="stylesheet" href="../../../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>workspace/targets/DupFind/blueprint/FEATURE-Summary.md</h1><div class="filenav"><a href="../../../../../index.html">&larr; Report</a><a href="../../../../../workspace/targets/DupFind/blueprint/FEATURE-Summary.md">Raw file</a></div></header>
+<article class="doc"><h1>FEATURE: Summary</h1>
+<div class="scroll"><table><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Version</td><td>20261025 V1</td></tr><tr><td>Description</td><td>Write the one-row CSV summary of groups, duplicate files, and reclaimable bytes when --summary is given.</td></tr><tr><td>Depends On</td><td>FEATURE-Listing.md, ARCHITECTURE.md</td></tr><tr><td>Provides</td><td>report.WriteSummary</td></tr><tr><td>Consumes</td><td>dupes.Order</td></tr></tbody></table></div>
+<h2>Purpose</h2>
+<p>With <code>--summary</code> the tool reports the totals of the listing that the same options would produce, instead of the listing itself.</p>
+<h2>Interface</h2>
+<p><code>report.WriteSummary</code> writes, through <code>encoding/csv</code> with <code>\n</code> line endings, the header <code>groups,duplicate_files,reclaimable_bytes</code> and one row:</p>
+<ul><li><code>groups</code>: the number of duplicate groups.</li><li><code>duplicate_files</code>: the sum of <code>files - 1</code> over all groups.</li><li><code>reclaimable_bytes</code>: the sum of every group&#x27;s <code>size x (files - 1)</code>.</li></ul>
+<p>With no duplicates the row is <code>0,0,0</code>. The <code>--summary</code> mode of <code>cli.Run</code> uses the same walk, grouping, and ordering as the listing, with the same <code>--min-size</code>, and returns 0.</p>
+<h2>Reads and Writes</h2>
+<ul><li>Reads: ordered groups.</li><li>Writes: CSV to standard output only.</li></ul>
+<h2>Programmatic Acceptance</h2>
+<p>=== AC summary-totals-match-fixture ===<br>Intent: The summary row equals totals computed from the fixture&#x27;s known duplicate structure.</p>
+<p>import csv import os import tempfile from drydock_go import cli_runner</p>
+<p>def write(root, rel, data): p = os.path.join(root, rel) os.makedirs(os.path.dirname(p), exist_ok=True) with open(p, &quot;wb&quot;) as f: f.write(data)</p>
+<p>fixtures = { b&quot;quarterly report\n&quot;: [&quot;a/r.txt&quot;, &quot;b/r2.txt&quot;, &quot;c/r3.txt&quot;], b&quot;la la la\n&quot;: [&quot;m/s.mp3&quot;, &quot;m/s2.mp3&quot;], b&quot;unique content here\n&quot;: [&quot;u/solo&quot;], } dup_groups = [(c, p) for c, p in fixtures.items() if len(p) &gt; 1] want_groups = len(dup_groups) want_files = sum(len(p) - 1 for c, p in dup_groups) want_bytes = sum(len(c) * (len(p) - 1) for c, p in dup_groups) with tempfile.TemporaryDirectory() as root: for content, paths in fixtures.items(): for p in paths: write(root, p, content) code, out, err = cli_runner(&quot;--summary&quot;, root) print(out) print(err) assert code == 0 rows = list(csv.reader(out.splitlines())) assert len(rows) == 2 assert rows[0] == [&quot;groups&quot;, &quot;duplicate_files&quot;, &quot;reclaimable_bytes&quot;] assert [int(x) for x in rows[1]] == [want_groups, want_files, want_bytes] === END AC summary-totals-match-fixture ===</p>
+<p>=== AC summary-no-duplicates ===<br>Intent: With no duplicates the summary row holds three zeros and exit status is 0.</p>
+<p>import csv import os import tempfile from drydock_go import cli_runner</p>
+<p>def write(root, rel, data): p = os.path.join(root, rel) os.makedirs(os.path.dirname(p), exist_ok=True) with open(p, &quot;wb&quot;) as f: f.write(data)</p>
+<p>with tempfile.TemporaryDirectory() as root: write(root, &quot;empty/one&quot;, b&quot;&quot;) write(root, &quot;empty/two&quot;, b&quot;&quot;) code, out, err = cli_runner(&quot;--summary&quot;, root) print(out) print(err) assert code == 0 rows = list(csv.reader(out.splitlines())) assert len(rows) == 2 assert [int(x) for x in rows[1]] == [0, 0, 0] === END AC summary-no-duplicates ===</p>
+<p>=== AC summary-agrees-with-listing ===<br>Intent: The summary totals equal the totals derived from the listing produced by the same options, including --min-size.</p>
+<p>import csv import os import tempfile from drydock_go import cli_runner</p>
+<p>def write(root, rel, data): p = os.path.join(root, rel) os.makedirs(os.path.dirname(p), exist_ok=True) with open(p, &quot;wb&quot;) as f: f.write(data)</p>
+<p>fixtures = { b&quot;S&quot; * 4: [&quot;s1&quot;, &quot;s2&quot;], b&quot;M&quot; * 30: [&quot;m1&quot;, &quot;m2&quot;, &quot;m3&quot;], b&quot;B&quot; * 200: [&quot;b1&quot;, &quot;b2&quot;], } with tempfile.TemporaryDirectory() as root: for content, paths in fixtures.items(): for p in paths: write(root, p, content) for opts in ([], [&quot;--min-size&quot;, &quot;20&quot;], [&quot;--min-size&quot;, &quot;100&quot;], [&quot;--min-size&quot;, &quot;1000&quot;]): code, listing, err = cli_runner(*opts, root) assert code == 0 rows = list(csv.reader(listing.splitlines()))[1:] per_group = {} for r in rows: per_group.setdefault(r[0], []).append(int(r[1])) want = [ len(per_group), sum(len(v) - 1 for v in per_group.values()), sum(v[0] * (len(v) - 1) for v in per_group.values()), ] code, summ, err = cli_runner(&quot;--summary&quot;, *opts, root) print(summ) print(err) assert code == 0 srows = list(csv.reader(summ.splitlines())) assert len(srows) == 2 assert [int(x) for x in srows[1]] == want === END AC summary-agrees-with-listing ===</p>
+<p>=== AC summary-unit-tests ===<br>Intent: The project&#x27;s own summary tests pass and actually execute.</p>
+<p>from drydock_go import run_test</p>
+<p>result = run_test(&quot;./internal/report&quot;, &quot;TestWriteSummary&quot;) assert result.passed, (result.status, result.stdout, result.stderr) === END AC summary-unit-tests ===</p>
+<h2>User Acceptance</h2>
+<ul><li>None.</li></ul>
+<h2>Guardrails</h2>
+<ul><li>The summary never prints the listing and the listing never prints the summary.</li><li>Output is produced with <code>encoding/csv</code>.</li><li>No file under the examined directory is modified, moved, or deleted.</li></ul></article>
+</main>
+</body>
+</html>

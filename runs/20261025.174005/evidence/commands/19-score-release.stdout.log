@@ -1,0 +1,31 @@
+Drydock 0.8.0  Copyright (c) 2026 Web Cloud Studio. All rights reserved.
+2026-10-25 13:59:56 EDT  Calling CLAUDE/claude-haiku-5-5 (score release)...
+-only behaviour that
+-only guar
+-24
+-probe/bin/d
+-004",
+      "verd
+-005",
+      "verd
+-link.txt p
+-006",
+      "verd
+=0,
+-005
+  Completed CLAUDE/claude-haiku-5-5 (score release)  rc=0
+
+DupFind: PASSED — 8 of 8
+
+  st-001  MET       ["sh", "sources/run.sh"] exited 0; governed gate 'full' PASS, return_code 0, stdout 'DupFind: 15 passed, 0 failed (of 15)'; sources/run.sh:exit status 0 on every check
+  st-002  MET       bin/test.sh:1-24 uses #!/bin/sh, set -eu, no bashisms, and runs `go vet ./... && go test ./...`; ran `sh bin/test.sh`: go vet clean, all four test packages ok, 'completed: exit 0'
+  st-003  MET       go.mod:1 'module dupfind'; cmd/dupfind/main.go:1-12 package main calling cli.Run; `go list -deps ./cmd/dupfind` shows only stdlib packages and dupfind/internal/* packages; go build -o .drydock-probe/bin/dupfind ./cmd/dupfind succeeded
+  st-004  MET       sources/run.sh A1/A2 expected listing matches output: groups ordered 1(1000B) 2(128B) 3(17B) 4(9B) 5(6B), paths sorted within group; internal/dupes/dupes.go Order(): sort.Strings on Paths; ri>rj then Digest<; internal/dupes/dupes.go GroupByDigest(): SHA-256 via digestFile, only groups of 2+ files kept
+  st-005  MET       internal/walk/walk.go: `info.Size() == 0` skipped; `!d.Type().IsRegular()` skips symlinks; filepath.WalkDir does not descend symlinked directories; probe: tree with linkdir -> other/ and linkfile.txt -> real/f1.txt printed only real/f1.txt and other/f2.txt, rc=0; grader C/D/E cases with empty files and report-link.txt pass
+  st-006  MET       internal/report/report.go WriteSummary: files += len(Paths)-1, reclaimable += Reclaimable(), groups = len(groups); grader B1 '5,6,1177', C2 '2,2,1128', D2 '0,0,0' all PASS
+  st-007  MET       probe: `dupfind <missing>` rc=1 stdout_bytes=0, stderr 'stat ...: no such file or directory'; probe: `dupfind <regular file>` rc=1 stdout_bytes=0, stderr 'is not a directory'; grader U1-U5 compare stdout against empty expected output with rc 2, all PASS; internal/cli/cli.go Run(): usage errors return 2 and write only to stderr
+  st-008  MET       internal/dupes/dupes.go digestFile: os.Open (read-only) with io.Copy into the hash; internal/walk/walk.go: filepath.WalkDir and d.Info() only, no writes; probe: stat of every path in a tree before and after running dupfind was identical
+
+Scorecard: /mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261025.174005/workspace/targets/DupFind/SCORECARD.md
+Evidence: /mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261025.174005/workspace/targets/DupFind/evidence/score-release.json
+Target - committed project workspace git store

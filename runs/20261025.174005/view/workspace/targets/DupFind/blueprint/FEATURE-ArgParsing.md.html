@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>workspace/targets/DupFind/blueprint/FEATURE-ArgParsing.md</title>
+<link rel="stylesheet" href="../../../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>workspace/targets/DupFind/blueprint/FEATURE-ArgParsing.md</h1><div class="filenav"><a href="../../../../../index.html">&larr; Report</a><a href="../../../../../workspace/targets/DupFind/blueprint/FEATURE-ArgParsing.md">Raw file</a></div></header>
+<article class="doc"><h1>FEATURE: Arg Parsing</h1>
+<div class="scroll"><table><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Version</td><td>20261025 V1</td></tr><tr><td>Description</td><td>Parse --summary, --min-size, and exactly one directory argument, rejecting malformed usage with exit 2.</td></tr><tr><td>Depends On</td><td>ARCHITECTURE.md</td></tr><tr><td>Provides</td><td>cli.Run, cli.Config</td></tr></tbody></table></div>
+<h2>Purpose</h2>
+<p><code>cli.Run(args []string, stdout, stderr io.Writer) int</code> in <code>internal/cli</code> interprets the command line <code>dupfind [--summary] [--min-size &lt;bytes&gt;] &lt;directory&gt;</code> and produces a parsed configuration for later stories.</p>
+<h2>Behavior</h2>
+<ul><li>Parsing uses a local <code>flag.FlagSet</code> with <code>flag.ContinueOnError</code> and its own output discarded.</li><li><code>cli.Config</code> carries <code>Summary bool</code>, <code>MinSize int64</code>, and <code>Dir string</code>. <code>MinSize</code> defaults to 1.</li><li>Options precede the directory. Exactly one directory argument is required.</li><li>Usage errors return exit code 2, write nothing to stdout, and write exactly one diagnostic line to stderr. Usage errors are:<ul><li>no arguments, or an option with no directory;</li><li>more than one positional argument, or an option placed after the directory (it counts as an extra argument);</li><li>an unknown option, including <code>-h</code> and <code>--help</code>;</li><li><code>--min-size</code> with a missing value, or a value that is not a positive decimal integer.</li></ul></li><li>A <code>--min-size</code> value is accepted only when it consists solely of ASCII decimal digits, is at least 1, and fits in an <code>int64</code>. Signs (<code>+5</code>, <code>-5</code>), zero, hexadecimal, exponent forms, and overflow are usage errors.</li><li>Argument errors take precedence over directory validation.</li></ul>
+<h2>Reads</h2>
+<p>None.</p>
+<h2>Writes</h2>
+<p>Standard error only, on usage errors.</p>
+<h2>Programmatic Acceptance</h2>
+<p>=== AC argparse-usage-errors-exit-2 ===<br>Intent: Every malformed command line exits 2 with empty standard output.</p>
+<p>import os import tempfile from drydock_go import cli_runner</p>
+<p>with tempfile.TemporaryDirectory() as d: other = os.path.join(d, &quot;other&quot;) os.mkdir(other) bad = [ [], [&quot;--summary&quot;], [&quot;--min-size&quot;, &quot;5&quot;], [d, other], [&quot;--frobnicate&quot;, d], [&quot;-h&quot;, d], [&quot;--min-size&quot;, &quot;abc&quot;, d], [&quot;--min-size&quot;, &quot;0&quot;, d], [&quot;--min-size&quot;, &quot;-5&quot;, d], [&quot;--min-size&quot;, &quot;+5&quot;, d], [&quot;--min-size&quot;, &quot;0x10&quot;, d], [&quot;--min-size&quot;, &quot;1e3&quot;, d], [&quot;--min-size&quot;, &quot;99999999999999999999999&quot;, d], [&quot;--min-size&quot;, d], [d, &quot;--summary&quot;], ] for args in bad: code, out, err = cli_runner(*args) print(args, code, repr(out), repr(err)) assert code == 2, args assert out == &quot;&quot;, args === END AC argparse-usage-errors-exit-2 ===</p>
+<p>=== AC argparse-diagnostic-on-stderr ===<br>Intent: A usage error writes exactly one diagnostic line to standard error.</p>
+<p>from drydock_go import cli_runner</p>
+<p>code, out, err = cli_runner(&quot;--min-size&quot;, &quot;0&quot;, &quot;.&quot;) print(code, repr(out), repr(err)) assert code == 2 assert out == &quot;&quot; assert len(err.splitlines()) == 1 === END AC argparse-diagnostic-on-stderr ===</p>
+<p>=== AC argparse-valid-forms-not-usage-errors ===<br>Intent: Well-formed command lines are not rejected as usage errors.</p>
+<p>import tempfile from drydock_go import cli_runner</p>
+<p>with tempfile.TemporaryDirectory() as d: valid = [ [d], [&quot;--summary&quot;, d], [&quot;--min-size&quot;, &quot;5&quot;, d], [&quot;--summary&quot;, &quot;--min-size&quot;, &quot;5&quot;, d], [&quot;--min-size&quot;, &quot;5&quot;, &quot;--summary&quot;, d], ] for args in valid: code, out, err = cli_runner(*args) print(args, code, repr(out), repr(err)) assert code != 2, args === END AC argparse-valid-forms-not-usage-errors ===</p>
+<h2>User Acceptance</h2>
+<ul><li>None.</li></ul>
+<h2>Guardrails</h2>
+<ul><li>Standard library only; parsing uses <code>flag</code> with <code>flag.ContinueOnError</code>.</li><li>Only <code>main</code> calls <code>os.Exit</code>; <code>Run</code> returns the code.</li><li>A failing command writes nothing to standard output.</li><li>Never touch any file under the directory examined.</li></ul></article>
+</main>
+</body>
+</html>

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>build/DupFind/README.md</title>
+<link rel="stylesheet" href="../../../assets/kit.css">
+</head>
+<body>
+<main>
+<header class="fileheader"><div class="kind">Run artifact</div><h1>build/DupFind/README.md</h1><div class="filenav"><a href="../../../index.html">&larr; Report</a><a href="../../../build/DupFind/README.md">Raw file</a></div></header>
+<article class="doc"><h1>drydock DupFind Uat Case</h1>
+<p>Drydock uat - DupFind is the simplest Go kit and exercises go build end to end. The source is an original brief for a command-line duplicate file finder that groups regular files by size and SHA-256 digest and reports each group or a summary of reclaimable bytes. The supplied grader, sources/run.sh, builds ./cmd/dupfind with go build, creates a fixed directory tree (hidden files, a symbolic link, empty files, a path with a comma), and runs 15 checks of exit code and output. Standard library only, no database. Run with drydock uat DupFind. Source Repo: none, the brief is original to this kit.</p>
+<h2>Intent</h2>
+<p>Build a command-line duplicate file finder, the Go executable <code>./cmd/dupfind</code>, as described in <code>sources/INSTRUCTIONS.md</code>. It walks a directory, groups regular files by size and then by SHA-256 digest, and reports each duplicate group or a one-row summary of the space that removing the copies would recover.</p>
+<p>Correctness is measured by <code>sources/run.sh</code>: it builds the executable with <code>go build</code> and makes 15 checks of exit code and standard output against a fixed directory tree. The goal is every check passing.</p>
+<h2>What It Does</h2>
+<p><code>cli.Run(args []string, stdout, stderr io.Writer) int</code> in <code>internal/cli</code> interprets the command line <code>dupfind [--summary] [--min-size &lt;bytes&gt;] &lt;directory&gt;</code> and produces a parsed configuration for later stories.</p>
+<p>Rule 3 groups same-size files by the SHA-256 digest of their contents; a group of two or more files with the same size and digest is a duplicate group. Rule 6 skips unreadable files with one warning.</p>
+<p>After successful argument parsing, <code>cli.Run</code> checks that <code>Config.Dir</code> names an existing directory before any walking or output.</p>
+<p>Rules 4 and 5 fix how paths are written and how groups and paths are ordered so output is deterministic.</p>
+<p>The default output of <code>dupfind &lt;directory&gt;</code> is a CSV listing of every file in every duplicate group.</p>
+<p>The application root is a Go module whose executable is the main package at <code>./cmd/dupfind</code>. <code>go build ./cmd/dupfind</code> must succeed using only the standard library.</p>
+<p>Rule 3 of the build instructions says files are grouped by size first and only files that share a size are read. This feature implements that first stage in <code>internal/dupes</code>.</p>
+<p>With <code>--summary</code> the tool reports the totals of the listing that the same options would produce, instead of the listing itself.</p>
+<p>The application needs one command that decides whether the code is healthy. <code>bin/test.sh</code> runs <code>go vet ./...</code> and then <code>go test ./...</code> from the application root and exits zero only when both pass. The Go test suite behind it exercises the finished tool, so a regression in any earlier story turns this gate red.</p>
+<p><code>internal/walk</code> enumerates the files that may be considered for duplicate detection. It never opens file contents.</p>
+<h2>Stack</h2>
+<p>Go</p>
+<h2>Verification</h2>
+<pre><code>bash bin/test.sh</code></pre>
+<h2>Next Steps</h2>
+<ul><li>Complete the first-run checks above.</li><li>Run <code>bash bin/test.sh</code> before making release or deployment changes.</li></ul></article>
+</main>
+</body>
+</html>

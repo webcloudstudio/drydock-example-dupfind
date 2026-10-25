@@ -1,0 +1,171 @@
+Drydock 0.8.0  Copyright (c) 2026 Web Cloud Studio. All rights reserved.
+  ✓ PASS        [1/45]  arch-module-no-third-party              foundation            ARCHITECTURE.md
+  ✓ PASS        [2/45]  arch-package-tree                       foundation            ARCHITECTURE.md
+  ✓ PASS        [3/45]  arch-vet-and-build                      foundation            ARCHITECTURE.md
+  ✓ PASS        [4/45]  argparse-usage-errors-exit-2            arg-parsing           FEATURE-ArgParsing.md
+  ✓ PASS        [5/45]  argparse-diagnostic-on-stderr           arg-parsing           FEATURE-ArgParsing.md
+  ✓ PASS        [6/45]  argparse-valid-forms-not-usage-errors   arg-parsing           FEATURE-ArgParsing.md
+  ✓ PASS        [7/45]  modbuild-go-build                       module-build          FEATURE-ModuleBuild.md
+  ✓ PASS        [8/45]  modbuild-standard-library-only          module-build          FEATURE-ModuleBuild.md
+  ✓ PASS        [9/45]  modbuild-executable-runs                module-build          FEATURE-ModuleBuild.md
+  ✓ PASS        [10/45]  dirval-missing-directory                directory-validation  FEATURE-DirectoryValidation.md
+  ✓ PASS        [11/45]  dirval-not-a-directory                  directory-validation  FEATURE-DirectoryValidation.md
+  ✓ PASS        [12/45]  dirval-usage-precedes-validation        directory-validation  FEATURE-DirectoryValidation.md
+  ✓ PASS        [13/45]  dirval-existing-directory-succeeds      directory-validation  FEATURE-DirectoryValidation.md
+  ✓ PASS        [14/45]  walk-rules                              walk                  FEATURE-Walk.md
+  ✓ PASS        [15/45]  walk-vet                                walk                  FEATURE-Walk.md
+  ✓ PASS        [16/45]  size-unique-and-shared                  size-grouping         FEATURE-SizeGrouping.md
+  ✓ PASS        [17/45]  size-same-size-different-content        size-grouping         FEATURE-SizeGrouping.md
+  ✓ PASS        [18/45]  size-unit-tests                         size-grouping         FEATURE-SizeGrouping.md
+  ✓ PASS        [19/45]  digest-columns-match-contents           digest-grouping       FEATURE-DigestGrouping.md
+  ✓ PASS        [20/45]  digest-splits-same-size-groups          digest-grouping       FEATURE-DigestGrouping.md
+  ✓ PASS        [21/45]  digest-unreadable-skipped               digest-grouping       FEATURE-DigestGrouping.md
+  ✓ PASS        [22/45]  digest-tree-unmodified                  digest-grouping       FEATURE-DigestGrouping.md
+  ✓ PASS        [23/45]  digest-unit-tests                       digest-grouping       FEATURE-DigestGrouping.md
+  ✓ PASS        [24/45]  order-by-reclaimable-then-digest        group-ordering        FEATURE-GroupOrdering.md
+  ✓ PASS        [25/45]  order-paths-byte-ascending              group-ordering        FEATURE-GroupOrdering.md
+  ✓ PASS        [26/45]  order-reclaimable-beats-size            group-ordering        FEATURE-GroupOrdering.md
+  ✓ PASS        [27/45]  order-unit-tests                        group-ordering        FEATURE-GroupOrdering.md
+  ✓ PASS        [28/45]  listing-full-output                     listing               FEATURE-Listing.md
+  ✓ PASS        [29/45]  listing-csv-quoting                     listing               FEATURE-Listing.md
+  ✓ PASS        [30/45]  listing-header-only-when-no-duplicates  listing               FEATURE-Listing.md
+  ✓ PASS        [31/45]  listing-min-size                        listing               FEATURE-Listing.md
+  ✓ PASS        [32/45]  listing-symlinks-and-hidden             listing               FEATURE-Listing.md
+  ✓ PASS        [33/45]  summary-totals-match-fixture            summary               FEATURE-Summary.md
+  ✓ PASS        [34/45]  summary-no-duplicates                   summary               FEATURE-Summary.md
+  ✓ PASS        [35/45]  summary-agrees-with-listing             summary               FEATURE-Summary.md
+  ✓ PASS        [36/45]  summary-unit-tests                      summary               FEATURE-Summary.md
+  ✓ PASS        [37/45]  test-script-exits-zero                  test-gate             FEATURE-TestGate.md
+  ✓ PASS        [38/45]  test-script-posix-syntax                test-gate             FEATURE-TestGate.md
+  ✓ PASS        [39/45]  test-script-fails-on-failing-test       test-gate             FEATURE-TestGate.md
+  ✓ PASS        [40/45]  test-script-independent-of-cwd          test-gate             FEATURE-TestGate.md
+  ✓ PASS        [41/45]  suite-has-tests-for-cli                 test-gate             FEATURE-TestGate.md
+  ✓ PASS        [42/45]  built-binary-exit-codes                 test-gate             FEATURE-TestGate.md
+  ✓ PASS        [43/45]  verification-test-gate-passes           verification          VERIFICATION.md
+  ✓ PASS        [44/45]  verification-no-grader-coupling         verification          VERIFICATION.md
+  ✓ PASS        [45/45]  verification-grader-passes              verification          VERIFICATION.md
+
+Acceptance verification: DupFind  (2026-10-25T17:58:23+00:00)
+  PASS 34   FAIL 0   UNVERIFIED 0   PREPASSED 11   (45 AC)
+
+  ✓ PASS        arch-module-no-third-party              foundation            ARCHITECTURE.md
+  ✓ PASS        arch-package-tree                       foundation            ARCHITECTURE.md
+  ✓ PASS        arch-vet-and-build                      foundation            ARCHITECTURE.md
+  ✓ PASS        argparse-usage-errors-exit-2            arg-parsing           FEATURE-ArgParsing.md
+  ✓ PASS        argparse-diagnostic-on-stderr           arg-parsing           FEATURE-ArgParsing.md
+  ~ PREPASSED   argparse-valid-forms-not-usage-errors   arg-parsing           FEATURE-ArgParsing.md
+  ~ PREPASSED   modbuild-go-build                       module-build          FEATURE-ModuleBuild.md
+  ~ PREPASSED   modbuild-standard-library-only          module-build          FEATURE-ModuleBuild.md
+  ✓ PASS        modbuild-executable-runs                module-build          FEATURE-ModuleBuild.md
+  ✓ PASS        dirval-missing-directory                directory-validation  FEATURE-DirectoryValidation.md
+  ✓ PASS        dirval-not-a-directory                  directory-validation  FEATURE-DirectoryValidation.md
+  ✓ PASS        dirval-usage-precedes-validation        directory-validation  FEATURE-DirectoryValidation.md
+  ~ PREPASSED   dirval-existing-directory-succeeds      directory-validation  FEATURE-DirectoryValidation.md
+  ✓ PASS        walk-rules                              walk                  FEATURE-Walk.md
+  ~ PREPASSED   walk-vet                                walk                  FEATURE-Walk.md
+  ✓ PASS        size-unique-and-shared                  size-grouping         FEATURE-SizeGrouping.md
+  ✓ PASS        size-same-size-different-content        size-grouping         FEATURE-SizeGrouping.md
+  ✓ PASS        size-unit-tests                         size-grouping         FEATURE-SizeGrouping.md
+  ✓ PASS        digest-columns-match-contents           digest-grouping       FEATURE-DigestGrouping.md
+  ✓ PASS        digest-splits-same-size-groups          digest-grouping       FEATURE-DigestGrouping.md
+  ✓ PASS        digest-unreadable-skipped               digest-grouping       FEATURE-DigestGrouping.md
+  ~ PREPASSED   digest-tree-unmodified                  digest-grouping       FEATURE-DigestGrouping.md
+  ✓ PASS        digest-unit-tests                       digest-grouping       FEATURE-DigestGrouping.md
+  ✓ PASS        order-by-reclaimable-then-digest        group-ordering        FEATURE-GroupOrdering.md
+  ✓ PASS        order-paths-byte-ascending              group-ordering        FEATURE-GroupOrdering.md
+  ✓ PASS        order-reclaimable-beats-size            group-ordering        FEATURE-GroupOrdering.md
+  ✓ PASS        order-unit-tests                        group-ordering        FEATURE-GroupOrdering.md
+  ✓ PASS        listing-full-output                     listing               FEATURE-Listing.md
+  ✓ PASS        listing-csv-quoting                     listing               FEATURE-Listing.md
+  ✓ PASS        listing-header-only-when-no-duplicates  listing               FEATURE-Listing.md
+  ✓ PASS        listing-min-size                        listing               FEATURE-Listing.md
+  ✓ PASS        listing-symlinks-and-hidden             listing               FEATURE-Listing.md
+  ✓ PASS        summary-totals-match-fixture            summary               FEATURE-Summary.md
+  ✓ PASS        summary-no-duplicates                   summary               FEATURE-Summary.md
+  ✓ PASS        summary-agrees-with-listing             summary               FEATURE-Summary.md
+  ✓ PASS        summary-unit-tests                      summary               FEATURE-Summary.md
+  ✓ PASS        test-script-exits-zero                  test-gate             FEATURE-TestGate.md
+  ✓ PASS        test-script-posix-syntax                test-gate             FEATURE-TestGate.md
+  ~ PREPASSED   test-script-fails-on-failing-test       test-gate             FEATURE-TestGate.md
+  ✓ PASS        test-script-independent-of-cwd          test-gate             FEATURE-TestGate.md
+  ~ PREPASSED   suite-has-tests-for-cli                 test-gate             FEATURE-TestGate.md
+  ✓ PASS        built-binary-exit-codes                 test-gate             FEATURE-TestGate.md
+  ~ PREPASSED   verification-test-gate-passes           verification          VERIFICATION.md
+  ~ PREPASSED   verification-no-grader-coupling         verification          VERIFICATION.md
+  ~ PREPASSED   verification-grader-passes              verification          VERIFICATION.md
+
+  ~ PREPASSED   argparse-valid-forms-not-usage-errors
+        intent: Well-formed command lines are not rejected as usage errors.
+        green at this block's baseline too, before its code existed — confirm the criterion exercises the story's work
+
+  ~ PREPASSED   modbuild-go-build
+        intent: go build ./cmd/dupfind succeeds and produces an executable.
+        green at this block's baseline too, before its code existed — confirm the criterion exercises the story's work
+
+  ~ PREPASSED   modbuild-standard-library-only
+        intent: The executable's dependency graph contains only standard library and in-module packages.
+        green at this block's baseline too, before its code existed — confirm the criterion exercises the story's work
+
+  ~ PREPASSED   dirval-existing-directory-succeeds
+        intent: An existing empty directory is accepted and the run exits 0.
+        green at this block's baseline too, before its code existed — confirm the criterion exercises the story's work
+
+  ~ PREPASSED   walk-vet
+        intent: The walk package compiles and passes go vet.
+        green at this block's baseline too, before its code existed — confirm the criterion exercises the story's work
+
+  ~ PREPASSED   digest-tree-unmodified
+        intent: Running the tool leaves every file's bytes and the directory listing unchanged.
+        green at this block's baseline too, before its code existed — confirm the criterion exercises the story's work
+
+  ~ PREPASSED   test-script-fails-on-failing-test
+        intent: bin/test.sh exits non-zero when any Go test fails, proven on a temporary copy of the application.
+        green at this block's baseline too, before its code existed — confirm the criterion exercises the story's work
+
+  ~ PREPASSED   suite-has-tests-for-cli
+        intent: The Go test suite contains test files for the cli package and they pass when run alone.
+        green at this block's baseline too, before its code existed — confirm the criterion exercises the story's work
+
+  ~ PREPASSED   verification-test-gate-passes
+        intent: The project's own gate, bin/test.sh, exits zero on the assembled application.
+        green at this block's baseline too, before its code existed — confirm the criterion exercises the story's work
+
+  ~ PREPASSED   verification-no-grader-coupling
+        intent: Application code, tests excluded, never refers to the supplied grader script.
+        green at this block's baseline too, before its code existed — confirm the criterion exercises the story's work
+
+  ~ PREPASSED   verification-grader-passes
+        intent: The supplied grader sources/run.sh builds ./cmd/dupfind and exits zero with every check passing.
+        green at this block's baseline too, before its code existed — confirm the criterion exercises the story's work
+
+  Run `drydock score ac DupFind --full` for untruncated output per failure.
+
+
+  Proof coverage: 34 of 45 criteria are proof — green here, and observed red before the work that turned them green.
+    11 are not. Each names a story whose acceptance did not test it.
+
+    PREPASSED  argparse-valid-forms-not-usage-errors  arg-parsing  FEATURE-ArgParsing.md
+               green before its block built
+    PREPASSED  modbuild-go-build  module-build  FEATURE-ModuleBuild.md
+               green before its block built
+    PREPASSED  modbuild-standard-library-only  module-build  FEATURE-ModuleBuild.md
+               green before its block built
+    PREPASSED  dirval-existing-directory-succeeds  directory-validation  FEATURE-DirectoryValidation.md
+               green before its block built
+    PREPASSED  walk-vet  walk  FEATURE-Walk.md
+               green before its block built
+    PREPASSED  digest-tree-unmodified  digest-grouping  FEATURE-DigestGrouping.md
+               green before its block built
+    PREPASSED  test-script-fails-on-failing-test  test-gate  FEATURE-TestGate.md
+               green before its block built
+    PREPASSED  suite-has-tests-for-cli  test-gate  FEATURE-TestGate.md
+               green before its block built
+    PREPASSED  verification-test-gate-passes  verification  VERIFICATION.md
+               green before its block built
+    PREPASSED  verification-no-grader-coupling  verification  VERIFICATION.md
+               green before its block built
+    PREPASSED  verification-grader-passes  verification  VERIFICATION.md
+               green before its block built
+
+Soundings: /mnt/c/Users/barlo/projects/drydock/uat/DupFind/runs/20261025.174005/workspace/targets/DupFind/SOUNDINGS.md
+Target - committed project workspace git store

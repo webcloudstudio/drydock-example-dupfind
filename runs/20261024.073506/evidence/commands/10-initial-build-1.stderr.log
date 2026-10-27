@@ -1,2 +1,0 @@
-error: build failed for DupFind: 5 step(s)
-  command_interface — closed/failed: programmatic acceptance failed: summary-no-duplicates, summary-filtered, listing-empty, listing-relative-paths, listing-csv-path

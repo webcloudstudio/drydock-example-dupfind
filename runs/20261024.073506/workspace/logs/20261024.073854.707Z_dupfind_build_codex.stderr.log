@@ -1,1 +1,0 @@
-2026-10-24T07:39:26.947834Z ERROR codex_core::tools::router: error=exec_command failed: CreateProcess { message: "Rejected(\"`/bin/bash -lc \\\"rm -f dupfind && rg --files -g '\\\"'!sources/run.sh'\\\"' . && git status --short\\\"` rejected: rm -f style commands are not permitted. Use a safer approach\")" }

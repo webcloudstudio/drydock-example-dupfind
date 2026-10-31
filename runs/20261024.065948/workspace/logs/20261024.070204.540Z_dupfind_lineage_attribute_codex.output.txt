@@ -1,9 +1,0 @@
-<requirement name="go-module-command">
-Build `./cmd/dupfind` with `go build`.
-</requirement>
-<requirement name="duplicate-discovery-output">
-Every command's exit code and standard output with the known answer below.
-</requirement>
-<unattached story="language-foundation"/>
-<unattached story="duplicate-discovery"/>
-<unattached story="supplied-grader"/>
